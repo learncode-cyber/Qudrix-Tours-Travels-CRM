@@ -173,7 +173,24 @@ Route::prefix('v1')->group(function () {
         
         // Umrah Packages
         Route::apiResource('umrah', '\App\Http\Controllers\UmrahController')->only(['index', 'store', 'show']);
-        
+
+        // Hajj/Umrah Groups (departure management) + Pilgrims
+        Route::apiResource('hajj-umrah-groups', '\App\Http\Controllers\HajjUmrahGroupController')->only(['index', 'store', 'show', 'update']);
+        Route::get('/hajj-umrah-groups/{id}/report', '\App\Http\Controllers\HajjUmrahGroupController@report');
+
+        Route::apiResource('pilgrims', '\App\Http\Controllers\PilgrimController')->only(['index', 'store', 'show', 'update']);
+        Route::put('/pilgrims/{id}/room', '\App\Http\Controllers\PilgrimController@assignRoom');
+        Route::put('/pilgrims/{id}/transport', '\App\Http\Controllers\PilgrimController@assignTransport');
+        Route::post('/pilgrims/{id}/payments', '\App\Http\Controllers\PilgrimController@recordPayment');
+
+        // Student Visa
+        Route::apiResource('student-visa-applications', '\App\Http\Controllers\StudentVisaController')->only(['index', 'store', 'show', 'update']);
+        Route::put('/student-visa-applications/{id}/status', '\App\Http\Controllers\StudentVisaController@updateStatus');
+        Route::post('/student-visa-applications/{id}/offer-letter', '\App\Http\Controllers\StudentVisaController@recordOfferLetter');
+        Route::post('/student-visa-applications/{id}/embassy-appointment', '\App\Http\Controllers\StudentVisaController@scheduleEmbassyAppointment');
+        Route::put('/student-visa-applications/{id}/visa-status', '\App\Http\Controllers\StudentVisaController@updateVisaStatus');
+        Route::post('/student-visa-applications/{id}/assign-counsellor', '\App\Http\Controllers\StudentVisaController@assignCounsellor');
+
         // Tour Packages
         Route::apiResource('tours', '\App\Http\Controllers\TourController')->only(['index', 'store', 'show', 'update']);
         

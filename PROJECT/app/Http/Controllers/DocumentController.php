@@ -13,6 +13,8 @@ class DocumentController extends Controller
         'booking' => \App\Models\Booking::class,
         'visa_application' => \App\Models\VisaApplication::class,
         'support_ticket' => \App\Models\SupportTicket::class,
+        'student_visa_application' => \App\Models\StudentVisaApplication::class,
+        'pilgrim' => \App\Models\Pilgrim::class,
     ];
 
     public function index(Request $request)

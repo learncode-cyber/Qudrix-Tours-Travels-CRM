@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class UmrahPackage extends Model
 {
     use SoftDeletes;
-    protected $fillable = ['tenant_id', 'name', 'description', 'duration_days', 'price', 'currency', 'max_capacity', 'rituals_included', 'status'];
-    protected $casts = ['rituals_included' => 'json'];
+    protected $fillable = ['tenant_id', 'name', 'description', 'duration_days', 'price', 'currency', 'max_capacity', 'rituals_included', 'accommodations', 'status'];
+    protected $casts = ['rituals_included' => 'json', 'accommodations' => 'json'];
     public function tenant(): BelongsTo { return $this->belongsTo(Tenant::class); }
 }

@@ -37,7 +37,14 @@ class AutomationController extends Controller
     public function update(Request $request, $id)
     {
         $automation = Automation::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
-        $automation->update($request->all());
+        $validated = $request->validate([
+            'name' => 'sometimes|string',
+            'description' => 'nullable|string',
+            'trigger_type' => 'sometimes|string',
+            'status' => 'sometimes|string',
+            'is_active' => 'boolean',
+        ]);
+        $automation->update($validated);
         return response()->json(['data' => $automation]);
     }
     

@@ -31,7 +31,18 @@ class HajjController extends Controller
     public function update(Request $request, $id)
     {
         $package = HajjPackage::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
-        $package->update($request->all());
+        $validated = $request->validate([
+            'name' => 'sometimes|string',
+            'description' => 'nullable|string',
+            'duration_days' => 'sometimes|integer',
+            'price' => 'sometimes|numeric',
+            'currency' => 'sometimes|string|size:3',
+            'max_capacity' => 'sometimes|integer',
+            'rituals_included' => 'nullable|array',
+            'accommodations' => 'nullable|array',
+            'status' => 'sometimes|in:active,inactive,sold_out',
+        ]);
+        $package->update($validated);
         return response()->json(['data' => $package]);
     }
 }

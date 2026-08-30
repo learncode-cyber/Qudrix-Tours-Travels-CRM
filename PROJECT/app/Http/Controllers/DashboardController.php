@@ -24,7 +24,13 @@ class DashboardController extends Controller
     public function update(Request $request, $id)
     {
         $dashboard = Dashboard::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
-        $dashboard->update($request->all());
+        $validated = $request->validate([
+            'name' => 'sometimes|string',
+            'widgets' => 'sometimes|array',
+            'layout' => 'nullable|array',
+            'is_default' => 'boolean',
+        ]);
+        $dashboard->update($validated);
         return response()->json(['data' => $dashboard]);
     }
     
