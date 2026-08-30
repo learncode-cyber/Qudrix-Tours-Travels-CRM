@@ -10,7 +10,10 @@ use App\Http\Controllers\Admin\WebhookAnalyticsDashboardController;
  * Base URI: /admin/api/webhooks-advanced
  */
 
-Route::prefix('admin/api/webhooks-advanced')->middleware(['auth:sanctum', 'api.key.auth'])->group(function () {
+// Admin webhook management is staff-only: authenticated via the same JWT
+// session as the rest of the admin surface (routes/api.php), not a public
+// API key — using an API key to manage API keys would be circular.
+Route::prefix('admin/api/webhooks-advanced')->middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
 
     /**
      * Analytics Dashboard Endpoints

@@ -17,235 +17,234 @@ Route::prefix('v1')->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/profile', [AuthController::class, 'profile']);
     });
-});
 
     // Phase 1: Customer Management (protected routes)
     Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
-        Route::apiResource('customers', 'CustomerController');
-        Route::post('/customers/{id}/family', 'CustomerController@addFamily');
-        Route::get('/customers/{id}/family', 'CustomerController@getFamily');
+        Route::apiResource('customers', '\App\Http\Controllers\CustomerController');
+        Route::post('/customers/{id}/family', '\App\Http\Controllers\CustomerController@addFamily');
+        Route::get('/customers/{id}/family', '\App\Http\Controllers\CustomerController@getFamily');
     });
 
     // Phase 1: Lead Management (protected routes)
     Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
-        Route::apiResource('leads', 'LeadController')->only(['index', 'store', 'show']);
-        Route::put('/leads/{id}/status', 'LeadController@updateStatus');
-        Route::put('/leads/{id}/assign', 'LeadController@assignLead');
-        Route::post('/leads/{id}/score', 'LeadController@scoreLeadForConversion');
-        Route::post('/leads/{id}/follow-up', 'LeadController@scheduleFollowUp');
-        Route::get('/leads/pending/follow-ups', 'LeadController@pendingFollowUps');
+        Route::apiResource('leads', '\App\Http\Controllers\LeadController')->only(['index', 'store', 'show']);
+        Route::put('/leads/{id}/status', '\App\Http\Controllers\LeadController@updateStatus');
+        Route::put('/leads/{id}/assign', '\App\Http\Controllers\LeadController@assignLead');
+        Route::post('/leads/{id}/score', '\App\Http\Controllers\LeadController@scoreLeadForConversion');
+        Route::post('/leads/{id}/follow-up', '\App\Http\Controllers\LeadController@scheduleFollowUp');
+        Route::get('/leads/pending/follow-ups', '\App\Http\Controllers\LeadController@pendingFollowUps');
     });
 
     // Phase 1: Communication (protected routes)
     Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
-        Route::apiResource('communications', 'CommunicationController')->only(['index', 'store']);
-        Route::get('/customers/{customerId}/communications', 'CommunicationController@getCustomerCommunications');
-        Route::put('/communications/{id}/read', 'CommunicationController@markAsRead');
-        Route::get('/communications/stats', 'CommunicationController@getCommunicationStats');
+        Route::apiResource('communications', '\App\Http\Controllers\CommunicationController')->only(['index', 'store']);
+        Route::get('/customers/{customerId}/communications', '\App\Http\Controllers\CommunicationController@getCustomerCommunications');
+        Route::put('/communications/{id}/read', '\App\Http\Controllers\CommunicationController@markAsRead');
+        Route::get('/communications/stats', '\App\Http\Controllers\CommunicationController@getCommunicationStats');
     });
 
     // Phase 1: Task Management (protected routes)
     Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
-        Route::apiResource('tasks', 'TaskController');
-        Route::put('/tasks/{id}/complete', 'TaskController@markComplete');
-        Route::put('/tasks/{id}/incomplete', 'TaskController@markIncomplete');
-        Route::get('/tasks/stats', 'TaskController@getTaskStats');
+        Route::apiResource('tasks', '\App\Http\Controllers\TaskController');
+        Route::put('/tasks/{id}/complete', '\App\Http\Controllers\TaskController@markComplete');
+        Route::put('/tasks/{id}/incomplete', '\App\Http\Controllers\TaskController@markIncomplete');
+        Route::get('/tasks/stats', '\App\Http\Controllers\TaskController@getTaskStats');
     });
 
     // Phase 2: Sales Pipeline & Quotations (protected routes)
     Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
         // Quotation Management
-        Route::apiResource('quotations', 'QuotationController')->except('destroy');
-        Route::post('/quotations/{id}/send', 'QuotationController@sendQuotation');
-        Route::get('/quotations/stats', 'QuotationController@getQuotationStats');
+        Route::apiResource('quotations', '\App\Http\Controllers\QuotationController')->except('destroy');
+        Route::post('/quotations/{id}/send', '\App\Http\Controllers\QuotationController@sendQuotation');
+        Route::get('/quotations/stats', '\App\Http\Controllers\QuotationController@getQuotationStats');
 
         // Proposal Management
-        Route::apiResource('proposals', 'ProposalController')->only(['index', 'show']);
-        Route::post('/proposals/from-quotation', 'ProposalController@createFromQuotation');
-        Route::post('/proposals/{id}/send', 'ProposalController@sendProposal');
-        Route::post('/proposals/{id}/sign', 'ProposalController@signProposal');
-        Route::post('/proposals/{id}/reject', 'ProposalController@rejectProposal');
-        Route::get('/proposals/stats', 'ProposalController@getProposalStats');
+        Route::apiResource('proposals', '\App\Http\Controllers\ProposalController')->only(['index', 'show']);
+        Route::post('/proposals/from-quotation', '\App\Http\Controllers\ProposalController@createFromQuotation');
+        Route::post('/proposals/{id}/send', '\App\Http\Controllers\ProposalController@sendProposal');
+        Route::post('/proposals/{id}/sign', '\App\Http\Controllers\ProposalController@signProposal');
+        Route::post('/proposals/{id}/reject', '\App\Http\Controllers\ProposalController@rejectProposal');
+        Route::get('/proposals/stats', '\App\Http\Controllers\ProposalController@getProposalStats');
 
         // Sales Pipeline
-        Route::get('/pipeline/full', 'PipelineController@getFullPipeline');
-        Route::get('/pipeline/lead/{leadId}', 'PipelineController@getLeadPipeline');
-        Route::post('/pipeline/activity', 'PipelineController@recordActivity');
-        Route::put('/pipeline/stage', 'PipelineController@updateLeadStage');
-        Route::get('/pipeline/metrics', 'PipelineController@getPipelineMetrics');
+        Route::get('/pipeline/full', '\App\Http\Controllers\PipelineController@getFullPipeline');
+        Route::get('/pipeline/lead/{leadId}', '\App\Http\Controllers\PipelineController@getLeadPipeline');
+        Route::post('/pipeline/activity', '\App\Http\Controllers\PipelineController@recordActivity');
+        Route::put('/pipeline/stage', '\App\Http\Controllers\PipelineController@updateLeadStage');
+        Route::get('/pipeline/metrics', '\App\Http\Controllers\PipelineController@getPipelineMetrics');
     });
 
     // Phase 3: Booking Engine (protected routes)
     Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
         // Booking Management
-        Route::apiResource('bookings', 'BookingController');
-        Route::post('/bookings/{id}/confirm', 'BookingController@confirmBooking');
-        Route::post('/bookings/{id}/cancel', 'BookingController@cancelBooking');
-        Route::get('/bookings/stats', 'BookingController@getBookingStats');
+        Route::apiResource('bookings', '\App\Http\Controllers\BookingController');
+        Route::post('/bookings/{id}/confirm', '\App\Http\Controllers\BookingController@confirmBooking');
+        Route::post('/bookings/{id}/cancel', '\App\Http\Controllers\BookingController@cancelBooking');
+        Route::get('/bookings/stats', '\App\Http\Controllers\BookingController@getBookingStats');
 
         // Booking Travelers
-        Route::post('/travelers/add', 'TravelerController@addTraveler');
-        Route::get('/bookings/{bookingId}/travelers', 'TravelerController@getTravelers');
-        Route::put('/travelers/{id}', 'TravelerController@updateTraveler');
-        Route::delete('/travelers/{id}', 'TravelerController@removeTraveler');
-        Route::get('/travelers/{id}/details', 'TravelerController@getTravelerDetails');
+        Route::post('/travelers/add', '\App\Http\Controllers\TravelerController@addTraveler');
+        Route::get('/bookings/{bookingId}/travelers', '\App\Http\Controllers\TravelerController@getTravelers');
+        Route::put('/travelers/{id}', '\App\Http\Controllers\TravelerController@updateTraveler');
+        Route::delete('/travelers/{id}', '\App\Http\Controllers\TravelerController@removeTraveler');
+        Route::get('/travelers/{id}/details', '\App\Http\Controllers\TravelerController@getTravelerDetails');
 
         // Booking Itinerary
-        Route::post('/itinerary/create', 'ItineraryController@createItinerary');
-        Route::get('/bookings/{bookingId}/itinerary', 'ItineraryController@getItinerary');
-        Route::put('/itinerary/{id}', 'ItineraryController@updateItinerary');
-        Route::delete('/itinerary/{id}', 'ItineraryController@deleteItinerary');
-        Route::get('/bookings/{bookingId}/itinerary/pdf', 'ItineraryController@generateItineraryPdf');
+        Route::post('/itinerary/create', '\App\Http\Controllers\ItineraryController@createItinerary');
+        Route::get('/bookings/{bookingId}/itinerary', '\App\Http\Controllers\ItineraryController@getItinerary');
+        Route::put('/itinerary/{id}', '\App\Http\Controllers\ItineraryController@updateItinerary');
+        Route::delete('/itinerary/{id}', '\App\Http\Controllers\ItineraryController@deleteItinerary');
+        Route::get('/bookings/{bookingId}/itinerary/pdf', '\App\Http\Controllers\ItineraryController@generateItineraryPdf');
 
         // Group Bookings
-        Route::apiResource('groups', 'GroupBookingController')->only(['index', 'store', 'show']);
-        Route::post('/groups/{groupId}/bookings', 'GroupBookingController@addBookingToGroup');
-        Route::get('/groups/{groupId}/bookings', 'GroupBookingController@getGroupBookings');
-        Route::get('/groups/{groupId}/stats', 'GroupBookingController@getGroupStats');
+        Route::apiResource('groups', '\App\Http\Controllers\GroupBookingController')->only(['index', 'store', 'show']);
+        Route::post('/groups/{groupId}/bookings', '\App\Http\Controllers\GroupBookingController@addBookingToGroup');
+        Route::get('/groups/{groupId}/bookings', '\App\Http\Controllers\GroupBookingController@getGroupBookings');
+        Route::get('/groups/{groupId}/stats', '\App\Http\Controllers\GroupBookingController@getGroupStats');
     });
 
     // Phase 4: Travel Management (Flights, Hotels, Transport, Destinations, Visa)
     Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
         // Flights
-        Route::apiResource('flights', 'FlightController');
-        Route::post('/flights/book', 'FlightController@bookFlight');
+        Route::apiResource('flights', '\App\Http\Controllers\FlightController');
+        Route::post('/flights/book', '\App\Http\Controllers\FlightController@bookFlight');
 
         // Hotels
-        Route::apiResource('hotels', 'HotelController');
-        Route::post('/hotels/book', 'HotelController@bookHotel');
+        Route::apiResource('hotels', '\App\Http\Controllers\HotelController');
+        Route::post('/hotels/book', '\App\Http\Controllers\HotelController@bookHotel');
 
         // Transport
-        Route::apiResource('transports', 'TransportController');
-        Route::post('/transports/book', 'TransportController@bookTransport');
+        Route::apiResource('transports', '\App\Http\Controllers\TransportController');
+        Route::post('/transports/book', '\App\Http\Controllers\TransportController@bookTransport');
 
         // Destinations
-        Route::apiResource('destinations', 'DestinationController');
+        Route::apiResource('destinations', '\App\Http\Controllers\DestinationController');
 
         // Visas
-        Route::apiResource('visas', 'VisaController');
-        Route::post('/visas/{id}/submit', 'VisaController@submitApplication');
-        Route::post('/visas/{id}/approve', 'VisaController@approveVisa');
-        Route::get('/visas/booking/{bookingId}/status', 'VisaController@getVisaStatus');
+        Route::apiResource('visas', '\App\Http\Controllers\VisaController');
+        Route::post('/visas/{id}/submit', '\App\Http\Controllers\VisaController@submitApplication');
+        Route::post('/visas/{id}/approve', '\App\Http\Controllers\VisaController@approveVisa');
+        Route::get('/visas/booking/{bookingId}/status', '\App\Http\Controllers\VisaController@getVisaStatus');
     });
 
     // Phase 5: Hajj/Umrah/Tours & Expense/Supplier/Complaint Management
     Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
         // Hajj Packages
-        Route::apiResource('hajj', 'HajjController')->only(['index', 'store', 'show', 'update']);
+        Route::apiResource('hajj', '\App\Http\Controllers\HajjController')->only(['index', 'store', 'show', 'update']);
         
         // Umrah Packages
-        Route::apiResource('umrah', 'UmrahController')->only(['index', 'store', 'show']);
+        Route::apiResource('umrah', '\App\Http\Controllers\UmrahController')->only(['index', 'store', 'show']);
         
         // Tour Packages
-        Route::apiResource('tours', 'TourController')->only(['index', 'store', 'show', 'update']);
+        Route::apiResource('tours', '\App\Http\Controllers\TourController')->only(['index', 'store', 'show', 'update']);
         
         // Expenses
-        Route::post('/expenses', 'ExpenseController@create');
-        Route::get('/bookings/{bookingId}/expenses', 'ExpenseController@getByBooking');
+        Route::post('/expenses', '\App\Http\Controllers\ExpenseController@create');
+        Route::get('/bookings/{bookingId}/expenses', '\App\Http\Controllers\ExpenseController@getByBooking');
         
         // Suppliers
-        Route::apiResource('suppliers', 'SupplierController');
+        Route::apiResource('suppliers', '\App\Http\Controllers\SupplierController');
         
         // Complaints
-        Route::get('/complaints', 'ComplaintController@index');
-        Route::post('/complaints', 'ComplaintController@create');
-        Route::put('/complaints/{id}/status', 'ComplaintController@updateStatus');
+        Route::get('/complaints', '\App\Http\Controllers\ComplaintController@index');
+        Route::post('/complaints', '\App\Http\Controllers\ComplaintController@create');
+        Route::put('/complaints/{id}/status', '\App\Http\Controllers\ComplaintController@updateStatus');
     });
 
     // Phase 6: Automation Engine + Templates + Dashboard
     Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
         // Automation Management
-        Route::apiResource('automations', 'AutomationController')->only(['index', 'store', 'show', 'update']);
-        Route::post('/automations/{id}/execute', 'AutomationController@execute');
-        Route::post('/automations/{id}/test', 'AutomationController@test');
+        Route::apiResource('automations', '\App\Http\Controllers\AutomationController')->only(['index', 'store', 'show', 'update']);
+        Route::post('/automations/{id}/execute', '\App\Http\Controllers\AutomationController@execute');
+        Route::post('/automations/{id}/test', '\App\Http\Controllers\AutomationController@test');
         
         // Automation Templates
-        Route::get('/automation-templates', 'AutomationTemplateController@index');
-        Route::get('/automation-templates/{id}', 'AutomationTemplateController@show');
-        Route::get('/automation-templates/category/{category}', 'AutomationTemplateController@getByCategory');
-        Route::post('/automation-templates/{id}/use', 'AutomationTemplateController@useTemplate');
+        Route::get('/automation-templates', '\App\Http\Controllers\AutomationTemplateController@index');
+        Route::get('/automation-templates/{id}', '\App\Http\Controllers\AutomationTemplateController@show');
+        Route::get('/automation-templates/category/{category}', '\App\Http\Controllers\AutomationTemplateController@getByCategory');
+        Route::post('/automation-templates/{id}/use', '\App\Http\Controllers\AutomationTemplateController@useTemplate');
         
         // Automation Logs
-        Route::get('/automations/{automationId}/logs', 'AutomationLogController@getAutomationLogs');
-        Route::get('/automations/{automationId}/stats', 'AutomationLogController@getStats');
-        Route::delete('/automations/{automationId}/logs', 'AutomationLogController@clearLogs');
+        Route::get('/automations/{automationId}/logs', '\App\Http\Controllers\AutomationLogController@getAutomationLogs');
+        Route::get('/automations/{automationId}/stats', '\App\Http\Controllers\AutomationLogController@getStats');
+        Route::delete('/automations/{automationId}/logs', '\App\Http\Controllers\AutomationLogController@clearLogs');
         
         // Automation Dashboard
-        Route::get('/automation-dashboard/summary', 'AutomationDashboardController@getSummary');
-        Route::get('/automation-dashboard/metrics', 'AutomationDashboardController@getMetrics');
+        Route::get('/automation-dashboard/summary', '\App\Http\Controllers\AutomationDashboardController@getSummary');
+        Route::get('/automation-dashboard/metrics', '\App\Http\Controllers\AutomationDashboardController@getMetrics');
     });
 
     // Phase 7: AI & Analytics + Reports + Insights + Segmentation + Predictions
     Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
         // Analytics
-        Route::get('/analytics/metrics', 'AnalyticsController@getMetrics');
-        Route::get('/analytics/metric/{type}', 'AnalyticsController@getMetricByType');
+        Route::get('/analytics/metrics', '\App\Http\Controllers\AnalyticsController@getMetrics');
+        Route::get('/analytics/metric/{type}', '\App\Http\Controllers\AnalyticsController@getMetricByType');
         
         // Reports
-        Route::get('/reports', 'ReportController@index');
-        Route::post('/reports', 'ReportController@create');
-        Route::post('/reports/{id}/generate', 'ReportController@generate');
-        Route::post('/reports/{id}/schedule', 'ReportController@schedule');
+        Route::get('/reports', '\App\Http\Controllers\ReportController@index');
+        Route::post('/reports', '\App\Http\Controllers\ReportController@create');
+        Route::post('/reports/{id}/generate', '\App\Http\Controllers\ReportController@generate');
+        Route::post('/reports/{id}/schedule', '\App\Http\Controllers\ReportController@schedule');
         
         // Insights
-        Route::get('/insights', 'InsightController@list');
-        Route::get('/insights/type/{type}', 'InsightController@getByType');
-        Route::get('/insights/trending', 'InsightController@getTrending');
+        Route::get('/insights', '\App\Http\Controllers\InsightController@list');
+        Route::get('/insights/type/{type}', '\App\Http\Controllers\InsightController@getByType');
+        Route::get('/insights/trending', '\App\Http\Controllers\InsightController@getTrending');
         
         // Customer Segments
-        Route::get('/segments', 'SegmentController@list');
-        Route::post('/segments', 'SegmentController@create');
-        Route::get('/segments/{id}/members', 'SegmentController@getMembers');
+        Route::get('/segments', '\App\Http\Controllers\SegmentController@list');
+        Route::post('/segments', '\App\Http\Controllers\SegmentController@create');
+        Route::get('/segments/{id}/members', '\App\Http\Controllers\SegmentController@getMembers');
         
         // Dashboard
-        Route::get('/dashboard/default', 'DashboardController@getDefault');
-        Route::put('/dashboard/{id}', 'DashboardController@update');
-        Route::get('/dashboard/kpi', 'DashboardController@getKPI');
+        Route::get('/dashboard/default', '\App\Http\Controllers\DashboardController@getDefault');
+        Route::put('/dashboard/{id}', '\App\Http\Controllers\DashboardController@update');
+        Route::get('/dashboard/kpi', '\App\Http\Controllers\DashboardController@getKPI');
     });
 
     // Phase 8: Offline & PWA + Sync Engine + Cache Management
     Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
         // Sync & Offline
-        Route::post('/sync', 'SyncController@syncData');
-        Route::get('/sync/pending', 'SyncController@getPendingSync');
-        Route::get('/sync/status/{batchId}', 'SyncController@getSyncStatus');
-        Route::post('/sync/retry-failed', 'SyncController@resyncFailed');
+        Route::post('/sync', '\App\Http\Controllers\SyncController@syncData');
+        Route::get('/sync/pending', '\App\Http\Controllers\SyncController@getPendingSync');
+        Route::get('/sync/status/{batchId}', '\App\Http\Controllers\SyncController@getSyncStatus');
+        Route::post('/sync/retry-failed', '\App\Http\Controllers\SyncController@resyncFailed');
         
         // Cache Management
-        Route::get('/cache/policies', 'CacheController@getCachePolicies');
-        Route::post('/cache/policies', 'CacheController@createPolicy');
-        Route::post('/cache/clear', 'CacheController@clearCache');
-        Route::get('/cache/stats', 'CacheController@getCacheStats');
+        Route::get('/cache/policies', '\App\Http\Controllers\CacheController@getCachePolicies');
+        Route::post('/cache/policies', '\App\Http\Controllers\CacheController@createPolicy');
+        Route::post('/cache/clear', '\App\Http\Controllers\CacheController@clearCache');
+        Route::get('/cache/stats', '\App\Http\Controllers\CacheController@getCacheStats');
         
         // PWA Configuration
-        Route::get('/pwa/manifest.json', 'PWAController@getManifest');
-        Route::put('/pwa/settings', 'PWAController@updateSettings');
-        Route::get('/sw.js', 'PWAController@getServiceWorker');
+        Route::get('/pwa/manifest.json', '\App\Http\Controllers\PWAController@getManifest');
+        Route::put('/pwa/settings', '\App\Http\Controllers\PWAController@updateSettings');
+        Route::get('/sw.js', '\App\Http\Controllers\PWAController@getServiceWorker');
         
         // Offline Data
-        Route::get('/offline/data', 'OfflineController@downloadOfflineData');
-        Route::get('/offline/status', 'OfflineController@getOfflineStatus');
-        Route::post('/offline/sync', 'OfflineController@syncOfflineChanges');
-        Route::post('/offline/clear', 'OfflineController@clearOfflineData');
+        Route::get('/offline/data', '\App\Http\Controllers\OfflineController@downloadOfflineData');
+        Route::get('/offline/status', '\App\Http\Controllers\OfflineController@getOfflineStatus');
+        Route::post('/offline/sync', '\App\Http\Controllers\OfflineController@syncOfflineChanges');
+        Route::post('/offline/clear', '\App\Http\Controllers\OfflineController@clearOfflineData');
     });
 
     // Phase 9: Production Hardening & Deployment
     Route::middleware(['jwt.auth', 'security.headers', 'rate.limit'])->group(function () {
-        Route::get('/health', 'HealthController@status');
-        Route::get('/health/detailed', 'HealthController@detailed');
+        Route::get('/health', '\App\Http\Controllers\HealthController@status');
+        Route::get('/health/detailed', '\App\Http\Controllers\HealthController@detailed');
     });
     
     // Phase 0: Vendors (distinct from Suppliers — contracted package/service providers)
     Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
-        Route::apiResource('vendors', 'VendorController')->only(['index', 'store', 'show', 'update']);
+        Route::apiResource('vendors', '\App\Http\Controllers\VendorController')->only(['index', 'store', 'show', 'update']);
     });
 
     // Phase 0: Support Tickets
     Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
-        Route::apiResource('support-tickets', 'SupportTicketController')->only(['index', 'store', 'show']);
-        Route::put('/support-tickets/{id}/status', 'SupportTicketController@updateStatus');
-        Route::post('/support-tickets/{id}/escalate', 'SupportTicketController@escalate');
-        Route::post('/support-tickets/{id}/reply', 'SupportTicketController@reply');
+        Route::apiResource('support-tickets', '\App\Http\Controllers\SupportTicketController')->only(['index', 'store', 'show']);
+        Route::put('/support-tickets/{id}/status', '\App\Http\Controllers\SupportTicketController@updateStatus');
+        Route::post('/support-tickets/{id}/escalate', '\App\Http\Controllers\SupportTicketController@escalate');
+        Route::post('/support-tickets/{id}/reply', '\App\Http\Controllers\SupportTicketController@reply');
     });
 
     // Admin endpoints (require super-admin role).
@@ -253,8 +252,9 @@ Route::prefix('v1')->group(function () {
     // admin URL segment can change without touching route definitions,
     // auth, or RBAC.
     Route::prefix(config('admin.path'))->middleware(['jwt.auth', 'security.headers'])->group(function () {
-        Route::post('/optimize-db', 'AdminController@optimizeDatabase');
-        Route::post('/analyze-db', 'AdminController@analyzeDatabase');
-        Route::post('/backup', 'AdminController@createBackup');
-        Route::get('/backups', 'AdminController@listBackups');
+        Route::post('/optimize-db', '\App\Http\Controllers\AdminController@optimizeDatabase');
+        Route::post('/analyze-db', '\App\Http\Controllers\AdminController@analyzeDatabase');
+        Route::post('/backup', '\App\Http\Controllers\AdminController@createBackup');
+        Route::get('/backups', '\App\Http\Controllers\AdminController@listBackups');
     });
+});

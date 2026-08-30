@@ -4,7 +4,7 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Tymon\JWTAuth\Facades\JWTAuth;
+use Tymon\JWTAuth\Facades\JWTAuth as JWTAuthFacade;
 use Tymon\JWTAuth\Exceptions\JWTException;
 
 class JwtAuth
@@ -12,11 +12,11 @@ class JwtAuth
     public function handle(Request $request, Closure $next)
     {
         try {
-            if (!$token = JWTAuth::getToken()) {
+            if (!$token = JWTAuthFacade::getToken()) {
                 return response()->json(['error' => 'Token not provided'], 401);
             }
 
-            if (!$user = JWTAuth::authenticate($token)) {
+            if (!$user = JWTAuthFacade::authenticate($token)) {
                 return response()->json(['error' => 'User not found'], 401);
             }
 
