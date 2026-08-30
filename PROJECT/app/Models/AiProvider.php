@@ -12,8 +12,10 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class AiProvider extends Model
 {
     protected $fillable = [
-        'tenant_id', 'provider', 'model', 'credentials', 'is_active',
-        'is_default', 'monthly_cost_limit_usd', 'priority',
+        'tenant_id', 'provider', 'model', 'base_url', 'credentials', 'is_active',
+        'is_default', 'monthly_cost_limit_usd', 'input_cost_per_million',
+        'output_cost_per_million', 'max_output_tokens', 'priority',
+        'last_test_at', 'last_test_error',
     ];
 
     protected $casts = [
@@ -21,6 +23,9 @@ class AiProvider extends Model
         'is_active' => 'boolean',
         'is_default' => 'boolean',
         'monthly_cost_limit_usd' => 'decimal:2',
+        'input_cost_per_million' => 'decimal:4',
+        'output_cost_per_million' => 'decimal:4',
+        'last_test_at' => 'datetime',
     ];
 
     protected $hidden = ['credentials'];

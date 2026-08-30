@@ -216,6 +216,15 @@ Route::prefix('v1')->group(function () {
         Route::put('/complaints/{id}/status', '\App\Http\Controllers\ComplaintController@updateStatus');
     });
 
+    // Phase 9: AI Provider Management (provider-independent).
+    // Credentials are write-only here and never returned in any response.
+    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+        Route::apiResource('ai-providers', '\App\Http\Controllers\AiProviderController')->only(['index', 'store', 'show', 'update', 'destroy']);
+        Route::put('/ai-providers/{id}/credentials', '\App\Http\Controllers\AiProviderController@updateCredentials');
+        Route::post('/ai-providers/{id}/test', '\App\Http\Controllers\AiProviderController@test');
+        Route::get('/ai-usage', '\App\Http\Controllers\AiProviderController@usage');
+    });
+
     // Phase 8: Integration Manager — operator-configurable external API
     // connectors (GDS/flight, hotel bedbank, visa provider, payment, ...)
     // plus hybrid search across internal inventory + those providers.
