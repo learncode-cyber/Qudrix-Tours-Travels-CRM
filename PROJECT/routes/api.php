@@ -216,6 +216,23 @@ Route::prefix('v1')->group(function () {
         Route::put('/complaints/{id}/status', '\App\Http\Controllers\ComplaintController@updateStatus');
     });
 
+    // Phase 8: Integration Manager — operator-configurable external API
+    // connectors (GDS/flight, hotel bedbank, visa provider, payment, ...)
+    // plus hybrid search across internal inventory + those providers.
+    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+        Route::apiResource('api-connectors', '\App\Http\Controllers\ApiConnectorController')->only(['index', 'store', 'show', 'update', 'destroy']);
+        Route::put('/api-connectors/{id}/credentials', '\App\Http\Controllers\ApiConnectorController@updateCredentials');
+        Route::post('/api-connectors/{id}/endpoints', '\App\Http\Controllers\ApiConnectorController@upsertEndpoint');
+        Route::delete('/api-connectors/{id}/endpoints/{endpointId}', '\App\Http\Controllers\ApiConnectorController@deleteEndpoint');
+        Route::post('/api-connectors/{id}/test-connection', '\App\Http\Controllers\ApiConnectorController@testConnection');
+        Route::post('/api-connectors/{id}/execute', '\App\Http\Controllers\ApiConnectorController@execute');
+        Route::get('/api-connectors/{id}/call-logs', '\App\Http\Controllers\ApiConnectorController@callLogs');
+
+        Route::post('/search/flights', '\App\Http\Controllers\HybridSearchController@flights');
+        Route::post('/search/hotels', '\App\Http\Controllers\HybridSearchController@hotels');
+        Route::post('/search/visa', '\App\Http\Controllers\HybridSearchController@visa');
+    });
+
     // Phase 6: Dynamic Pricing Engine + Custom Package Builder
     Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
         Route::apiResource('pricing-rules', '\App\Http\Controllers\PricingRuleController')->only(['index', 'store', 'update', 'destroy']);
