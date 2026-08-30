@@ -16,6 +16,15 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/profile', [AuthController::class, 'profile']);
+        Route::put('/profile', [AuthController::class, 'updateProfile']);
+    });
+
+    // Phase 7: Notifications
+    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+        Route::get('/notifications', '\App\Http\Controllers\NotificationController@index');
+        Route::put('/notifications/{id}/read', '\App\Http\Controllers\NotificationController@markRead');
+        Route::put('/notifications/read-all', '\App\Http\Controllers\NotificationController@markAllRead');
+        Route::get('/notifications/unread-count', '\App\Http\Controllers\NotificationController@unreadCount');
     });
 
     // Phase 1: Customer Management (protected routes)

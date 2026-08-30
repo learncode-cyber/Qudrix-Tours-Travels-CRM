@@ -7,10 +7,15 @@ use App\Models\BookingTraveler;
 use App\Models\BookingItinerary;
 use App\Models\BookingConfirmation;
 use App\Models\GroupBooking;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class BookingController extends Controller
 {
+    public function __construct(private NotificationService $notifications)
+    {
+    }
+
     public function index(Request $request)
     {
         $query = Booking::where('tenant_id', $request->user->tenant_id)
@@ -70,6 +75,16 @@ class BookingController extends Controller
             'payment_status' => 'pending',
             ...$validated
         ]);
+
+        $this->notifications->send(
+            $booking->tenant_id,
+            $booking->created_by,
+            'booking_created',
+            'Booking created',
+            "Booking {$booking->booking_number} has been created and is pending confirmation.",
+            ['booking_id' => $booking->id],
+            ['in_app', 'telegram']
+        );
 
         return response()->json([
             'message' => 'Booking created successfully',

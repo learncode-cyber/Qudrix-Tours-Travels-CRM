@@ -96,4 +96,17 @@ class AuthController extends Controller
             'permissions' => $user->roles->pluck('permissions')->flatten()->unique()
         ]);
     }
+
+    public function updateProfile(Request $request)
+    {
+        $user = JWTAuth::parseToken()->authenticate();
+        $validated = $request->validate([
+            'name' => 'sometimes|string',
+            'phone' => 'nullable|string',
+            'avatar_url' => 'nullable|url',
+            'telegram_chat_id' => 'nullable|string',
+        ]);
+        $user->update($validated);
+        return response()->json(['user' => $user]);
+    }
 }

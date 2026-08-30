@@ -16,7 +16,8 @@ class User extends Model implements AuthenticatableContract, JWTSubject
 
     protected $fillable = [
         'tenant_id', 'name', 'email', 'phone', 'password',
-        'avatar_url', 'is_active', 'mfa_enabled', 'mfa_secret', 'status'
+        'avatar_url', 'is_active', 'mfa_enabled', 'mfa_secret', 'status',
+        'telegram_chat_id'
     ];
 
     protected $hidden = [

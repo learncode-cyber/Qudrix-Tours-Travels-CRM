@@ -4,10 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\Lead;
 use App\Models\LeadScore;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class LeadController extends Controller
 {
+    public function __construct(private NotificationService $notifications)
+    {
+    }
+
     public function index(Request $request)
     {
         $query = Lead::where('tenant_id', $request->user->tenant_id)
@@ -67,6 +72,18 @@ class LeadController extends Controller
             ...$validated
         ]);
 
+        if ($lead->assigned_to) {
+            $this->notifications->send(
+                $lead->tenant_id,
+                $lead->assigned_to,
+                'lead_assigned',
+                'New lead assigned to you',
+                "Lead \"{$lead->name}\" ({$lead->source}) has been assigned to you.",
+                ['lead_id' => $lead->id],
+                ['in_app', 'telegram']
+            );
+        }
+
         return response()->json([
             'message' => 'Lead created successfully',
             'data' => $lead
@@ -114,6 +131,16 @@ class LeadController extends Controller
         ]);
 
         $lead->update($validated);
+
+        $this->notifications->send(
+            $lead->tenant_id,
+            $lead->assigned_to,
+            'lead_assigned',
+            'Lead assigned to you',
+            "Lead \"{$lead->name}\" has been assigned to you.",
+            ['lead_id' => $lead->id],
+            ['in_app', 'telegram']
+        );
 
         return response()->json([
             'message' => 'Lead assigned successfully',
