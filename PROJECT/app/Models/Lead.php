@@ -12,7 +12,7 @@ class Lead extends Model
     use SoftDeletes, Taggable;
 
     protected $fillable = [
-        'tenant_id', 'branch_id', 'assigned_to', 'name',
+        'tenant_id', 'branch_id', 'assigned_to', 'name', 'agent_id',
         'email', 'phone', 'company', 'designation',
         'source', 'status', 'priority', 'notes',
         'last_contacted_at', 'follow_up_date', 'estimated_value',

@@ -13,7 +13,7 @@ class Booking extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'tenant_id', 'lead_id', 'customer_id', 'package_id',
+        'tenant_id', 'lead_id', 'customer_id', 'package_id', 'agent_id',
         'created_by', 'booking_number', 'booking_type',
         'status', 'travel_date', 'return_date',
         'number_of_travelers', 'total_amount', 'currency',

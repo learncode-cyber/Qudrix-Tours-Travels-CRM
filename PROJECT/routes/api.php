@@ -216,6 +216,41 @@ Route::prefix('v1')->group(function () {
         Route::put('/complaints/{id}/status', '\App\Http\Controllers\ComplaintController@updateStatus');
     });
 
+    // Phase 16: HRM + B2B Agent Management.
+    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+        // HRM
+        Route::get('/hrm/employees', '\App\Http\Controllers\HrmController@employees');
+        Route::post('/hrm/employees', '\App\Http\Controllers\HrmController@storeEmployee');
+        Route::post('/hrm/attendance/check-in', '\App\Http\Controllers\HrmController@checkIn');
+        Route::post('/hrm/attendance/check-out', '\App\Http\Controllers\HrmController@checkOut');
+        Route::get('/hrm/attendance', '\App\Http\Controllers\HrmController@attendance');
+        Route::get('/hrm/leave-types', '\App\Http\Controllers\HrmController@leaveTypes');
+        Route::post('/hrm/leave-types', '\App\Http\Controllers\HrmController@storeLeaveType');
+        Route::get('/hrm/leave-requests', '\App\Http\Controllers\HrmController@leaveRequests');
+        Route::post('/hrm/leave-requests', '\App\Http\Controllers\HrmController@requestLeave');
+        Route::put('/hrm/leave-requests/{id}/decide', '\App\Http\Controllers\HrmController@decideLeave');
+        Route::get('/hrm/holidays', '\App\Http\Controllers\HrmController@holidays');
+        Route::post('/hrm/holidays', '\App\Http\Controllers\HrmController@storeHoliday');
+        Route::get('/hrm/payroll', '\App\Http\Controllers\HrmController@payrollRuns');
+        Route::post('/hrm/payroll/generate', '\App\Http\Controllers\HrmController@generatePayroll');
+        Route::get('/hrm/payroll/{runId}', '\App\Http\Controllers\HrmController@payrollRun');
+        Route::put('/hrm/payroll/{runId}/items/{itemId}', '\App\Http\Controllers\HrmController@updatePayrollItem');
+        Route::post('/hrm/payroll/{runId}/approve', '\App\Http\Controllers\HrmController@approvePayroll');
+
+        // B2B Agents
+        Route::get('/agents', '\App\Http\Controllers\AgentController@index');
+        Route::post('/agents', '\App\Http\Controllers\AgentController@store');
+        Route::get('/agents/{id}', '\App\Http\Controllers\AgentController@show');
+        Route::post('/agents/{id}/kyc/submit', '\App\Http\Controllers\AgentController@submitKyc');
+        Route::put('/agents/{id}/kyc/verify', '\App\Http\Controllers\AgentController@verifyKyc');
+        Route::put('/agents/{id}/decide', '\App\Http\Controllers\AgentController@decide');
+        Route::post('/agents/{id}/commissions', '\App\Http\Controllers\AgentController@recordCommission');
+        Route::put('/agent-commissions/{commissionId}/approve', '\App\Http\Controllers\AgentController@approveCommission');
+        Route::post('/agents/{id}/payouts', '\App\Http\Controllers\AgentController@createPayout');
+        Route::put('/agent-payouts/{payoutId}/paid', '\App\Http\Controllers\AgentController@markPayoutPaid');
+        Route::get('/agents/{id}/performance', '\App\Http\Controllers\AgentController@performance');
+    });
+
     // Phase 14: AI Complaint Handling. Triage output is stored as a
     // suggestion; only a critical severity auto-escalates for human
     // attention, and nothing is ever answered or resolved automatically.
