@@ -235,10 +235,26 @@ Route::prefix('v1')->group(function () {
         Route::get('/health/detailed', 'HealthController@detailed');
     });
     
-    // Admin endpoints (require super-admin role)
-    Route::middleware(['jwt.auth', 'security.headers'])->group(function () {
-        Route::post('/admin/optimize-db', 'AdminController@optimizeDatabase');
-        Route::post('/admin/analyze-db', 'AdminController@analyzeDatabase');
-        Route::post('/admin/backup', 'AdminController@createBackup');
-        Route::get('/admin/backups', 'AdminController@listBackups');
+    // Phase 0: Vendors (distinct from Suppliers — contracted package/service providers)
+    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+        Route::apiResource('vendors', 'VendorController')->only(['index', 'store', 'show', 'update']);
+    });
+
+    // Phase 0: Support Tickets
+    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+        Route::apiResource('support-tickets', 'SupportTicketController')->only(['index', 'store', 'show']);
+        Route::put('/support-tickets/{id}/status', 'SupportTicketController@updateStatus');
+        Route::post('/support-tickets/{id}/escalate', 'SupportTicketController@escalate');
+        Route::post('/support-tickets/{id}/reply', 'SupportTicketController@reply');
+    });
+
+    // Admin endpoints (require super-admin role).
+    // Prefix is driven by config('admin.path') (env: ADMIN_URL_PATH) so the
+    // admin URL segment can change without touching route definitions,
+    // auth, or RBAC.
+    Route::prefix(config('admin.path'))->middleware(['jwt.auth', 'security.headers'])->group(function () {
+        Route::post('/optimize-db', 'AdminController@optimizeDatabase');
+        Route::post('/analyze-db', 'AdminController@analyzeDatabase');
+        Route::post('/backup', 'AdminController@createBackup');
+        Route::get('/backups', 'AdminController@listBackups');
     });
