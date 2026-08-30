@@ -17,12 +17,15 @@ class Quotation extends Model
         'quotation_number', 'subject', 'description',
         'status', 'subtotal', 'tax_amount', 'discount_amount',
         'total_amount', 'currency', 'valid_until', 'notes',
-        'terms', 'payment_terms'
+        'payment_terms', 'share_token', 'requires_approval',
+        'approved_by', 'approved_at', 'quotation_template_id', 'version',
     ];
 
     protected $casts = [
         'valid_until' => 'datetime',
-        'terms' => AsJson::class,
+        'payment_terms' => AsJson::class,
+        'requires_approval' => 'boolean',
+        'approved_at' => 'datetime',
     ];
 
     protected $dates = ['valid_until'];
@@ -55,6 +58,21 @@ class Quotation extends Model
     public function proposals(): HasMany
     {
         return $this->hasMany(Proposal::class);
+    }
+
+    public function template(): BelongsTo
+    {
+        return $this->belongsTo(QuotationTemplate::class, 'quotation_template_id');
+    }
+
+    public function approver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    public function supersedes(): BelongsTo
+    {
+        return $this->belongsTo(Quotation::class, 'supersedes_quotation_id');
     }
 
     public function calculateTotals(): void

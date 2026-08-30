@@ -72,6 +72,29 @@ Route::prefix('v1')->group(function () {
         Route::post('/pipeline/activity', '\App\Http\Controllers\PipelineController@recordActivity');
         Route::put('/pipeline/stage', '\App\Http\Controllers\PipelineController@updateLeadStage');
         Route::get('/pipeline/metrics', '\App\Http\Controllers\PipelineController@getPipelineMetrics');
+
+        // Quotation approval workflow + versioning
+        Route::post('/quotations/{id}/submit-for-approval', '\App\Http\Controllers\QuotationController@submitForApproval');
+        Route::post('/quotations/{id}/approve', '\App\Http\Controllers\QuotationController@approve');
+        Route::post('/quotations/{id}/new-version', '\App\Http\Controllers\QuotationController@newVersion');
+        Route::get('/quotations/{id}/pdf', '\App\Http\Controllers\QuotationPdfController@download');
+
+        // Quote Templates
+        Route::apiResource('quotation-templates', '\App\Http\Controllers\QuotationTemplateController')->only(['index', 'store', 'show', 'update', 'destroy']);
+
+        // Invoices
+        Route::apiResource('invoices', '\App\Http\Controllers\InvoiceController')->only(['index', 'store', 'show']);
+        Route::post('/invoices/{id}/payments', '\App\Http\Controllers\InvoiceController@recordPayment');
+        Route::post('/invoices/{id}/send', '\App\Http\Controllers\InvoiceController@send');
+        Route::get('/invoices/stats', '\App\Http\Controllers\InvoiceController@stats');
+    });
+
+    // Public, token-authenticated quotation sharing — no JWT session.
+    // Rate-limited since it's an unauthenticated surface.
+    Route::prefix('public')->middleware(['rate.limit'])->group(function () {
+        Route::get('/quotations/{token}', '\App\Http\Controllers\QuotationShareController@show');
+        Route::post('/quotations/{token}/accept', '\App\Http\Controllers\QuotationShareController@accept');
+        Route::post('/quotations/{token}/reject', '\App\Http\Controllers\QuotationShareController@reject');
     });
 
     // Phase 3: Booking Engine (protected routes)

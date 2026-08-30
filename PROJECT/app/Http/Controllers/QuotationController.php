@@ -57,18 +57,22 @@ class QuotationController extends Controller
             'valid_until' => 'required|date',
             'currency' => 'required|string|size:3',
             'items' => 'required|array|min:1',
+            'items.*.package_id' => 'nullable|exists:packages,id',
             'items.*.description' => 'required|string',
             'items.*.quantity' => 'required|integer|min:1',
             'items.*.unit_price' => 'required|numeric|min:0',
+            'items.*.cost_price' => 'nullable|numeric|min:0',
+            'items.*.markup_percentage' => 'nullable|numeric|min:0',
             'items.*.tax_rate' => 'nullable|numeric|between:0,100',
             'items.*.discount' => 'nullable|numeric|min:0',
-            'payment_terms' => 'nullable|string',
+            'payment_terms' => 'nullable|array',
         ]);
 
         $quotation = Quotation::create([
             'tenant_id' => $request->user->tenant_id,
             'created_by' => $request->user->id,
             'quotation_number' => 'QT-' . time(),
+            'share_token' => bin2hex(random_bytes(20)),
             'status' => 'draft',
             'tax_amount' => 0,
             'discount_amount' => 0,
@@ -79,14 +83,21 @@ class QuotationController extends Controller
 
         $subtotal = 0;
         foreach ($validated['items'] as $item) {
-            $itemTotal = ($item['quantity'] * $item['unit_price']) - ($item['discount'] ?? 0);
+            $unitPrice = $item['unit_price'];
+            if (isset($item['cost_price'], $item['markup_percentage'])) {
+                $unitPrice = QuotationItem::priceFromMarkup($item['cost_price'], $item['markup_percentage']);
+            }
+            $itemTotal = ($item['quantity'] * $unitPrice) - ($item['discount'] ?? 0);
             $tax = $itemTotal * (($item['tax_rate'] ?? 0) / 100);
-            
+
             QuotationItem::create([
                 'quotation_id' => $quotation->id,
+                'package_id' => $item['package_id'] ?? null,
                 'description' => $item['description'],
                 'quantity' => $item['quantity'],
-                'unit_price' => $item['unit_price'],
+                'unit_price' => $unitPrice,
+                'cost_price' => $item['cost_price'] ?? null,
+                'markup_percentage' => $item['markup_percentage'] ?? null,
                 'tax_rate' => $item['tax_rate'] ?? 0,
                 'discount' => $item['discount'] ?? 0,
                 'total' => $itemTotal + $tax,
@@ -139,7 +150,11 @@ class QuotationController extends Controller
     {
         $quotation = Quotation::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
 
-        if ($quotation->status !== 'draft') {
+        if ($quotation->requires_approval && !$quotation->approved_at) {
+            return response()->json(['error' => 'Quotation requires approval before it can be sent'], 400);
+        }
+
+        if (!in_array($quotation->status, ['draft', 'pending_approval', 'approved'])) {
             return response()->json(['error' => 'Quotation already sent'], 400);
         }
 
@@ -149,6 +164,80 @@ class QuotationController extends Controller
             'message' => 'Quotation sent successfully',
             'data' => $quotation
         ]);
+    }
+
+    public function submitForApproval(Request $request, $id)
+    {
+        $quotation = Quotation::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
+        if ($quotation->status !== 'draft') {
+            return response()->json(['error' => 'Only draft quotations can be submitted for approval'], 400);
+        }
+        $quotation->update(['status' => 'pending_approval', 'requires_approval' => true]);
+        return response()->json(['data' => $quotation]);
+    }
+
+    public function approve(Request $request, $id)
+    {
+        $quotation = Quotation::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
+        if ($quotation->status !== 'pending_approval') {
+            return response()->json(['error' => 'Quotation is not pending approval'], 400);
+        }
+        $quotation->update([
+            'status' => 'approved',
+            'approved_by' => $request->user->id,
+            'approved_at' => now(),
+        ]);
+        return response()->json(['data' => $quotation]);
+    }
+
+    // Creates a new draft version linked back to the original, for
+    // revising a quotation that has already been sent (preserves the sent
+    // version's history instead of mutating it in place).
+    public function newVersion(Request $request, $id)
+    {
+        $original = Quotation::where('tenant_id', $request->user->tenant_id)->with('items')->findOrFail($id);
+
+        $copy = Quotation::create([
+            'tenant_id' => $original->tenant_id,
+            'lead_id' => $original->lead_id,
+            'customer_id' => $original->customer_id,
+            'created_by' => $request->user->id,
+            'quotation_number' => 'QT-' . time(),
+            'share_token' => bin2hex(random_bytes(20)),
+            'subject' => $original->subject,
+            'description' => $original->description,
+            'status' => 'draft',
+            'currency' => $original->currency,
+            'valid_until' => $original->valid_until,
+            'notes' => $original->notes,
+            'payment_terms' => $original->payment_terms,
+            'version' => $original->version + 1,
+            'supersedes_quotation_id' => $original->id,
+            'tax_amount' => $original->tax_amount,
+            'discount_amount' => $original->discount_amount,
+            'subtotal' => 0,
+            'total_amount' => 0,
+        ]);
+
+        $subtotal = 0;
+        foreach ($original->items as $item) {
+            QuotationItem::create([
+                'quotation_id' => $copy->id,
+                'package_id' => $item->package_id,
+                'description' => $item->description,
+                'quantity' => $item->quantity,
+                'unit_price' => $item->unit_price,
+                'cost_price' => $item->cost_price,
+                'markup_percentage' => $item->markup_percentage,
+                'tax_rate' => $item->tax_rate,
+                'discount' => $item->discount,
+                'total' => $item->total,
+            ]);
+            $subtotal += $item->total;
+        }
+        $copy->update(['subtotal' => $subtotal, 'total_amount' => $subtotal + $copy->tax_amount - $copy->discount_amount]);
+
+        return response()->json(['data' => $copy->load('items')], 201);
     }
 
     public function getQuotationStats(Request $request)
