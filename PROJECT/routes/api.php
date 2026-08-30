@@ -216,6 +216,18 @@ Route::prefix('v1')->group(function () {
         Route::put('/complaints/{id}/status', '\App\Http\Controllers\ComplaintController@updateStatus');
     });
 
+    // Phase 10: AI Sales Agent + AI Package Builder.
+    // Every response here is a SUGGESTION or DRAFT for a human to act on —
+    // nothing is sent, booked, or priced by the model itself.
+    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+        Route::post('/ai/leads/{leadId}/qualify', '\App\Http\Controllers\AiSalesAgentController@qualifyLead');
+        Route::post('/ai/leads/{leadId}/summarize', '\App\Http\Controllers\AiSalesAgentController@summarize');
+        Route::post('/ai/leads/{leadId}/suggest-reply', '\App\Http\Controllers\AiSalesAgentController@suggestReply');
+
+        Route::post('/ai/package-builder/interpret', '\App\Http\Controllers\AiPackageBuilderController@interpret');
+        Route::post('/ai/package-builder/propose', '\App\Http\Controllers\AiPackageBuilderController@propose');
+    });
+
     // Phase 9: AI Provider Management (provider-independent).
     // Credentials are write-only here and never returned in any response.
     Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {

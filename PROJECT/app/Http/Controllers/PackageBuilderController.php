@@ -1,12 +1,10 @@
 <?php
 namespace App\Http\Controllers;
 
-use App\Models\Flight;
-use App\Models\HotelRoomType;
 use App\Models\Package;
 use App\Models\Quotation;
 use App\Models\QuotationItem;
-use App\Models\Transport;
+use App\Services\InventoryResolver;
 use App\Services\PricingEngine;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -19,6 +17,10 @@ use Illuminate\Validation\ValidationException;
 // auditable markup.
 class PackageBuilderController extends Controller
 {
+    public function __construct(private InventoryResolver $inventory)
+    {
+    }
+
     public function build(Request $request, PricingEngine $pricingEngine)
     {
         $validated = $request->validate([
@@ -36,14 +38,10 @@ class PackageBuilderController extends Controller
         ]);
 
         $tenantId = $request->user->tenant_id;
-        $lines = [];
-        $baseCost = 0;
 
-        foreach ($validated['components'] as $component) {
-            $line = $this->resolveComponent($tenantId, $component);
-            $lines[] = $line;
-            $baseCost += $line['line_total'];
-        }
+        $resolved = $this->inventory->resolveAll($tenantId, $validated['components']);
+        $lines = $resolved['lines'];
+        $baseCost = $resolved['base_cost'];
 
         $daysBeforeTravel = now()->diffInDays(\Illuminate\Support\Carbon::parse($validated['travel_date']), false);
 
@@ -128,62 +126,5 @@ class PackageBuilderController extends Controller
         }
 
         return response()->json(['data' => $response], 201);
-    }
-
-    private function resolveComponent(int $tenantId, array $component): array
-    {
-        return match ($component['type']) {
-            'hotel' => $this->resolveHotelComponent($tenantId, $component),
-            'flight' => $this->resolveFlightComponent($tenantId, $component),
-            'transport' => $this->resolveTransportComponent($tenantId, $component),
-        };
-    }
-
-    private function resolveHotelComponent(int $tenantId, array $component): array
-    {
-        $roomType = HotelRoomType::where('tenant_id', $tenantId)->findOrFail($component['reference_id']);
-        if (!$roomType->isAvailable($component['quantity'])) {
-            throw ValidationException::withMessages(['components' => "Not enough availability for hotel room type #{$roomType->id}"]);
-        }
-        return [
-            'type' => 'hotel',
-            'reference_id' => $roomType->id,
-            'description' => $roomType->hotel->name . ' — ' . $roomType->name,
-            'quantity' => $component['quantity'],
-            'unit_price' => (float) $roomType->price_per_night,
-            'line_total' => round((float) $roomType->price_per_night * $component['quantity'], 2),
-        ];
-    }
-
-    private function resolveFlightComponent(int $tenantId, array $component): array
-    {
-        $flight = Flight::where('tenant_id', $tenantId)->findOrFail($component['reference_id']);
-        if ($flight->available_seats < $component['quantity']) {
-            throw ValidationException::withMessages(['components' => "Not enough seats on flight #{$flight->id}"]);
-        }
-        return [
-            'type' => 'flight',
-            'reference_id' => $flight->id,
-            'description' => $flight->airline_code . ' ' . $flight->flight_number . ' (' . $flight->departure_airport . '-' . $flight->arrival_airport . ')',
-            'quantity' => $component['quantity'],
-            'unit_price' => (float) $flight->price_per_seat,
-            'line_total' => round((float) $flight->price_per_seat * $component['quantity'], 2),
-        ];
-    }
-
-    private function resolveTransportComponent(int $tenantId, array $component): array
-    {
-        $transport = Transport::where('tenant_id', $tenantId)->findOrFail($component['reference_id']);
-        if ($transport->capacity < $component['quantity']) {
-            throw ValidationException::withMessages(['components' => "Not enough capacity on transport #{$transport->id}"]);
-        }
-        return [
-            'type' => 'transport',
-            'reference_id' => $transport->id,
-            'description' => $transport->vehicle_name . ' (' . $transport->pickup_location . ' -> ' . $transport->dropoff_location . ')',
-            'quantity' => $component['quantity'],
-            'unit_price' => (float) $transport->price_per_seat,
-            'line_total' => round((float) $transport->price_per_seat * $component['quantity'], 2),
-        ];
     }
 }
