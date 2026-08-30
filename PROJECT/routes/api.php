@@ -10,7 +10,7 @@ Route::prefix('v1')->group(function () {
 
     // Auth routes (no JWT required)
     Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/login', [AuthController::class, 'login'])->middleware('rate.limit:5,1');
 
     // Protected routes (JWT required)
     Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
@@ -446,6 +446,12 @@ Route::prefix('v1')->group(function () {
     // admin URL segment can change without touching route definitions,
     // auth, or RBAC.
     Route::prefix(config('admin.path'))->middleware(['jwt.auth', 'security.headers'])->group(function () {
+        // Phase 15: security trail (access logs, audit logs, failed logins)
+        Route::get('/security/access-logs', '\App\Http\Controllers\SecurityLogController@accessLogs');
+        Route::get('/security/audit-logs', '\App\Http\Controllers\SecurityLogController@auditLogs');
+        Route::get('/security/failed-logins', '\App\Http\Controllers\SecurityLogController@failedLogins');
+        Route::get('/security/summary', '\App\Http\Controllers\SecurityLogController@summary');
+
         Route::post('/optimize-db', '\App\Http\Controllers\AdminController@optimizeDatabase');
         Route::post('/analyze-db', '\App\Http\Controllers\AdminController@analyzeDatabase');
         Route::post('/backup', '\App\Http\Controllers\AdminController@createBackup');

@@ -28,6 +28,13 @@ return Application::configure(basePath: dirname(__DIR__))
         // for the ones still pending an architecture decision
         // (auth:sanctum / api guard used by the webhook route files, which
         // are not wired to an actual auth driver yet).
+        // Security headers and access logging apply to every API request,
+        // not only the routes that remember to opt in (Directive S19).
+        $middleware->appendToGroup('api', [
+            \App\Http\Middleware\SecurityHeaders::class,
+            \App\Http\Middleware\AccessLogMiddleware::class,
+        ]);
+
         $middleware->alias([
             'jwt.auth' => \App\Http\Middleware\JwtAuth::class,
             'tenant' => \App\Http\Middleware\TenantMiddleware::class,
@@ -39,6 +46,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api.key' => \App\Http\Middleware\ApiKeyMiddleware::class,
             'api.key.auth' => \App\Http\Middleware\ApiKeyMiddleware::class,
             'encryption' => \App\Http\Middleware\EncryptionMiddleware::class,
+            'access.log' => \App\Http\Middleware\AccessLogMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

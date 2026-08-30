@@ -57,19 +57,50 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        $user = User::where('email', $credentials['email'])->first();
+        $email = $credentials['email'];
+        $ip = $request->ip();
+
+        $maxAttempts = (int) config('security.login.max_failed_attempts', 5);
+        $lockoutMinutes = (int) config('security.login.lockout_minutes', 15);
+
+        // Blunt credential stuffing. The lockout key is email + source IP,
+        // so an attacker cannot lock a real user out globally just by
+        // hammering their address from somewhere else.
+        if (\App\Models\FailedLoginAttempt::recentCount($email, $ip, $lockoutMinutes) >= $maxAttempts) {
+            $this->recordFailedLogin($request, $email, 'locked_out');
+
+            return response()->json([
+                'message' => "Too many failed attempts. Try again in {$lockoutMinutes} minutes.",
+            ], 429);
+        }
+
+        $user = User::where('email', $email)->first();
 
         if (!$user || !Hash::check($credentials['password'], $user->password)) {
+            // The reason is recorded for defenders but NOT returned to the
+            // client — the response stays identical either way, so the
+            // endpoint cannot be used to enumerate valid addresses.
+            $this->recordFailedLogin($request, $email, $user ? 'bad_password' : 'unknown_email');
+
             throw ValidationException::withMessages([
                 'email' => ['Invalid credentials'],
             ]);
         }
 
         if (!$user->isActive()) {
+            $this->recordFailedLogin($request, $email, 'inactive_account');
+
             throw ValidationException::withMessages([
                 'email' => ['User account is inactive'],
             ]);
         }
+
+        // A successful login clears the failure streak for this pair.
+        \App\Models\FailedLoginAttempt::where('email', $email)
+            ->when($ip, fn ($q) => $q->where('ip_address', $ip))
+            ->delete();
+
+        $user->forceFill(['last_login_at' => now()])->save();
 
         $token = JWTAuth::fromUser($user);
 
@@ -77,6 +108,17 @@ class AuthController extends Controller
             'message' => 'Login successful',
             'user' => $user,
             'token' => $token
+        ]);
+    }
+
+    private function recordFailedLogin(Request $request, string $email, string $reason): void
+    {
+        \App\Models\FailedLoginAttempt::create([
+            'email' => $email,
+            'ip_address' => $request->ip(),
+            'user_agent' => mb_strcut((string) $request->userAgent(), 0, 1000),
+            'reason' => $reason,
+            'created_at' => now(),
         ]);
     }
 

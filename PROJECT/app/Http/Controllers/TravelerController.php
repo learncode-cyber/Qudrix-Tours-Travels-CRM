@@ -29,7 +29,7 @@ class TravelerController extends Controller
             'room_preference' => 'nullable|string',
         ]);
 
-        $booking = Booking::findOrFail($validated['booking_id']);
+        $booking = Booking::where('tenant_id', $request->user->tenant_id)->findOrFail($validated['booking_id']);
 
         $traveler = BookingTraveler::create($validated);
 
@@ -41,7 +41,8 @@ class TravelerController extends Controller
 
     public function getTravelers(Request $request, $bookingId)
     {
-        $travelers = BookingTraveler::where('booking_id', $bookingId)
+        $travelers = BookingTraveler::whereHas('booking', fn ($q) => $q->where('tenant_id', $request->user->tenant_id))
+            ->where('booking_id', $bookingId)
             ->orderBy('is_primary_contact', 'desc')
             ->get();
 
@@ -50,7 +51,7 @@ class TravelerController extends Controller
 
     public function updateTraveler(Request $request, $id)
     {
-        $traveler = BookingTraveler::findOrFail($id);
+        $traveler = BookingTraveler::whereHas('booking', fn ($q) => $q->where('tenant_id', $request->user->tenant_id))->findOrFail($id);
 
         $validated = $request->validate([
             'first_name' => 'sometimes|string|max:100',
@@ -72,7 +73,7 @@ class TravelerController extends Controller
 
     public function removeTraveler(Request $request, $id)
     {
-        $traveler = BookingTraveler::findOrFail($id);
+        $traveler = BookingTraveler::whereHas('booking', fn ($q) => $q->where('tenant_id', $request->user->tenant_id))->findOrFail($id);
         $traveler->delete();
 
         return response()->json(['message' => 'Traveler removed']);
@@ -80,7 +81,7 @@ class TravelerController extends Controller
 
     public function getTravelerDetails(Request $request, $id)
     {
-        $traveler = BookingTraveler::findOrFail($id);
+        $traveler = BookingTraveler::whereHas('booking', fn ($q) => $q->where('tenant_id', $request->user->tenant_id))->findOrFail($id);
 
         $details = [
             'full_name' => $traveler->getFullName(),

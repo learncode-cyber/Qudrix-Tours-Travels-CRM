@@ -36,7 +36,8 @@ class ItineraryController extends Controller
 
     public function getItinerary(Request $request, $bookingId)
     {
-        $itinerary = BookingItinerary::where('booking_id', $bookingId)
+        $itinerary = BookingItinerary::whereHas('booking', fn ($q) => $q->where('tenant_id', $request->user->tenant_id))
+            ->where('booking_id', $bookingId)
             ->orderBy('day_number')
             ->orderBy('start_time')
             ->get();
@@ -46,7 +47,7 @@ class ItineraryController extends Controller
 
     public function updateItinerary(Request $request, $id)
     {
-        $itinerary = BookingItinerary::findOrFail($id);
+        $itinerary = BookingItinerary::whereHas('booking', fn ($q) => $q->where('tenant_id', $request->user->tenant_id))->findOrFail($id);
 
         $validated = $request->validate([
             'activity_name' => 'sometimes|string|max:255',
@@ -66,7 +67,7 @@ class ItineraryController extends Controller
 
     public function deleteItinerary(Request $request, $id)
     {
-        $itinerary = BookingItinerary::findOrFail($id);
+        $itinerary = BookingItinerary::whereHas('booking', fn ($q) => $q->where('tenant_id', $request->user->tenant_id))->findOrFail($id);
         $itinerary->delete();
 
         return response()->json(['message' => 'Itinerary deleted']);
