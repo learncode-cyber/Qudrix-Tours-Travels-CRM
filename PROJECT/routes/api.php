@@ -216,6 +216,15 @@ Route::prefix('v1')->group(function () {
         Route::put('/complaints/{id}/status', '\App\Http\Controllers\ComplaintController@updateStatus');
     });
 
+    // Phase 14: AI Complaint Handling. Triage output is stored as a
+    // suggestion; only a critical severity auto-escalates for human
+    // attention, and nothing is ever answered or resolved automatically.
+    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+        Route::post('/support-tickets/{ticketId}/ai-triage', '\App\Http\Controllers\AiComplaintController@triage');
+        Route::get('/support-tickets/{ticketId}/ai-triage', '\App\Http\Controllers\AiComplaintController@show');
+        Route::post('/support-tickets/{ticketId}/ai-triage/{triageId}/apply', '\App\Http\Controllers\AiComplaintController@apply');
+    });
+
     // Phase 13: Upsell/Cross-sell Engine + Sales Script A/B Testing.
     Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
         Route::get('/upsell-rules', '\App\Http\Controllers\UpsellController@indexRules');
