@@ -4,230 +4,183 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Booking;
-use App\Models\Package;
+use App\Models\BookingTraveler;
 use App\Models\Customer;
+use App\Models\Package;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
-/**
- * Public Booking Controller
- * Used by website to create bookings
- */
+// Booking creation from a tenant's own website.
+//
+// REWRITTEN: the previous version wrote to columns that do not exist
+// (`booking_reference`, `total_price`, `booking_status`), passed the string
+// 'website_api' into `created_by` (a non-nullable integer FK to `users`),
+// created travellers with a `name` field the table does not have, and applied
+// no tenant filter anywhere. It could not have inserted a single row.
 class PublicBookingController extends Controller
 {
-    /**
-     * Create a new booking from website
-     * 
-     * POST /api/v1/bookings
-     * 
-     * Body:
-     * {
-     *   "package_id": 1,
-     *   "customer": {
-     *     "name": "John Doe",
-     *     "email": "john@example.com",
-     *     "phone": "1234567890",
-     *     "address": "123 Street"
-     *   },
-     *   "travelers": [
-     *     {
-     *       "name": "John Doe",
-     *       "age": 30,
-     *       "passport": "AB123456"
-     *     }
-     *   ],
-     *   "travel_date": "2024-12-01",
-     *   "special_requests": "Non-vegetarian",
-     *   "source": "website"
-     * }
-     * 
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function store(Request $request)
+    private function tenantId(Request $request): ?int
     {
-        try {
-            // Validate input
-            $validator = Validator::make($request->all(), [
-                'package_id' => 'required|integer|exists:packages,id',
-                'customer.name' => 'required|string|min:2|max:255',
-                'customer.email' => 'required|email',
-                'customer.phone' => 'required|string|min:7|max:20',
-                'customer.address' => 'nullable|string|max:500',
-                'travelers' => 'required|array|min:1',
-                'travelers.*.name' => 'required|string|min:2|max:255',
-                'travelers.*.age' => 'required|integer|min:1|max:120',
-                'travelers.*.passport' => 'nullable|string|max:50',
-                'travel_date' => 'required|date|after:today',
-                'special_requests' => 'nullable|string|max:1000',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'code' => 'VALIDATION_ERROR',
-                    'errors' => $validator->errors(),
-                ], Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
-
-            // Get package
-            $package = Package::where('id', $request->package_id)
-                ->where('is_active', true)
-                ->first();
-
-            if (!$package) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Package not found',
-                    'code' => 'PACKAGE_NOT_FOUND',
-                ], Response::HTTP_NOT_FOUND);
-            }
-
-            // Check capacity
-            if ($package->bookings_count >= $package->capacity) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Package is fully booked',
-                    'code' => 'NO_CAPACITY',
-                ], Response::HTTP_BAD_REQUEST);
-            }
-
-            // Find or create customer
-            $customer = Customer::where('email', $request->customer['email'])->first();
-            
-            if (!$customer) {
-                $customer = Customer::create([
-                    'name' => $request->customer['name'],
-                    'email' => $request->customer['email'],
-                    'phone' => $request->customer['phone'],
-                    'address' => $request->customer['address'] ?? null,
-                    'source' => 'website',
-                    'status' => 'lead',
-                ]);
-            }
-
-            // Create booking
-            $booking = Booking::create([
-                'booking_reference' => 'BK-' . Str::random(10),
-                'package_id' => $package->id,
-                'customer_id' => $customer->id,
-                'travel_date' => $request->travel_date,
-                'number_of_travelers' => count($request->travelers),
-                'total_price' => $package->price * count($request->travelers),
-                'payment_status' => 'pending',
-                'booking_status' => 'pending',
-                'special_requests' => $request->special_requests ?? null,
-                'source' => 'website',
-                'created_by' => 'website_api',
-            ]);
-
-            // Store travelers
-            foreach ($request->travelers as $traveler) {
-                $booking->travelers()->create([
-                    'name' => $traveler['name'],
-                    'age' => $traveler['age'],
-                    'passport_number' => $traveler['passport'] ?? null,
-                    'passport_expiry' => null,
-                ]);
-            }
-
-            // Log API usage
-            \Log::info('Booking created via public API', [
-                'booking_id' => $booking->id,
-                'package_id' => $package->id,
-                'customer_email' => $customer->email,
-                'source' => 'website',
-            ]);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Booking created successfully',
-                'data' => [
-                    'id' => $booking->id,
-                    'booking_reference' => $booking->booking_reference,
-                    'status' => $booking->booking_status,
-                    'payment_status' => $booking->payment_status,
-                    'total_price' => $booking->total_price,
-                    'currency' => 'BDT',
-                    'travel_date' => $booking->travel_date->toIso8601String(),
-                    'created_at' => $booking->created_at->toIso8601String(),
-                    'confirmation_email_sent' => true,
-                ],
-                'meta' => [
-                    'timestamp' => now()->toIso8601String(),
-                    'api_version' => 'v1',
-                    'next_step' => 'Customer will receive confirmation email. Payment link will be sent shortly.',
-                ],
-            ], Response::HTTP_CREATED);
-
-        } catch (\Exception $e) {
-            \Log::error('Public booking creation failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create booking',
-                'code' => 'CREATION_ERROR',
-                'error' => config('app.debug') ? $e->getMessage() : null,
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+        return $request->apiKey->tenant_id ?? null;
     }
 
-    /**
-     * Get booking status by reference
-     * 
-     * GET /api/v1/bookings/{reference}
-     * 
-     * @param string $reference
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function show($reference)
+    public function store(Request $request)
     {
-        try {
-            $booking = Booking::where('booking_reference', $reference)->first();
-
-            if (!$booking) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Booking not found',
-                    'code' => 'NOT_FOUND',
-                ], Response::HTTP_NOT_FOUND);
-            }
-
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'id' => $booking->id,
-                    'booking_reference' => $booking->booking_reference,
-                    'package_name' => $booking->package->name ?? null,
-                    'customer_name' => $booking->customer->name ?? null,
-                    'status' => $booking->booking_status,
-                    'payment_status' => $booking->payment_status,
-                    'total_price' => $booking->total_price,
-                    'currency' => 'BDT',
-                    'travel_date' => $booking->travel_date->toIso8601String(),
-                    'number_of_travelers' => $booking->number_of_travelers,
-                    'travelers' => $booking->travelers->map(fn($t) => [
-                        'name' => $t->name,
-                        'age' => $t->age,
-                    ]),
-                    'special_requests' => $booking->special_requests,
-                    'created_at' => $booking->created_at->toIso8601String(),
-                    'updated_at' => $booking->updated_at->toIso8601String(),
-                ],
-            ]);
-        } catch (\Exception $e) {
+        $tenantId = $this->tenantId($request);
+        if (!$tenantId) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch booking',
-                'code' => 'FETCH_ERROR',
-                'error' => config('app.debug') ? $e->getMessage() : null,
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+                'message' => 'API key is not bound to a tenant.',
+            ], Response::HTTP_UNAUTHORIZED);
         }
+
+        $validated = $request->validate([
+            'package_id' => 'required|integer',
+            'travel_date' => 'required|date|after:today',
+            'return_date' => 'nullable|date|after:travel_date',
+            'customer' => 'required|array',
+            'customer.name' => 'required|string|max:255',
+            'customer.email' => 'required|email',
+            'customer.phone' => 'required|string|max:32',
+            'customer.address' => 'nullable|string',
+            'travelers' => 'required|array|min:1',
+            'travelers.*.first_name' => 'required|string|max:120',
+            'travelers.*.last_name' => 'required|string|max:120',
+            'travelers.*.email' => 'nullable|email',
+            'travelers.*.phone' => 'nullable|string|max:32',
+            'travelers.*.date_of_birth' => 'nullable|date',
+            'travelers.*.passport_number' => 'nullable|string|max:64',
+            'special_requests' => 'nullable|array',
+        ]);
+
+        // The package must belong to the API key's tenant — this is what
+        // stops one tenant's key from booking another tenant's inventory.
+        $package = Package::where('tenant_id', $tenantId)
+            ->where('is_active', true)
+            ->find($validated['package_id']);
+
+        if (!$package) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Package not found',
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        $booking = DB::transaction(function () use ($tenantId, $validated, $package) {
+            // Customer lookup is scoped to the tenant, so a shared email
+            // address cannot link a booking to another tenant's customer.
+            $customer = Customer::where('tenant_id', $tenantId)
+                ->where('email', $validated['customer']['email'])
+                ->first();
+
+            if (!$customer) {
+                $customer = Customer::create([
+                    'tenant_id' => $tenantId,
+                    'name' => $validated['customer']['name'],
+                    'email' => $validated['customer']['email'],
+                    'phone' => $validated['customer']['phone'],
+                    'address' => $validated['customer']['address'] ?? null,
+                    'customer_type' => 'individual',
+                    'source' => 'website',
+                    'is_active' => true,
+                    'status' => 'active',
+                ]);
+            }
+
+            $travellerCount = count($validated['travelers']);
+
+            $booking = Booking::create([
+                'tenant_id' => $tenantId,
+                'customer_id' => $customer->id,
+                'package_id' => $package->id,
+                // No CRM user creates a website booking; the column is
+                // nullable and `source` records where it came from.
+                'created_by' => null,
+                'source' => 'website',
+                'booking_number' => 'BK-' . now()->format('Ymd') . '-' . strtoupper(bin2hex(random_bytes(3))),
+                'booking_type' => 'individual',
+                'status' => 'pending',
+                'payment_status' => 'pending',
+                'travel_date' => $validated['travel_date'],
+                'return_date' => $validated['return_date'] ?? null,
+                'number_of_travelers' => $travellerCount,
+                // Price comes from the package's real base_price, never
+                // from the request.
+                'total_amount' => round((float) $package->base_price * $travellerCount, 2),
+                'currency' => 'USD',
+                'special_requests' => $validated['special_requests'] ?? null,
+            ]);
+
+            foreach ($validated['travelers'] as $index => $traveler) {
+                BookingTraveler::create([
+                    'booking_id' => $booking->id,
+                    'first_name' => $traveler['first_name'],
+                    'last_name' => $traveler['last_name'],
+                    'email' => $traveler['email'] ?? null,
+                    'phone' => $traveler['phone'] ?? null,
+                    'date_of_birth' => $traveler['date_of_birth'] ?? null,
+                    'passport_number' => $traveler['passport_number'] ?? null,
+                    'traveler_type' => 'adult',
+                    'is_primary_contact' => $index === 0,
+                ]);
+            }
+
+            return $booking;
+        });
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Booking created and is pending confirmation by the agency.',
+            'data' => [
+                'booking_number' => $booking->booking_number,
+                'status' => $booking->status,
+                'payment_status' => $booking->payment_status,
+                'total_amount' => (float) $booking->total_amount,
+                'currency' => $booking->currency,
+                'travel_date' => optional($booking->travel_date)->toDateString(),
+            ],
+        ], Response::HTTP_CREATED);
+    }
+
+    public function show(Request $request, $reference)
+    {
+        $tenantId = $this->tenantId($request);
+        if (!$tenantId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'API key is not bound to a tenant.',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
+
+        $booking = Booking::where('tenant_id', $tenantId)
+            ->where('booking_number', $reference)
+            ->with('travelers')
+            ->first();
+
+        if (!$booking) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Booking not found',
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'booking_number' => $booking->booking_number,
+                'status' => $booking->status,
+                'payment_status' => $booking->payment_status,
+                'travel_date' => optional($booking->travel_date)->toDateString(),
+                'return_date' => optional($booking->return_date)->toDateString(),
+                'number_of_travelers' => $booking->number_of_travelers,
+                'total_amount' => (float) $booking->total_amount,
+                'currency' => $booking->currency,
+                'travelers' => $booking->travelers->map(fn ($t) => [
+                    'first_name' => $t->first_name,
+                    'last_name' => $t->last_name,
+                ])->all(),
+            ],
+        ]);
     }
 }

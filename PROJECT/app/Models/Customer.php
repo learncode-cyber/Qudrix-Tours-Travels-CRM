@@ -15,7 +15,7 @@ class Customer extends Model
 
     protected $fillable = [
         'tenant_id', 'branch_id', 'name', 'email', 'phone',
-        'customer_type', 'national_id', 'passport_number',
+        'customer_type', 'source', 'national_id', 'passport_number',
         'address', 'city', 'country', 'additional_info',
         'is_active', 'status'
     ];

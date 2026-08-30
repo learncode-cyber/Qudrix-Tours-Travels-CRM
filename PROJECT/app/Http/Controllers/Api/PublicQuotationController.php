@@ -3,218 +3,195 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Models\Quotation;
-use App\Models\Package;
 use App\Models\Customer;
+use App\Models\Lead;
+use App\Models\Package;
+use App\Models\Quotation;
+use App\Models\QuotationItem;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
 
-/**
- * Public Quotation Controller
- * Used by website to request custom quotes
- */
+// Quotation requests from a tenant's own website.
+//
+// REWRITTEN: the previous version wrote to `package_id`, `travel_date`,
+// `number_of_travelers`, `base_price`, `total_price` and
+// `special_requirements` — none of which exist on `quotations` — and applied
+// no tenant filter. It also hardcoded a 5/10% "group discount" in the
+// controller, bypassing the auditable PricingEngine entirely.
+//
+// A website quote request is, in CRM terms, a LEAD. This version creates the
+// lead, the customer, and a real draft quotation with proper line items.
 class PublicQuotationController extends Controller
 {
-    /**
-     * Request a custom quotation
-     * 
-     * POST /api/v1/quotations
-     * 
-     * Body:
-     * {
-     *   "package_id": 1,
-     *   "customer": {
-     *     "name": "John Doe",
-     *     "email": "john@example.com",
-     *     "phone": "1234567890"
-     *   },
-     *   "number_of_travelers": 4,
-     *   "travel_date": "2024-12-01",
-     *   "special_requirements": "Need hotel near airport",
-     *   "budget": "350000"
-     * }
-     * 
-     * @param Request $request
-     * @return \Illuminate\Http\JsonResponse
-     */
+    private function tenantId(Request $request): ?int
+    {
+        return $request->apiKey->tenant_id ?? null;
+    }
+
     public function store(Request $request)
     {
-        try {
-            // Validate input
-            $validator = Validator::make($request->all(), [
-                'package_id' => 'required|integer|exists:packages,id',
-                'customer.name' => 'required|string|min:2|max:255',
-                'customer.email' => 'required|email',
-                'customer.phone' => 'required|string|min:7|max:20',
-                'number_of_travelers' => 'required|integer|min:1|max:50',
-                'travel_date' => 'required|date|after:today',
-                'special_requirements' => 'nullable|string|max:1000',
-                'budget' => 'nullable|numeric|min:0',
-            ]);
+        $tenantId = $this->tenantId($request);
+        if (!$tenantId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'API key is not bound to a tenant.',
+            ], Response::HTTP_UNAUTHORIZED);
+        }
 
-            if ($validator->fails()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed',
-                    'code' => 'VALIDATION_ERROR',
-                    'errors' => $validator->errors(),
-                ], Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
+        $validated = $request->validate([
+            'package_id' => 'required|integer',
+            'travel_date' => 'required|date|after:today',
+            'number_of_travelers' => 'required|integer|min:1|max:500',
+            'customer' => 'required|array',
+            'customer.name' => 'required|string|max:255',
+            'customer.email' => 'required|email',
+            'customer.phone' => 'required|string|max:32',
+            'special_requirements' => 'nullable|string|max:2000',
+        ]);
 
-            // Get package
-            $package = Package::where('id', $request->package_id)
-                ->where('is_active', true)
+        $package = Package::where('tenant_id', $tenantId)
+            ->where('is_active', true)
+            ->find($validated['package_id']);
+
+        if (!$package) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Package not found',
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        $quotation = DB::transaction(function () use ($tenantId, $validated, $package) {
+            $customer = Customer::where('tenant_id', $tenantId)
+                ->where('email', $validated['customer']['email'])
                 ->first();
 
-            if (!$package) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Package not found',
-                    'code' => 'PACKAGE_NOT_FOUND',
-                ], Response::HTTP_NOT_FOUND);
-            }
-
-            // Find or create customer
-            $customer = Customer::where('email', $request->customer['email'])->first();
-            
             if (!$customer) {
                 $customer = Customer::create([
-                    'name' => $request->customer['name'],
-                    'email' => $request->customer['email'],
-                    'phone' => $request->customer['phone'],
+                    'tenant_id' => $tenantId,
+                    'name' => $validated['customer']['name'],
+                    'email' => $validated['customer']['email'],
+                    'phone' => $validated['customer']['phone'],
+                    'customer_type' => 'individual',
                     'source' => 'website',
-                    'status' => 'lead',
+                    'is_active' => true,
+                    'status' => 'active',
                 ]);
             }
 
-            // Calculate base quotation price
-            $basePrice = $package->price * $request->number_of_travelers;
-            $discount = 0;
-            
-            // Apply group discounts
-            if ($request->number_of_travelers >= 10) {
-                $discount = $basePrice * 0.10; // 10% discount
-            } elseif ($request->number_of_travelers >= 5) {
-                $discount = $basePrice * 0.05; // 5% discount
-            }
-
-            $totalPrice = $basePrice - $discount;
-
-            // Create quotation
-            $quotation = Quotation::create([
-                'quotation_number' => 'QT-' . Str::random(10),
-                'package_id' => $package->id,
+            // A website quote request IS a lead — creating one puts it into
+            // the real sales pipeline instead of leaving an orphan quote.
+            $lead = Lead::create([
+                'tenant_id' => $tenantId,
                 'customer_id' => $customer->id,
-                'travel_date' => $request->travel_date,
-                'number_of_travelers' => $request->number_of_travelers,
-                'base_price' => $basePrice,
-                'discount_amount' => $discount,
-                'total_price' => $totalPrice,
-                'special_requirements' => $request->special_requirements ?? null,
-                'quoted_budget' => $request->budget ?? null,
-                'status' => 'pending_review',
-                'valid_until' => now()->addDays(7),
-                'created_by' => 'website_api',
+                'name' => $validated['customer']['name'],
+                'email' => $validated['customer']['email'],
+                'phone' => $validated['customer']['phone'],
+                'source' => 'website',
+                'status' => 'new',
+                'priority' => 'medium',
+                'notes' => $validated['special_requirements'] ?? null,
             ]);
 
-            // Log API usage
-            \Log::info('Quotation requested via public API', [
+            $travellers = $validated['number_of_travelers'];
+            $unitPrice = (float) $package->base_price;
+            $subtotal = round($unitPrice * $travellers, 2);
+
+            $quotation = Quotation::create([
+                'tenant_id' => $tenantId,
+                'lead_id' => $lead->id,
+                'customer_id' => $customer->id,
+                // No CRM user creates a website quote request.
+                'created_by' => null,
+                'source' => 'website',
+                'quotation_number' => 'QT-' . now()->format('Ymd') . '-' . strtoupper(bin2hex(random_bytes(3))),
+                'share_token' => bin2hex(random_bytes(20)),
+                'subject' => $package->name . ' — ' . $travellers . ' traveller(s)',
+                'description' => $validated['special_requirements'] ?? null,
+                // Deliberately DRAFT: a website request is not a priced
+                // offer until staff review it. Discounts belong to the
+                // auditable PricingEngine, not to a hardcoded rule here.
+                'status' => 'draft',
+                'currency' => 'USD',
+                'valid_until' => now()->addDays(7),
+                'subtotal' => $subtotal,
+                'tax_amount' => 0,
+                'discount_amount' => 0,
+                'total_amount' => $subtotal,
+            ]);
+
+            QuotationItem::create([
                 'quotation_id' => $quotation->id,
                 'package_id' => $package->id,
-                'customer_email' => $customer->email,
-                'travelers' => $request->number_of_travelers,
+                'description' => $package->name
+                    . ($package->destination ? ' (' . $package->destination . ')' : '')
+                    . ' — travel ' . $validated['travel_date'],
+                'quantity' => $travellers,
+                'unit_price' => $unitPrice,
+                'cost_price' => $unitPrice,
+                'tax_rate' => 0,
+                'discount' => 0,
+                'total' => $subtotal,
             ]);
 
-            return response()->json([
-                'success' => true,
-                'message' => 'Quotation request received successfully',
-                'data' => [
-                    'id' => $quotation->id,
-                    'quotation_number' => $quotation->quotation_number,
-                    'status' => $quotation->status,
-                    'base_price' => $quotation->base_price,
-                    'discount_amount' => $quotation->discount_amount,
-                    'total_price' => $quotation->total_price,
-                    'currency' => 'BDT',
-                    'number_of_travelers' => $quotation->number_of_travelers,
-                    'valid_until' => $quotation->valid_until->toIso8601String(),
-                    'created_at' => $quotation->created_at->toIso8601String(),
-                ],
-                'meta' => [
-                    'timestamp' => now()->toIso8601String(),
-                    'api_version' => 'v1',
-                    'next_step' => 'Our team will review and send detailed quotation within 24 hours',
-                ],
-            ], Response::HTTP_CREATED);
+            return $quotation;
+        });
 
-        } catch (\Exception $e) {
-            \Log::error('Public quotation creation failed', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Failed to create quotation',
-                'code' => 'CREATION_ERROR',
-                'error' => config('app.debug') ? $e->getMessage() : null,
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
-        }
+        return response()->json([
+            'success' => true,
+            'message' => 'Quotation request received. Our team will review and send you a final quote.',
+            'data' => [
+                'quotation_number' => $quotation->quotation_number,
+                'status' => $quotation->status,
+                'indicative_total' => (float) $quotation->total_amount,
+                'currency' => $quotation->currency,
+                'valid_until' => optional($quotation->valid_until)->toDateString(),
+                'note' => 'This is an indicative total based on list price. Final pricing is confirmed by the agency.',
+            ],
+        ], Response::HTTP_CREATED);
     }
 
-    /**
-     * Get quotation details
-     * 
-     * GET /api/v1/quotations/{number}
-     * 
-     * @param string $number
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function show($number)
+    public function show(Request $request, $number)
     {
-        try {
-            $quotation = Quotation::where('quotation_number', $number)->first();
-
-            if (!$quotation) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Quotation not found',
-                    'code' => 'NOT_FOUND',
-                ], Response::HTTP_NOT_FOUND);
-            }
-
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'id' => $quotation->id,
-                    'quotation_number' => $quotation->quotation_number,
-                    'package_name' => $quotation->package->name ?? null,
-                    'customer_name' => $quotation->customer->name ?? null,
-                    'status' => $quotation->status,
-                    'travel_date' => $quotation->travel_date->toIso8601String(),
-                    'number_of_travelers' => $quotation->number_of_travelers,
-                    'base_price' => $quotation->base_price,
-                    'discount_amount' => $quotation->discount_amount,
-                    'discount_percentage' => $quotation->discount_amount > 0 
-                        ? round(($quotation->discount_amount / $quotation->base_price) * 100, 2)
-                        : 0,
-                    'total_price' => $quotation->total_price,
-                    'currency' => 'BDT',
-                    'price_per_person' => round($quotation->total_price / $quotation->number_of_travelers, 2),
-                    'valid_until' => $quotation->valid_until->toIso8601String(),
-                    'special_requirements' => $quotation->special_requirements,
-                    'created_at' => $quotation->created_at->toIso8601String(),
-                ],
-            ]);
-        } catch (\Exception $e) {
+        $tenantId = $this->tenantId($request);
+        if (!$tenantId) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to fetch quotation',
-                'code' => 'FETCH_ERROR',
-                'error' => config('app.debug') ? $e->getMessage() : null,
-            ], Response::HTTP_INTERNAL_SERVER_ERROR);
+                'message' => 'API key is not bound to a tenant.',
+            ], Response::HTTP_UNAUTHORIZED);
         }
+
+        $quotation = Quotation::where('tenant_id', $tenantId)
+            ->where('quotation_number', $number)
+            ->with('items')
+            ->first();
+
+        if (!$quotation) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Quotation not found',
+            ], Response::HTTP_NOT_FOUND);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'quotation_number' => $quotation->quotation_number,
+                'subject' => $quotation->subject,
+                'status' => $quotation->status,
+                'subtotal' => (float) $quotation->subtotal,
+                'discount_amount' => (float) $quotation->discount_amount,
+                'tax_amount' => (float) $quotation->tax_amount,
+                'total_amount' => (float) $quotation->total_amount,
+                'currency' => $quotation->currency,
+                'valid_until' => optional($quotation->valid_until)->toDateString(),
+                'items' => $quotation->items->map(fn ($i) => [
+                    'description' => $i->description,
+                    'quantity' => $i->quantity,
+                    'unit_price' => (float) $i->unit_price,
+                    'total' => (float) $i->total,
+                ])->all(),
+            ],
+        ]);
     }
 }

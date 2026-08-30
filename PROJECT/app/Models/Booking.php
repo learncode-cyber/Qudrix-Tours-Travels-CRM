@@ -15,7 +15,7 @@ class Booking extends Model
     protected $fillable = [
         'tenant_id', 'lead_id', 'customer_id', 'package_id', 'agent_id',
         'created_by', 'booking_number', 'booking_type',
-        'status', 'travel_date', 'return_date',
+        'status', 'source', 'travel_date', 'return_date',
         'number_of_travelers', 'total_amount', 'currency',
         'payment_status', 'confirmation_date', 'notes',
         'special_requests', 'visa_required'

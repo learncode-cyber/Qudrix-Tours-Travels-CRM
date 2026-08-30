@@ -15,7 +15,7 @@ class Quotation extends Model
     protected $fillable = [
         'tenant_id', 'lead_id', 'customer_id', 'created_by',
         'quotation_number', 'subject', 'description',
-        'status', 'subtotal', 'tax_amount', 'discount_amount',
+        'status', 'source', 'subtotal', 'tax_amount', 'discount_amount',
         'total_amount', 'currency', 'valid_until', 'notes',
         'payment_terms', 'share_token', 'requires_approval',
         'approved_by', 'approved_at', 'quotation_template_id', 'version',
