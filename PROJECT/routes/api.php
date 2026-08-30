@@ -216,6 +216,29 @@ Route::prefix('v1')->group(function () {
         Route::put('/complaints/{id}/status', '\App\Http\Controllers\ComplaintController@updateStatus');
     });
 
+    // Phase 13: Upsell/Cross-sell Engine + Sales Script A/B Testing.
+    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+        Route::get('/upsell-rules', '\App\Http\Controllers\UpsellController@indexRules');
+        Route::post('/upsell-rules', '\App\Http\Controllers\UpsellController@storeRule');
+        Route::put('/upsell-rules/{id}', '\App\Http\Controllers\UpsellController@updateRule');
+        Route::delete('/upsell-rules/{id}', '\App\Http\Controllers\UpsellController@destroyRule');
+        Route::get('/bookings/{bookingId}/upsell-recommendations', '\App\Http\Controllers\UpsellController@forBooking');
+        Route::post('/upsell-recommendations', '\App\Http\Controllers\UpsellController@recordShown');
+        Route::put('/upsell-recommendations/{id}/outcome', '\App\Http\Controllers\UpsellController@recordOutcome');
+        Route::get('/upsell-effectiveness', '\App\Http\Controllers\UpsellController@effectiveness');
+
+        Route::get('/ab-experiments', '\App\Http\Controllers\AbTestingController@index');
+        Route::post('/ab-experiments', '\App\Http\Controllers\AbTestingController@store');
+        Route::get('/ab-experiments/{id}', '\App\Http\Controllers\AbTestingController@show');
+        Route::post('/ab-experiments/{id}/variants', '\App\Http\Controllers\AbTestingController@addVariant');
+        Route::post('/ab-experiments/{id}/start', '\App\Http\Controllers\AbTestingController@start');
+        Route::post('/ab-experiments/{id}/stop', '\App\Http\Controllers\AbTestingController@stop');
+        Route::post('/ab-experiments/{id}/assign', '\App\Http\Controllers\AbTestingController@assign');
+        Route::get('/ab-experiments/{id}/results', '\App\Http\Controllers\AbTestingController@results');
+        Route::put('/ab-assignments/{assignmentId}/response', '\App\Http\Controllers\AbTestingController@recordResponse');
+        Route::put('/ab-assignments/{assignmentId}/conversion', '\App\Http\Controllers\AbTestingController@recordConversion');
+    });
+
     // Phase 12: Executive Dashboard + Behavioural Analytics (real data only).
     Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
         Route::get('/analytics/executive-dashboard', '\App\Http\Controllers\AnalyticsDashboardController@executive');
