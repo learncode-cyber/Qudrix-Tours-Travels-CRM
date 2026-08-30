@@ -216,6 +216,15 @@ Route::prefix('v1')->group(function () {
         Route::put('/complaints/{id}/status', '\App\Http\Controllers\ComplaintController@updateStatus');
     });
 
+    // Phase 11: Sales Strategy Manager, Customer Memory, AI Copilot.
+    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+        Route::apiResource('sales-strategies', '\App\Http\Controllers\SalesStrategyController')->only(['index', 'store', 'update', 'destroy']);
+        Route::apiResource('customer-memories', '\App\Http\Controllers\CustomerMemoryController')->only(['index', 'store', 'update', 'destroy']);
+
+        Route::post('/ai/leads/{leadId}/copilot', '\App\Http\Controllers\AiCopilotController@assist');
+        Route::post('/ai/leads/{leadId}/extract-memory', '\App\Http\Controllers\AiCopilotController@extractMemory');
+    });
+
     // Phase 10: AI Sales Agent + AI Package Builder.
     // Every response here is a SUGGESTION or DRAFT for a human to act on —
     // nothing is sent, booked, or priced by the model itself.
