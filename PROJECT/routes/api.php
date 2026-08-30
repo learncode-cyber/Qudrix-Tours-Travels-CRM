@@ -216,6 +216,33 @@ Route::prefix('v1')->group(function () {
         Route::put('/complaints/{id}/status', '\App\Http\Controllers\ComplaintController@updateStatus');
     });
 
+    // Phase 17: Marketing Tools + Unified Conversations.
+    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+        // Marketing
+        Route::get('/marketing/contact-lists', '\App\Http\Controllers\MarketingController@contactLists');
+        Route::post('/marketing/contact-lists', '\App\Http\Controllers\MarketingController@storeContactList');
+        Route::post('/marketing/contact-lists/{id}/members', '\App\Http\Controllers\MarketingController@addListMembers');
+        Route::get('/marketing/campaigns', '\App\Http\Controllers\MarketingController@campaigns');
+        Route::post('/marketing/campaigns', '\App\Http\Controllers\MarketingController@storeCampaign');
+        Route::get('/marketing/campaigns/{id}', '\App\Http\Controllers\MarketingController@showCampaign');
+        Route::post('/marketing/campaigns/{id}/prepare', '\App\Http\Controllers\MarketingController@prepareCampaign');
+        Route::post('/marketing/campaigns/{id}/send', '\App\Http\Controllers\MarketingController@sendCampaign');
+        Route::get('/marketing/campaigns/{id}/report', '\App\Http\Controllers\MarketingController@campaignReport');
+        Route::get('/marketing/coupons', '\App\Http\Controllers\MarketingController@coupons');
+        Route::post('/marketing/coupons', '\App\Http\Controllers\MarketingController@storeCoupon');
+        Route::post('/marketing/coupons/validate', '\App\Http\Controllers\MarketingController@validateCoupon');
+        Route::post('/marketing/coupons/redeem', '\App\Http\Controllers\MarketingController@redeemCoupon');
+
+        // Unified conversations
+        Route::get('/conversations', '\App\Http\Controllers\ConversationController@index');
+        Route::post('/conversations', '\App\Http\Controllers\ConversationController@store');
+        Route::get('/conversations/{id}', '\App\Http\Controllers\ConversationController@show');
+        Route::post('/conversations/{id}/inbound', '\App\Http\Controllers\ConversationController@recordInbound');
+        Route::post('/conversations/{id}/reply', '\App\Http\Controllers\ConversationController@reply');
+        Route::put('/conversations/{id}/assign', '\App\Http\Controllers\ConversationController@assign');
+        Route::put('/conversations/{id}/status', '\App\Http\Controllers\ConversationController@updateStatus');
+    });
+
     // Phase 16: HRM + B2B Agent Management.
     Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
         // HRM
