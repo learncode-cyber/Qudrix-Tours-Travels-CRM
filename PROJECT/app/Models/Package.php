@@ -15,7 +15,8 @@ class Package extends Model
     protected $fillable = [
         'tenant_id', 'name', 'code', 'type', 'description',
         'days', 'nights', 'destination', 'base_price',
-        'inclusions', 'exclusions', 'is_active', 'status'
+        'inclusions', 'exclusions', 'is_active', 'status',
+        'is_custom_built', 'components', 'built_by', 'built_for_customer_id',
     ];
 
     protected $casts = [
@@ -23,6 +24,8 @@ class Package extends Model
         'exclusions' => AsJson::class,
         'is_active' => 'boolean',
         'base_price' => 'decimal:2',
+        'is_custom_built' => 'boolean',
+        'components' => 'json',
     ];
 
     public function tenant(): BelongsTo

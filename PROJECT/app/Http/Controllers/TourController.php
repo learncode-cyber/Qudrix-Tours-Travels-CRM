@@ -28,4 +28,20 @@ class TourController extends Controller
         $package = TourPackage::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
         return response()->json(['data' => $package]);
     }
+
+    public function update(Request $request, $id)
+    {
+        $package = TourPackage::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
+        $validated = $request->validate([
+            'name' => 'sometimes|string',
+            'destination' => 'sometimes|string',
+            'duration_days' => 'sometimes|integer',
+            'price' => 'sometimes|numeric',
+            'max_capacity' => 'sometimes|integer',
+            'activities' => 'nullable|array',
+            'status' => 'sometimes|in:active,inactive,sold_out',
+        ]);
+        $package->update($validated);
+        return response()->json(['data' => $package]);
+    }
 }

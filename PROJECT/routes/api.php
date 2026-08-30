@@ -207,6 +207,13 @@ Route::prefix('v1')->group(function () {
         Route::put('/complaints/{id}/status', '\App\Http\Controllers\ComplaintController@updateStatus');
     });
 
+    // Phase 6: Dynamic Pricing Engine + Custom Package Builder
+    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+        Route::apiResource('pricing-rules', '\App\Http\Controllers\PricingRuleController')->only(['index', 'store', 'update', 'destroy']);
+        Route::post('/pricing-rules/preview', '\App\Http\Controllers\PricingRuleController@preview');
+        Route::post('/package-builder/build', '\App\Http\Controllers\PackageBuilderController@build');
+    });
+
     // Phase 6: Automation Engine + Templates + Dashboard
     Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
         // Automation Management
