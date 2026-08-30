@@ -72,7 +72,7 @@ class Booking extends Model
 
     public function group(): BelongsTo
     {
-        return $this->belongsTo(GroupBooking::class, 'group_booking_id')->nullable();
+        return $this->belongsTo(GroupBooking::class, 'group_booking_id');
     }
 
     public function isConfirmed(): bool

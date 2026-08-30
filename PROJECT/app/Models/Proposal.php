@@ -43,7 +43,7 @@ class Proposal extends Model
 
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(Customer::class)->nullable();
+        return $this->belongsTo(Customer::class);
     }
 
     public function createdBy(): BelongsTo

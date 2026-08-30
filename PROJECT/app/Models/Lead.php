@@ -5,10 +5,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use App\Models\Concerns\Taggable;
 
 class Lead extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, Taggable;
 
     protected $fillable = [
         'tenant_id', 'branch_id', 'assigned_to', 'name',
@@ -33,12 +34,12 @@ class Lead extends Model
 
     public function branch(): BelongsTo
     {
-        return $this->belongsTo(Branch::class)->nullable();
+        return $this->belongsTo(Branch::class);
     }
 
     public function assignedTo(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'assigned_to')->nullable();
+        return $this->belongsTo(User::class, 'assigned_to');
     }
 
     public function isQualified(): bool

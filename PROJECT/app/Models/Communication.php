@@ -33,7 +33,7 @@ class Communication extends Model
 
     public function createdBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'created_by')->nullable();
+        return $this->belongsTo(User::class, 'created_by');
     }
 
     public function isSent(): bool

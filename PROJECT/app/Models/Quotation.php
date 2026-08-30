@@ -34,12 +34,12 @@ class Quotation extends Model
 
     public function lead(): BelongsTo
     {
-        return $this->belongsTo(Lead::class)->nullable();
+        return $this->belongsTo(Lead::class);
     }
 
     public function customer(): BelongsTo
     {
-        return $this->belongsTo(Customer::class)->nullable();
+        return $this->belongsTo(Customer::class);
     }
 
     public function createdBy(): BelongsTo

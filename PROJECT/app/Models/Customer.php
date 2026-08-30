@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Casts\AsJson;
+use App\Models\Concerns\Taggable;
 
 class Customer extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, Taggable;
 
     protected $fillable = [
         'tenant_id', 'branch_id', 'name', 'email', 'phone',
@@ -31,7 +32,7 @@ class Customer extends Model
 
     public function branch(): BelongsTo
     {
-        return $this->belongsTo(Branch::class)->nullable();
+        return $this->belongsTo(Branch::class);
     }
 
     public function bookings(): HasMany

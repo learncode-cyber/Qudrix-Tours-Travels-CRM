@@ -30,7 +30,7 @@ class Task extends Model
 
     public function assignee(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'assigned_to')->nullable();
+        return $this->belongsTo(User::class, 'assigned_to');
     }
 
     public function isOverdue(): bool

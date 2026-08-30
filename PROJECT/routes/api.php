@@ -234,6 +234,40 @@ Route::prefix('v1')->group(function () {
         Route::get('/health/detailed', '\App\Http\Controllers\HealthController@detailed');
     });
     
+    // Phase 2: CRM completion — Companies, Contacts, Notes, Documents, Tags,
+    // Custom Fields, Reminders, Customer Timeline
+    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+        Route::apiResource('companies', '\App\Http\Controllers\CompanyController')->only(['index', 'store', 'show', 'update', 'destroy']);
+        Route::apiResource('contacts', '\App\Http\Controllers\ContactController')->only(['index', 'store', 'show', 'update', 'destroy']);
+
+        Route::get('/notes', '\App\Http\Controllers\NoteController@index');
+        Route::post('/notes', '\App\Http\Controllers\NoteController@store');
+        Route::put('/notes/{id}', '\App\Http\Controllers\NoteController@update');
+        Route::delete('/notes/{id}', '\App\Http\Controllers\NoteController@destroy');
+
+        Route::get('/documents', '\App\Http\Controllers\DocumentController@index');
+        Route::post('/documents', '\App\Http\Controllers\DocumentController@store');
+        Route::delete('/documents/{id}', '\App\Http\Controllers\DocumentController@destroy');
+
+        Route::apiResource('tags', '\App\Http\Controllers\TagController')->only(['index', 'store', 'destroy']);
+        Route::post('/tags/attach', '\App\Http\Controllers\TagController@attach');
+        Route::post('/tags/detach', '\App\Http\Controllers\TagController@detach');
+
+        Route::get('/custom-fields', '\App\Http\Controllers\CustomFieldController@index');
+        Route::post('/custom-fields', '\App\Http\Controllers\CustomFieldController@store');
+        Route::delete('/custom-fields/{id}', '\App\Http\Controllers\CustomFieldController@destroy');
+        Route::post('/custom-fields/value', '\App\Http\Controllers\CustomFieldController@setValue');
+        Route::get('/custom-fields/values', '\App\Http\Controllers\CustomFieldController@valuesFor');
+
+        Route::get('/reminders', '\App\Http\Controllers\ReminderController@index');
+        Route::get('/reminders/due', '\App\Http\Controllers\ReminderController@due');
+        Route::post('/reminders', '\App\Http\Controllers\ReminderController@store');
+        Route::put('/reminders/{id}/complete', '\App\Http\Controllers\ReminderController@complete');
+        Route::delete('/reminders/{id}', '\App\Http\Controllers\ReminderController@destroy');
+
+        Route::get('/customers/{customerId}/timeline', '\App\Http\Controllers\CustomerTimelineController@show');
+    });
+
     // Phase 0: Vendors (distinct from Suppliers — contracted package/service providers)
     Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
         Route::apiResource('vendors', '\App\Http\Controllers\VendorController')->only(['index', 'store', 'show', 'update']);

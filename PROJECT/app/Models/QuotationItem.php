@@ -29,7 +29,7 @@ class QuotationItem extends Model
 
     public function package(): BelongsTo
     {
-        return $this->belongsTo(Package::class)->nullable();
+        return $this->belongsTo(Package::class);
     }
 
     public function calculateTotal(): void
