@@ -12,7 +12,7 @@ class Flight extends Model
     use SoftDeletes;
 
     protected $fillable = [
-        'tenant_id', 'booking_id', 'airline_code', 'flight_number',
+        'tenant_id', 'supplier_id', 'booking_id', 'airline_code', 'flight_number',
         'departure_airport', 'arrival_airport', 'departure_date',
         'arrival_date', 'departure_time', 'arrival_time',
         'aircraft_type', 'total_seats', 'available_seats',
@@ -27,6 +27,14 @@ class Flight extends Model
     public function tenant(): BelongsTo
     {
         return $this->belongsTo(Tenant::class);
+    }
+
+    // The supplier providing this flight's inventory — the seam a future
+    // GDS/airline API integration attaches to. No such integration is
+    // implemented here (CONTRACT REQUIRED: no GDS contract was supplied).
+    public function supplier(): BelongsTo
+    {
+        return $this->belongsTo(Supplier::class);
     }
 
     public function booking(): BelongsTo

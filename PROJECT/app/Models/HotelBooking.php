@@ -10,7 +10,7 @@ class HotelBooking extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'booking_id', 'hotel_id', 'check_in_date', 'check_out_date',
+        'booking_id', 'hotel_id', 'hotel_room_type_id', 'check_in_date', 'check_out_date',
         'number_of_rooms', 'number_of_nights', 'room_type',
         'price_per_night', 'total_price', 'status', 'confirmation_number'
     ];
@@ -28,6 +28,16 @@ class HotelBooking extends Model
     public function hotel(): BelongsTo
     {
         return $this->belongsTo(Hotel::class);
+    }
+
+    public function roomType(): BelongsTo
+    {
+        return $this->belongsTo(HotelRoomType::class, 'hotel_room_type_id');
+    }
+
+    public function extraServices()
+    {
+        return $this->hasMany(HotelBookingExtraService::class);
     }
 
     public function getNights(): int

@@ -36,8 +36,9 @@ class FlightController extends Controller
             'flight_number' => 'required|string|unique:flights,flight_number',
             'departure_airport' => 'required|string|size:3',
             'arrival_airport' => 'required|string|size:3',
-            'departure_date' => 'required|datetime',
-            'arrival_date' => 'required|datetime',
+            'departure_date' => 'required|date',
+            'arrival_date' => 'required|date',
+            'supplier_id' => 'nullable|exists:suppliers,id',
             'departure_time' => 'required|date_format:H:i:s',
             'arrival_time' => 'required|date_format:H:i:s',
             'aircraft_type' => 'required|string',
@@ -86,13 +87,18 @@ class FlightController extends Controller
             'flight_id' => 'required|exists:flights,id',
             'booking_id' => 'required|exists:bookings,id',
             'travelers' => 'required|array',
+            'cabin_class' => 'nullable|in:economy,premium_economy,business,first',
+            'baggage_allowance' => 'nullable|string',
+            'fare_type' => 'nullable|string',
         ]);
 
-        $flight = Flight::findOrFail($validated['flight_id']);
+        $flight = Flight::where('tenant_id', $request->user->tenant_id)->findOrFail($validated['flight_id']);
 
         if ($flight->available_seats < count($validated['travelers'])) {
             return response()->json(['error' => 'Not enough seats'], 400);
         }
+
+        $pnr = strtoupper(substr(bin2hex(random_bytes(4)), 0, 6));
 
         foreach ($validated['travelers'] as $index => $traveler_id) {
             FlightBooking::create([
@@ -100,12 +106,39 @@ class FlightController extends Controller
                 'flight_id' => $flight->id,
                 'booking_traveler_id' => $traveler_id,
                 'seat_number' => chr(65 + floor($index / 6)) . ($index % 6 + 1),
+                'pnr' => $pnr,
+                'cabin_class' => $validated['cabin_class'] ?? 'economy',
+                'baggage_allowance' => $validated['baggage_allowance'] ?? null,
+                'fare_type' => $validated['fare_type'] ?? null,
+                'price_paid' => $flight->price_per_seat,
                 'status' => 'booked',
             ]);
         }
 
         $flight->decrement('available_seats', count($validated['travelers']));
 
-        return response()->json(['message' => 'Flight booked successfully'], 201);
+        return response()->json(['message' => 'Flight booked successfully', 'data' => ['pnr' => $pnr]], 201);
+    }
+
+    public function cancelFlightBooking(Request $request, $id)
+    {
+        $flightBooking = FlightBooking::whereHas('flight', fn ($q) => $q->where('tenant_id', $request->user->tenant_id))
+            ->findOrFail($id);
+
+        if ($flightBooking->status === 'cancelled') {
+            return response()->json(['error' => 'Already cancelled'], 400);
+        }
+
+        $validated = $request->validate(['refund_amount' => 'nullable|numeric|min:0']);
+
+        $flightBooking->update([
+            'status' => 'cancelled',
+            'refund_status' => isset($validated['refund_amount']) ? 'refunded' : 'not_applicable',
+            'refund_amount' => $validated['refund_amount'] ?? null,
+            'cancelled_at' => now(),
+        ]);
+        $flightBooking->flight->increment('available_seats');
+
+        return response()->json(['data' => $flightBooking]);
     }
 }

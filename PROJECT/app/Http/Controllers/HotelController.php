@@ -68,37 +68,65 @@ class HotelController extends Controller
     {
         $validated = $request->validate([
             'hotel_id' => 'required|exists:hotels,id',
+            'hotel_room_type_id' => 'nullable|exists:hotel_room_types,id',
             'booking_id' => 'required|exists:bookings,id',
             'check_in_date' => 'required|date',
             'check_out_date' => 'required|date|after:check_in_date',
             'number_of_rooms' => 'required|integer|min:1',
             'room_type' => 'required|string',
+            'extra_service_ids' => 'nullable|array',
+            'extra_service_ids.*' => 'exists:hotel_extra_services,id',
         ]);
 
-        $hotel = Hotel::findOrFail($validated['hotel_id']);
+        $hotel = \App\Models\Hotel::where('tenant_id', $request->user->tenant_id)->findOrFail($validated['hotel_id']);
 
-        if ($hotel->available_rooms < $validated['number_of_rooms']) {
+        $roomType = null;
+        $pricePerNight = $hotel->price_per_night;
+        if (!empty($validated['hotel_room_type_id'])) {
+            $roomType = \App\Models\HotelRoomType::where('hotel_id', $hotel->id)->findOrFail($validated['hotel_room_type_id']);
+            if (!$roomType->isAvailable($validated['number_of_rooms'])) {
+                return response()->json(['error' => 'Not enough rooms available for this room type'], 400);
+            }
+            $pricePerNight = $roomType->price_per_night;
+        } elseif ($hotel->available_rooms < $validated['number_of_rooms']) {
             return response()->json(['error' => 'Not enough rooms available'], 400);
         }
 
         $nights = now()->parse($validated['check_in_date'])
             ->diffInDays(now()->parse($validated['check_out_date']));
 
+        $totalPrice = $pricePerNight * $nights * $validated['number_of_rooms'];
+
         $booking = HotelBooking::create([
             'booking_id' => $validated['booking_id'],
             'hotel_id' => $hotel->id,
+            'hotel_room_type_id' => $roomType?->id,
             'check_in_date' => $validated['check_in_date'],
             'check_out_date' => $validated['check_out_date'],
             'number_of_rooms' => $validated['number_of_rooms'],
             'number_of_nights' => $nights,
             'room_type' => $validated['room_type'],
-            'price_per_night' => $hotel->price_per_night,
-            'total_price' => $hotel->price_per_night * $nights * $validated['number_of_rooms'],
+            'price_per_night' => $pricePerNight,
+            'total_price' => $totalPrice,
             'status' => 'confirmed',
         ]);
 
-        $hotel->decrement('available_rooms', $validated['number_of_rooms']);
+        foreach ($validated['extra_service_ids'] ?? [] as $serviceId) {
+            $service = \App\Models\HotelExtraService::where('hotel_id', $hotel->id)->findOrFail($serviceId);
+            \App\Models\HotelBookingExtraService::create([
+                'hotel_booking_id' => $booking->id,
+                'hotel_extra_service_id' => $service->id,
+                'quantity' => 1,
+                'price' => $service->price,
+            ]);
+        }
 
-        return response()->json(['data' => $booking], 201);
+        if ($roomType) {
+            $roomType->decrement('available_rooms', $validated['number_of_rooms']);
+        } else {
+            $hotel->decrement('available_rooms', $validated['number_of_rooms']);
+        }
+
+        return response()->json(['data' => $booking->load('extraServices')], 201);
     }
 }

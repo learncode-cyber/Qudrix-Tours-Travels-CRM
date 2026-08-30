@@ -28,6 +28,16 @@ class Hotel extends Model
         return $this->hasMany(HotelBooking::class);
     }
 
+    public function roomTypes(): HasMany
+    {
+        return $this->hasMany(HotelRoomType::class);
+    }
+
+    public function extraServices(): HasMany
+    {
+        return $this->hasMany(HotelExtraService::class);
+    }
+
     public function isAvailable(): bool
     {
         return $this->available_rooms > 0 && $this->status === 'active';

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\VisaApplication;
+use App\Models\VisaChecklistItem;
+use App\Models\VisaDocumentRequirement;
 use Illuminate\Http\Request;
 
 class VisaController extends Controller
@@ -31,7 +33,9 @@ class VisaController extends Controller
             'booking_traveler_id' => 'required|exists:booking_travelers,id',
             'destination_country' => 'required|string|size:2',
             'visa_type' => 'required|string',
+            'embassy' => 'nullable|string',
             'agency_name' => 'nullable|string',
+            'assigned_to' => 'nullable|exists:users,id',
         ]);
 
         $visa = VisaApplication::create([
@@ -41,7 +45,53 @@ class VisaController extends Controller
             ...$validated
         ]);
 
-        return response()->json(['data' => $visa], 201);
+        // Seed the document checklist from the configurable per-country/
+        // type requirements, if any have been defined.
+        $requirements = VisaDocumentRequirement::where('tenant_id', $request->user->tenant_id)
+            ->where('destination_country', $validated['destination_country'])
+            ->where('visa_type', $validated['visa_type'])
+            ->get();
+        foreach ($requirements as $requirement) {
+            VisaChecklistItem::create([
+                'visa_application_id' => $visa->id,
+                'visa_document_requirement_id' => $requirement->id,
+                'document_name' => $requirement->document_name,
+                'status' => 'missing',
+            ]);
+        }
+
+        return response()->json(['data' => $visa->load('checklistItems')], 201);
+    }
+
+    public function checklist(Request $request, $id)
+    {
+        $visa = VisaApplication::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
+        return response()->json(['data' => $visa->checklistItems]);
+    }
+
+    public function updateChecklistItem(Request $request, $id, $itemId)
+    {
+        $visa = VisaApplication::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
+        $item = VisaChecklistItem::where('visa_application_id', $visa->id)->findOrFail($itemId);
+        $validated = $request->validate([
+            'status' => 'required|in:missing,submitted,verified,rejected',
+        ]);
+        $update = ['status' => $validated['status']];
+        if ($validated['status'] === 'submitted') {
+            $update['submitted_at'] = now();
+        } elseif ($validated['status'] === 'verified') {
+            $update['verified_at'] = now();
+        }
+        $item->update($update);
+        return response()->json(['data' => $item]);
+    }
+
+    public function assign(Request $request, $id)
+    {
+        $visa = VisaApplication::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
+        $validated = $request->validate(['assigned_to' => 'required|exists:users,id']);
+        $visa->update($validated);
+        return response()->json(['data' => $visa]);
     }
 
     public function show(Request $request, $id)

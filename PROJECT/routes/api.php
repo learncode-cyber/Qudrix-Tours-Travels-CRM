@@ -131,10 +131,18 @@ Route::prefix('v1')->group(function () {
         // Flights
         Route::apiResource('flights', '\App\Http\Controllers\FlightController');
         Route::post('/flights/book', '\App\Http\Controllers\FlightController@bookFlight');
+        Route::post('/flight-bookings/{id}/cancel', '\App\Http\Controllers\FlightController@cancelFlightBooking');
 
         // Hotels
         Route::apiResource('hotels', '\App\Http\Controllers\HotelController');
         Route::post('/hotels/book', '\App\Http\Controllers\HotelController@bookHotel');
+        Route::get('/hotels/{hotelId}/room-types', '\App\Http\Controllers\HotelRoomTypeController@index');
+        Route::post('/hotels/{hotelId}/room-types', '\App\Http\Controllers\HotelRoomTypeController@store');
+        Route::put('/hotels/{hotelId}/room-types/{id}', '\App\Http\Controllers\HotelRoomTypeController@update');
+        Route::delete('/hotels/{hotelId}/room-types/{id}', '\App\Http\Controllers\HotelRoomTypeController@destroy');
+        Route::get('/hotels/{hotelId}/extra-services', '\App\Http\Controllers\HotelExtraServiceController@index');
+        Route::post('/hotels/{hotelId}/extra-services', '\App\Http\Controllers\HotelExtraServiceController@store');
+        Route::delete('/hotels/{hotelId}/extra-services/{id}', '\App\Http\Controllers\HotelExtraServiceController@destroy');
 
         // Transport
         Route::apiResource('transports', '\App\Http\Controllers\TransportController');
@@ -147,7 +155,15 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('visas', '\App\Http\Controllers\VisaController');
         Route::post('/visas/{id}/submit', '\App\Http\Controllers\VisaController@submitApplication');
         Route::post('/visas/{id}/approve', '\App\Http\Controllers\VisaController@approveVisa');
+        Route::post('/visas/{id}/assign', '\App\Http\Controllers\VisaController@assign');
+        Route::get('/visas/{id}/checklist', '\App\Http\Controllers\VisaController@checklist');
+        Route::put('/visas/{id}/checklist/{itemId}', '\App\Http\Controllers\VisaController@updateChecklistItem');
         Route::get('/visas/booking/{bookingId}/status', '\App\Http\Controllers\VisaController@getVisaStatus');
+
+        // Visa document requirements (admin-configurable per country/type)
+        Route::get('/visa-document-requirements', '\App\Http\Controllers\VisaDocumentRequirementController@index');
+        Route::post('/visa-document-requirements', '\App\Http\Controllers\VisaDocumentRequirementController@store');
+        Route::delete('/visa-document-requirements/{id}', '\App\Http\Controllers\VisaDocumentRequirementController@destroy');
     });
 
     // Phase 5: Hajj/Umrah/Tours & Expense/Supplier/Complaint Management

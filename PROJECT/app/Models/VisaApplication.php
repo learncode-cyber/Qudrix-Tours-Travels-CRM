@@ -12,17 +12,21 @@ class VisaApplication extends Model
 
     protected $fillable = [
         'tenant_id', 'booking_id', 'booking_traveler_id', 'destination_country',
-        'visa_type', 'application_date', 'submission_date', 'approval_date',
+        'embassy', 'visa_type', 'application_date', 'submission_date',
+        'appointment_date', 'expected_completion_date', 'approval_date',
         'visa_number', 'issue_date', 'expiry_date', 'status', 'documents',
-        'notes', 'agency_name', 'agency_reference'
+        'notes', 'agency_name', 'agency_reference', 'assigned_to'
     ];
 
     protected $casts = [
         'application_date' => 'datetime',
         'submission_date' => 'datetime',
+        'appointment_date' => 'datetime',
+        'expected_completion_date' => 'date',
         'approval_date' => 'datetime',
         'issue_date' => 'datetime',
         'expiry_date' => 'datetime',
+        'documents' => 'json',
     ];
 
     public function tenant(): BelongsTo
@@ -38,6 +42,16 @@ class VisaApplication extends Model
     public function traveler(): BelongsTo
     {
         return $this->belongsTo(BookingTraveler::class, 'booking_traveler_id');
+    }
+
+    public function assignee(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to');
+    }
+
+    public function checklistItems()
+    {
+        return $this->hasMany(VisaChecklistItem::class);
     }
 
     public function isApproved(): bool
