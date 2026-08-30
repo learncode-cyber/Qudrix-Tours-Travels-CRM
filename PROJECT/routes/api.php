@@ -216,6 +216,15 @@ Route::prefix('v1')->group(function () {
         Route::put('/complaints/{id}/status', '\App\Http\Controllers\ComplaintController@updateStatus');
     });
 
+    // Phase 12: Executive Dashboard + Behavioural Analytics (real data only).
+    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+        Route::get('/analytics/executive-dashboard', '\App\Http\Controllers\AnalyticsDashboardController@executive');
+        Route::get('/analytics/behavioral', '\App\Http\Controllers\AnalyticsDashboardController@behavioral');
+        Route::get('/analytics/pipeline', '\App\Http\Controllers\AnalyticsDashboardController@pipeline');
+        Route::get('/analytics/revenue-trend', '\App\Http\Controllers\AnalyticsDashboardController@revenueTrend');
+        Route::get('/analytics/quotation-funnel', '\App\Http\Controllers\AnalyticsDashboardController@quotationFunnel');
+    });
+
     // Phase 11: Sales Strategy Manager, Customer Memory, AI Copilot.
     Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
         Route::apiResource('sales-strategies', '\App\Http\Controllers\SalesStrategyController')->only(['index', 'store', 'update', 'destroy']);
