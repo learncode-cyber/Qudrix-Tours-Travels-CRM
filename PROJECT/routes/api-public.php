@@ -81,7 +81,7 @@ Route::prefix('v1')->middleware(['api', 'api.key', 'rate.limit'])->group(functio
 // ============================================
 // Staff-only admin management of API keys: JWT session, not the API key
 // being managed.
-Route::prefix('admin/api')->middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+Route::prefix('admin/api')->middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
     
     Route::prefix('api-keys')->group(function () {
         // List all API keys
@@ -168,7 +168,7 @@ Route::get('/docs', function () {
 })->name('api.docs')->withoutMiddleware(['auth:api']);
 
 // Webhook Management (Admin)
-Route::middleware(['jwt.auth', 'tenant', 'audit'])->prefix('admin/api/webhooks')->group(function () {
+Route::middleware(['app.jwt', 'tenant', 'audit'])->prefix('admin/api/webhooks')->group(function () {
     Route::get('/', 'App\Http\Controllers\Admin\AdminWebhookController@index')->name('admin.webhooks.index');
     Route::get('/events', 'App\Http\Controllers\Admin\AdminWebhookController@getAvailableEvents')->name('admin.webhooks.events');
     Route::post('/', 'App\Http\Controllers\Admin\AdminWebhookController@store')->name('admin.webhooks.store');
@@ -185,7 +185,7 @@ Route::middleware(['jwt.auth', 'tenant', 'audit'])->prefix('admin/api/webhooks')
 });
 
 // Website Integration Management (Admin)
-Route::middleware(['jwt.auth', 'tenant', 'audit'])->prefix('admin/api/integrations')->group(function () {
+Route::middleware(['app.jwt', 'tenant', 'audit'])->prefix('admin/api/integrations')->group(function () {
     Route::get('/', 'App\\Http\\Controllers\\Admin\\IntegrationController@index')->name('admin.integrations.index');
     Route::post('/', 'App\\Http\\Controllers\\Admin\\IntegrationController@store')->name('admin.integrations.store');
     Route::get('/{id}', 'App\\Http\\Controllers\\Admin\\IntegrationController@show')->name('admin.integrations.show');

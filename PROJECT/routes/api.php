@@ -6,21 +6,31 @@ use App\Http\Controllers\HealthController;
 
 Route::prefix('v1')->group(function () {
     // Health check
-    Route::get('/health', [HealthController::class, 'check']);
+    // FIXED: this pointed at HealthController::check(), a method that has
+    // never existed on that class — the actual methods are status() and
+    // detailed(). It also duplicated the /health URI with the Phase 9
+    // registration below, and since Laravel's route collection keys routes
+    // by method+URI, the second registration silently overwrote this one —
+    // masking the missing-method bug behind a duplicate-route bug. A basic
+    // liveness check is left unauthenticated on purpose: load balancers and
+    // uptime monitors hit this without credentials (the same pattern as
+    // Laravel's own /up route). /health/detailed stays behind jwt.auth
+    // since it reveals disk/memory/DB internals.
+    Route::get('/health', [HealthController::class, 'status']);
 
     // Auth routes (no JWT required)
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login'])->middleware('rate.limit:5,1');
 
     // Protected routes (JWT required)
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         Route::post('/logout', [AuthController::class, 'logout']);
         Route::get('/profile', [AuthController::class, 'profile']);
         Route::put('/profile', [AuthController::class, 'updateProfile']);
     });
 
     // Phase 7: Notifications
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         Route::get('/notifications', '\App\Http\Controllers\NotificationController@index');
         Route::put('/notifications/{id}/read', '\App\Http\Controllers\NotificationController@markRead');
         Route::put('/notifications/read-all', '\App\Http\Controllers\NotificationController@markAllRead');
@@ -28,14 +38,14 @@ Route::prefix('v1')->group(function () {
     });
 
     // Phase 1: Customer Management (protected routes)
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         Route::apiResource('customers', '\App\Http\Controllers\CustomerController');
         Route::post('/customers/{id}/family', '\App\Http\Controllers\CustomerController@addFamily');
         Route::get('/customers/{id}/family', '\App\Http\Controllers\CustomerController@getFamily');
     });
 
     // Phase 1: Lead Management (protected routes)
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         Route::apiResource('leads', '\App\Http\Controllers\LeadController')->only(['index', 'store', 'show']);
         Route::put('/leads/{id}/status', '\App\Http\Controllers\LeadController@updateStatus');
         Route::put('/leads/{id}/assign', '\App\Http\Controllers\LeadController@assignLead');
@@ -45,7 +55,7 @@ Route::prefix('v1')->group(function () {
     });
 
     // Phase 1: Communication (protected routes)
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         Route::apiResource('communications', '\App\Http\Controllers\CommunicationController')->only(['index', 'store']);
         Route::get('/customers/{customerId}/communications', '\App\Http\Controllers\CommunicationController@getCustomerCommunications');
         Route::put('/communications/{id}/read', '\App\Http\Controllers\CommunicationController@markAsRead');
@@ -53,7 +63,7 @@ Route::prefix('v1')->group(function () {
     });
 
     // Phase 1: Task Management (protected routes)
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         Route::apiResource('tasks', '\App\Http\Controllers\TaskController');
         Route::put('/tasks/{id}/complete', '\App\Http\Controllers\TaskController@markComplete');
         Route::put('/tasks/{id}/incomplete', '\App\Http\Controllers\TaskController@markIncomplete');
@@ -61,7 +71,7 @@ Route::prefix('v1')->group(function () {
     });
 
     // Phase 2: Sales Pipeline & Quotations (protected routes)
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         // Quotation Management
         Route::apiResource('quotations', '\App\Http\Controllers\QuotationController')->except('destroy');
         Route::post('/quotations/{id}/send', '\App\Http\Controllers\QuotationController@sendQuotation');
@@ -107,7 +117,7 @@ Route::prefix('v1')->group(function () {
     });
 
     // Phase 3: Booking Engine (protected routes)
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         // Booking Management
         Route::apiResource('bookings', '\App\Http\Controllers\BookingController');
         Route::post('/bookings/{id}/confirm', '\App\Http\Controllers\BookingController@confirmBooking');
@@ -136,7 +146,7 @@ Route::prefix('v1')->group(function () {
     });
 
     // Phase 4: Travel Management (Flights, Hotels, Transport, Destinations, Visa)
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         // Flights
         Route::apiResource('flights', '\App\Http\Controllers\FlightController');
         Route::post('/flights/book', '\App\Http\Controllers\FlightController@bookFlight');
@@ -176,7 +186,7 @@ Route::prefix('v1')->group(function () {
     });
 
     // Phase 5: Hajj/Umrah/Tours & Expense/Supplier/Complaint Management
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         // Hajj Packages
         Route::apiResource('hajj', '\App\Http\Controllers\HajjController')->only(['index', 'store', 'show', 'update']);
         
@@ -217,7 +227,7 @@ Route::prefix('v1')->group(function () {
     });
 
     // Phase 17: Marketing Tools + Unified Conversations.
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         // Marketing
         Route::get('/marketing/contact-lists', '\App\Http\Controllers\MarketingController@contactLists');
         Route::post('/marketing/contact-lists', '\App\Http\Controllers\MarketingController@storeContactList');
@@ -244,7 +254,7 @@ Route::prefix('v1')->group(function () {
     });
 
     // Phase 16: HRM + B2B Agent Management.
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         // HRM
         Route::get('/hrm/employees', '\App\Http\Controllers\HrmController@employees');
         Route::post('/hrm/employees', '\App\Http\Controllers\HrmController@storeEmployee');
@@ -281,14 +291,14 @@ Route::prefix('v1')->group(function () {
     // Phase 14: AI Complaint Handling. Triage output is stored as a
     // suggestion; only a critical severity auto-escalates for human
     // attention, and nothing is ever answered or resolved automatically.
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         Route::post('/support-tickets/{ticketId}/ai-triage', '\App\Http\Controllers\AiComplaintController@triage');
         Route::get('/support-tickets/{ticketId}/ai-triage', '\App\Http\Controllers\AiComplaintController@show');
         Route::post('/support-tickets/{ticketId}/ai-triage/{triageId}/apply', '\App\Http\Controllers\AiComplaintController@apply');
     });
 
     // Phase 13: Upsell/Cross-sell Engine + Sales Script A/B Testing.
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         Route::get('/upsell-rules', '\App\Http\Controllers\UpsellController@indexRules');
         Route::post('/upsell-rules', '\App\Http\Controllers\UpsellController@storeRule');
         Route::put('/upsell-rules/{id}', '\App\Http\Controllers\UpsellController@updateRule');
@@ -311,7 +321,7 @@ Route::prefix('v1')->group(function () {
     });
 
     // Phase 12: Executive Dashboard + Behavioural Analytics (real data only).
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         Route::get('/analytics/executive-dashboard', '\App\Http\Controllers\AnalyticsDashboardController@executive');
         Route::get('/analytics/behavioral', '\App\Http\Controllers\AnalyticsDashboardController@behavioral');
         Route::get('/analytics/pipeline', '\App\Http\Controllers\AnalyticsDashboardController@pipeline');
@@ -320,7 +330,7 @@ Route::prefix('v1')->group(function () {
     });
 
     // Phase 11: Sales Strategy Manager, Customer Memory, AI Copilot.
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         Route::apiResource('sales-strategies', '\App\Http\Controllers\SalesStrategyController')->only(['index', 'store', 'update', 'destroy']);
         Route::apiResource('customer-memories', '\App\Http\Controllers\CustomerMemoryController')->only(['index', 'store', 'update', 'destroy']);
 
@@ -331,7 +341,7 @@ Route::prefix('v1')->group(function () {
     // Phase 10: AI Sales Agent + AI Package Builder.
     // Every response here is a SUGGESTION or DRAFT for a human to act on —
     // nothing is sent, booked, or priced by the model itself.
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         Route::post('/ai/leads/{leadId}/qualify', '\App\Http\Controllers\AiSalesAgentController@qualifyLead');
         Route::post('/ai/leads/{leadId}/summarize', '\App\Http\Controllers\AiSalesAgentController@summarize');
         Route::post('/ai/leads/{leadId}/suggest-reply', '\App\Http\Controllers\AiSalesAgentController@suggestReply');
@@ -342,7 +352,7 @@ Route::prefix('v1')->group(function () {
 
     // Phase 9: AI Provider Management (provider-independent).
     // Credentials are write-only here and never returned in any response.
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         Route::apiResource('ai-providers', '\App\Http\Controllers\AiProviderController')->only(['index', 'store', 'show', 'update', 'destroy']);
         Route::put('/ai-providers/{id}/credentials', '\App\Http\Controllers\AiProviderController@updateCredentials');
         Route::post('/ai-providers/{id}/test', '\App\Http\Controllers\AiProviderController@test');
@@ -352,7 +362,7 @@ Route::prefix('v1')->group(function () {
     // Phase 8: Integration Manager — operator-configurable external API
     // connectors (GDS/flight, hotel bedbank, visa provider, payment, ...)
     // plus hybrid search across internal inventory + those providers.
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         Route::apiResource('api-connectors', '\App\Http\Controllers\ApiConnectorController')->only(['index', 'store', 'show', 'update', 'destroy']);
         Route::put('/api-connectors/{id}/credentials', '\App\Http\Controllers\ApiConnectorController@updateCredentials');
         Route::post('/api-connectors/{id}/endpoints', '\App\Http\Controllers\ApiConnectorController@upsertEndpoint');
@@ -367,14 +377,14 @@ Route::prefix('v1')->group(function () {
     });
 
     // Phase 6: Dynamic Pricing Engine + Custom Package Builder
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         Route::apiResource('pricing-rules', '\App\Http\Controllers\PricingRuleController')->only(['index', 'store', 'update', 'destroy']);
         Route::post('/pricing-rules/preview', '\App\Http\Controllers\PricingRuleController@preview');
         Route::post('/package-builder/build', '\App\Http\Controllers\PackageBuilderController@build');
     });
 
     // Phase 6: Automation Engine + Templates + Dashboard
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         // Automation Management
         Route::apiResource('automations', '\App\Http\Controllers\AutomationController')->only(['index', 'store', 'show', 'update']);
         Route::post('/automations/{id}/execute', '\App\Http\Controllers\AutomationController@execute');
@@ -397,7 +407,7 @@ Route::prefix('v1')->group(function () {
     });
 
     // Phase 7: AI & Analytics + Reports + Insights + Segmentation + Predictions
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         // Analytics
         Route::get('/analytics/metrics', '\App\Http\Controllers\AnalyticsController@getMetrics');
         Route::get('/analytics/metric/{type}', '\App\Http\Controllers\AnalyticsController@getMetricByType');
@@ -425,7 +435,7 @@ Route::prefix('v1')->group(function () {
     });
 
     // Phase 8: Offline & PWA + Sync Engine + Cache Management
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         // Sync & Offline
         Route::post('/sync', '\App\Http\Controllers\SyncController@syncData');
         Route::get('/sync/pending', '\App\Http\Controllers\SyncController@getPendingSync');
@@ -451,14 +461,15 @@ Route::prefix('v1')->group(function () {
     });
 
     // Phase 9: Production Hardening & Deployment
-    Route::middleware(['jwt.auth', 'security.headers', 'rate.limit'])->group(function () {
-        Route::get('/health', '\App\Http\Controllers\HealthController@status');
+    // (the plain /health duplicate that used to live here was removed —
+    // see the fixed public registration near the top of this file)
+    Route::middleware(['app.jwt', 'security.headers', 'rate.limit'])->group(function () {
         Route::get('/health/detailed', '\App\Http\Controllers\HealthController@detailed');
     });
     
     // Phase 2: CRM completion — Companies, Contacts, Notes, Documents, Tags,
     // Custom Fields, Reminders, Customer Timeline
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         Route::apiResource('companies', '\App\Http\Controllers\CompanyController')->only(['index', 'store', 'show', 'update', 'destroy']);
         Route::apiResource('contacts', '\App\Http\Controllers\ContactController')->only(['index', 'store', 'show', 'update', 'destroy']);
 
@@ -491,12 +502,12 @@ Route::prefix('v1')->group(function () {
     });
 
     // Phase 0: Vendors (distinct from Suppliers — contracted package/service providers)
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         Route::apiResource('vendors', '\App\Http\Controllers\VendorController')->only(['index', 'store', 'show', 'update']);
     });
 
     // Phase 0: Support Tickets
-    Route::middleware(['jwt.auth', 'tenant', 'audit'])->group(function () {
+    Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         Route::apiResource('support-tickets', '\App\Http\Controllers\SupportTicketController')->only(['index', 'store', 'show']);
         Route::put('/support-tickets/{id}/status', '\App\Http\Controllers\SupportTicketController@updateStatus');
         Route::post('/support-tickets/{id}/escalate', '\App\Http\Controllers\SupportTicketController@escalate');
@@ -507,7 +518,7 @@ Route::prefix('v1')->group(function () {
     // Prefix is driven by config('admin.path') (env: ADMIN_URL_PATH) so the
     // admin URL segment can change without touching route definitions,
     // auth, or RBAC.
-    Route::prefix(config('admin.path'))->middleware(['jwt.auth', 'security.headers'])->group(function () {
+    Route::prefix(config('admin.path'))->middleware(['app.jwt', 'security.headers'])->group(function () {
         // Phase 15: security trail (access logs, audit logs, failed logins)
         Route::get('/security/access-logs', '\App\Http\Controllers\SecurityLogController@accessLogs');
         Route::get('/security/audit-logs', '\App\Http\Controllers\SecurityLogController@auditLogs');

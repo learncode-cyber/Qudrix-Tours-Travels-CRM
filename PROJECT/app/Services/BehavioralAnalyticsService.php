@@ -135,12 +135,21 @@ class BehavioralAnalyticsService
      */
     public function revenueTrend(int $tenantId, int $months = 6): array
     {
-        $since = now()->subMonths($months - 1)->startOfMonth();
+        $since = now()->startOfMonth()->subMonths($months - 1);
+
+        // DATE_FORMAT() is MySQL-only; SQLite (used for local/CI runs) needs
+        // strftime() for the same year-month grouping. Postgres would need
+        // to_char() but isn't a supported driver for this app.
+        $driver = Payment::query()->getConnection()->getDriverName();
+        $periodExpr = match ($driver) {
+            'sqlite' => "strftime('%Y-%m', created_at)",
+            default => "DATE_FORMAT(created_at, '%Y-%m')",
+        };
 
         $rows = Payment::where('tenant_id', $tenantId)
             ->where('status', 'completed')
             ->where('created_at', '>=', $since)
-            ->selectRaw("DATE_FORMAT(created_at, '%Y-%m') as period, SUM(amount) as revenue, COUNT(*) as payment_count")
+            ->selectRaw("{$periodExpr} as period, SUM(amount) as revenue, COUNT(*) as payment_count")
             ->groupBy('period')
             ->orderBy('period')
             ->get()
@@ -150,7 +159,7 @@ class BehavioralAnalyticsService
         // than silently vanishing from the chart.
         $out = [];
         for ($i = 0; $i < $months; $i++) {
-            $period = now()->subMonths($months - 1 - $i)->format('Y-m');
+            $period = now()->startOfMonth()->subMonths($months - 1 - $i)->format('Y-m');
             $row = $rows->get($period);
             $out[] = [
                 'period' => $period,

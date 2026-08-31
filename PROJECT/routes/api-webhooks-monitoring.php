@@ -10,7 +10,7 @@ use App\Http\Controllers\Admin\WebhookMonitoringController;
  * Base URI: /admin/api/webhooks-monitoring
  */
 
-Route::prefix('admin/api/webhooks-monitoring')->middleware(['jwt.auth', 'tenant', 'audit'])->controller(WebhookMonitoringController::class)->group(function () {
+Route::prefix('admin/api/webhooks-monitoring')->middleware(['app.jwt', 'tenant', 'audit'])->controller(WebhookMonitoringController::class)->group(function () {
 
     /**
      * Health Check Endpoints

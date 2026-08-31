@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Casts\AsJson;
 
 class Booking extends Model
 {
@@ -25,7 +24,7 @@ class Booking extends Model
         'travel_date' => 'datetime',
         'return_date' => 'datetime',
         'confirmation_date' => 'datetime',
-        'special_requests' => AsJson::class,
+        'special_requests' => 'array',
     ];
 
     protected $dates = ['travel_date', 'return_date', 'confirmation_date'];

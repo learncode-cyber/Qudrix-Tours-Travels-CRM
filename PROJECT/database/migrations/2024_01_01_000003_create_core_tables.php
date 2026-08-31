@@ -150,6 +150,7 @@ return new class extends Migration
             $table->timestamp('paid_at')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index(['tenant_id', 'status']);
             $table->index('booking_id');

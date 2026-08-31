@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Casts\AsJson;
 
 class Package extends Model
 {
@@ -20,8 +19,8 @@ class Package extends Model
     ];
 
     protected $casts = [
-        'inclusions' => AsJson::class,
-        'exclusions' => AsJson::class,
+        'inclusions' => 'array',
+        'exclusions' => 'array',
         'is_active' => 'boolean',
         'base_price' => 'decimal:2',
         'is_custom_built' => 'boolean',

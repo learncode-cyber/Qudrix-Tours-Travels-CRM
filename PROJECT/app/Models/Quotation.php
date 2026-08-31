@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Casts\AsJson;
 
 class Quotation extends Model
 {
@@ -23,7 +22,7 @@ class Quotation extends Model
 
     protected $casts = [
         'valid_until' => 'datetime',
-        'payment_terms' => AsJson::class,
+        'payment_terms' => 'array',
         'requires_approval' => 'boolean',
         'approved_at' => 'datetime',
     ];

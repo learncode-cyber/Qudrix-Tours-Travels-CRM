@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Casts\AsJson;
 
 class Communication extends Model
 {
@@ -16,7 +15,7 @@ class Communication extends Model
     protected $casts = [
         'sent_at' => 'datetime',
         'read_at' => 'datetime',
-        'metadata' => AsJson::class,
+        'metadata' => 'array',
     ];
 
     protected $dates = ['sent_at', 'read_at'];

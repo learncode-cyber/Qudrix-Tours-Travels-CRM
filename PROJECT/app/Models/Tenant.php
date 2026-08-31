@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Casts\AsJson;
 
 class Tenant extends Model
 {
@@ -17,7 +16,7 @@ class Tenant extends Model
     ];
 
     protected $casts = [
-        'settings' => AsJson::class,
+        'settings' => 'array',
         'is_active' => 'boolean',
         'trial_ends_at' => 'datetime',
     ];

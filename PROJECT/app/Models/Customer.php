@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Casts\AsJson;
 use App\Models\Concerns\Taggable;
 
 class Customer extends Model
@@ -21,7 +20,7 @@ class Customer extends Model
     ];
 
     protected $casts = [
-        'additional_info' => AsJson::class,
+        'additional_info' => 'array',
         'is_active' => 'boolean',
     ];
 

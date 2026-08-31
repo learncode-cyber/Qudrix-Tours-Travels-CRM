@@ -36,7 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
-            'jwt.auth' => \App\Http\Middleware\JwtAuth::class,
+            'app.jwt' => \App\Http\Middleware\JwtAuth::class,
             'tenant' => \App\Http\Middleware\TenantMiddleware::class,
             'tenant.scope' => \App\Http\Middleware\ValidateTenantScope::class,
             'audit' => \App\Http\Middleware\AuditMiddleware::class,

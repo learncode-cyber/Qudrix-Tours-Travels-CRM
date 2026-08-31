@@ -6,7 +6,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Casts\AsJson;
 
 class Branch extends Model
 {
@@ -20,7 +19,7 @@ class Branch extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
-        'settings' => AsJson::class,
+        'settings' => 'array',
     ];
 
     public function tenant(): BelongsTo
