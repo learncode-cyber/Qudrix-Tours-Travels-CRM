@@ -161,6 +161,16 @@ class BookingController extends Controller
         ]);
     }
 
+    // apiResource('bookings', ...) registers DELETE /bookings/{booking} —
+    // it didn't exist, so that route 500'd the moment anything called it.
+    public function destroy(Request $request, $id)
+    {
+        $booking = Booking::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
+        $booking->delete();
+
+        return response()->json(['message' => 'Booking deleted successfully']);
+    }
+
     public function getBookingStats(Request $request)
     {
         $tenantId = $request->user->tenant_id;
@@ -181,5 +191,25 @@ class BookingController extends Controller
         ];
 
         return response()->json(['data' => $stats]);
+    }
+
+    // Booking calendar: every booking whose travel window overlaps
+    // [from, to], for a calendar/timeline view. Defaults to the current
+    // month if no range is given.
+    public function calendar(Request $request)
+    {
+        $tenantId = $request->user->tenant_id;
+
+        $from = $request->from ? \Carbon\Carbon::parse($request->from)->startOfDay() : now()->startOfMonth();
+        $to = $request->to ? \Carbon\Carbon::parse($request->to)->endOfDay() : now()->endOfMonth();
+
+        $bookings = Booking::where('tenant_id', $tenantId)
+            ->where('travel_date', '<=', $to)
+            ->where('return_date', '>=', $from)
+            ->with(['customer', 'package'])
+            ->orderBy('travel_date')
+            ->get(['id', 'booking_number', 'customer_id', 'package_id', 'status', 'travel_date', 'return_date', 'number_of_travelers', 'total_amount', 'currency']);
+
+        return response()->json(['data' => $bookings]);
     }
 }

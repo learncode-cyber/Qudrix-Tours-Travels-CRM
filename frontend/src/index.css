@@ -585,6 +585,24 @@ button {
   text-align: center;
 }
 
+.state-block.success {
+  background: var(--color-success-bg, #ecfdf5);
+  color: var(--color-success, #047857);
+  border: 1px solid #a7f3d0;
+}
+
+.field-hint {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  margin: 0 0 4px;
+}
+
+.field-inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
 .not-available {
   color: var(--color-text-muted);
   font-style: italic;

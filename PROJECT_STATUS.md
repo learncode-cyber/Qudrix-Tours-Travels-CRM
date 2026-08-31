@@ -12,7 +12,7 @@ for the fullest recent verification transcript.
 | 1 | Backend Foundation + Auth + RBAC | ✅ Complete (backend). RBAC middleware exists (`RBACMiddleware`) but is not yet attached to any route — see Known Limitations below. |
 | 2 | Complete CRM | ✅ Complete — see `DOCUMENTATION/PHASE_2_REPORT.md` |
 | 3 | Sales + Quotation | ✅ Complete — see `DOCUMENTATION/PHASE_3_REPORT.md` |
-| 4 | Travel Operations (Flights/Hotels/Visa/Bookings) | ✅ Backend complete (prior sessions); no frontend yet |
+| 4 | Travel Operations (Flights/Hotels/Visa/Bookings) | ✅ Complete — see `DOCUMENTATION/PHASE_4_REPORT.md` |
 | 5 | Hajj & Umrah + Student Visa | ✅ Backend complete (prior sessions); no frontend yet |
 | 6 | Custom Package Builder + Pricing Engine | ✅ Backend complete (prior sessions); no frontend yet |
 | 7 | Telegram + Notification System | ✅ Backend complete (prior sessions); Telegram delivery UNVERIFIED — no outbound network in this sandbox |
@@ -48,11 +48,14 @@ live-verified end-to-end rather than syntax-checked only.
 A React + TypeScript frontend was started with Master Directive Phase 2
 (`/frontend`) — the first UI code anywhere in this repository. It now
 covers Phase 2's CRM surface (login, dashboard, customers + 360
-profile, leads + pipeline, deals + pipeline, tasks) and Phase 3's Sales
+profile, leads + pipeline, deals + pipeline, tasks), Phase 3's Sales
 surface (sales dashboard, quotations incl. approval workflow + PDF,
-proposals, invoices incl. payments + PDF). Phases 4–16's backend APIs
-have no frontend yet — building it out is expected to track the same
-phase-by-phase cadence going forward, per the directive.
+proposals, invoices incl. payments + PDF), and Phase 4's Travel
+Operations surface (packages, bookings + calendar, flights + seat
+booking, hotels + room types + room blocks, visas + embassies +
+expiry-reminder trigger). Phases 5–16's backend APIs have no frontend
+yet — building it out is expected to track the same phase-by-phase
+cadence going forward, per the directive.
 
 ## Known Limitations (cross-cutting, not specific to one phase)
 

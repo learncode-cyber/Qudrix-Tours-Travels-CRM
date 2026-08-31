@@ -146,7 +146,11 @@ class TaskController extends Controller
         return response()->json(['data' => $stats]);
     }
 
-    public function delete(Request $request, $id)
+    // apiResource('tasks', ...) registers DELETE /tasks/{task} routed to
+    // destroy() by Laravel convention — this was named delete(), so that
+    // route 500'd with "method does not exist" the moment anything
+    // called it.
+    public function destroy(Request $request, $id)
     {
         $task = Task::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
         $task->delete();

@@ -4,6 +4,49 @@ All notable changes to the Qudrix Travel CRM/ERP project, following the
 master development directive's phase numbering (Phase 0 = Foundation,
 Phase 1 = Backend Foundation + Auth + RBAC, Phase 2 = Complete CRM, ...).
 
+## [Unreleased] — Master Directive Phase 4: Travel Operations
+
+### Added
+- Booking calendar (`GET /bookings/calendar?from=&to=`).
+- Embassy entity (new `embassies` table, `VisaApplication.embassy_id`
+  FK) — the old `embassy` free-text column stays for backward
+  compatibility.
+- Hotel room blocks — group inventory holds distinct from the existing
+  per-guest `hotels/book` flow, with a create/release/CRUD API.
+- Visa/passport expiry reminder system: `ExpiryReminderService`, a
+  daily scheduled command (`reminders:check-expiry`), and an on-demand
+  endpoint. Idempotent — never double-creates a reminder for the same
+  expiring record.
+- Document attachment support for flight and hotel bookings (the
+  whitelist only covered `booking`/`visa_application` before).
+- **Package CRUD** (`GET/POST/PUT/DELETE /packages`) — didn't exist at
+  all before this phase, despite `Booking.package_id` and
+  `QuotationItem.package_id` depending on it entirely; found live-
+  testing the booking creation form, whose package picker had nothing
+  to populate it with.
+- Frontend: Packages, Bookings (+ calendar + detail), Flights (+ seat
+  booking), Hotels (+ room types + room blocks), Visas (+ embassies +
+  expiry-check trigger).
+
+### Fixed
+- **8 previously-broken CRUD routes across the whole app**, found by a
+  systematic scan (every `apiResource(...)` checked against its
+  controller's actual methods): `customers`/`tasks` DELETE named
+  `delete()` instead of `destroy()`; `bookings`/`hotels`/`flights`/
+  `destinations`/`suppliers`/`visas` missing `update`/`destroy`/`show`
+  entirely. Every one of these 500'd with "method does not exist" the
+  moment anything called them — invisible to `php -l`, never caught
+  until this phase's live end-to-end testing.
+- `VisaController::store` silently dropped `embassy_id` (missing from
+  its validation whitelist) even after the column and model relation
+  were added — fixed alongside adding `update()`.
+- Frontend: `/flights/book` actually takes `{travelers: [id, ...]}`
+  (auto-assigns seats) and requires `currency` on flight creation and
+  `H:i:s`-formatted times (the native `<input type="time">` only gives
+  `HH:MM`) — my own spec to the page's builder was wrong on all three
+  points; fixed the request payloads and the Book Seat form to match
+  the real contract.
+
 ## [Unreleased] — Master Directive Phase 3: Sales + Quotation
 
 ### Added

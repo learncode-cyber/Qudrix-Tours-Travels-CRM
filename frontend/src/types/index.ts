@@ -120,8 +120,198 @@ export interface TaskStats {
   [key: string]: unknown
 }
 
+export type BookingType = 'individual' | 'group' | 'corporate' | string
+export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed' | string
+export type BookingPaymentStatus = 'pending' | 'paid' | 'partial' | string
+
 export interface Booking {
   id: number
+  booking_number?: string
+  customer_id?: number | null
+  package_id?: number | null
+  lead_id?: number | null
+  booking_type: BookingType
+  status: BookingStatus
+  travel_date?: string | null
+  return_date?: string | null
+  number_of_travelers?: number | null
+  total_amount?: number | string | null
+  currency?: string | null
+  payment_status?: BookingPaymentStatus
+  visa_required?: boolean
+  special_requests?: string | null
+  notes?: string | null
+  customer?: { id: number; name?: string } | null
+  package?: { id: number; name?: string } | null
+  travelers?: BookingTraveler[]
+  flight_bookings?: FlightBooking[]
+  hotel_bookings?: unknown[]
+  visa_applications?: VisaApplication[]
+  created_at?: string
+  updated_at?: string
+  [key: string]: unknown
+}
+
+export interface BookingTraveler {
+  id: number
+  name?: string
+  [key: string]: unknown
+}
+
+export interface BookingStats {
+  total?: number
+  pending?: number
+  confirmed?: number
+  cancelled?: number
+  total_travelers?: number
+  total_revenue?: number | string
+  upcoming_bookings?: number
+  [key: string]: unknown
+}
+
+export interface Package {
+  id: number
+  name: string
+  code?: string | null
+  type?: string | null
+  description?: string | null
+  days?: number | null
+  nights?: number | null
+  destination?: string | null
+  base_price?: number | string | null
+  is_active?: boolean
+  status?: string | null
+  [key: string]: unknown
+}
+
+export interface Flight {
+  id: number
+  airline_code?: string | null
+  flight_number?: string | null
+  departure_airport?: string | null
+  arrival_airport?: string | null
+  departure_date?: string | null
+  arrival_date?: string | null
+  departure_time?: string | null
+  arrival_time?: string | null
+  aircraft_type?: string | null
+  total_seats?: number | null
+  available_seats?: number | null
+  price_per_seat?: number | string | null
+  [key: string]: unknown
+}
+
+export interface FlightBooking {
+  id: number
+  flight_id?: number
+  booking_id?: number
+  booking_traveler_id?: number
+  seat_number?: string | null
+  cabin_class?: string | null
+  fare_type?: string | null
+  status?: string | null
+  [key: string]: unknown
+}
+
+export interface Hotel {
+  id: number
+  name: string
+  city?: string | null
+  country?: string | null
+  address?: string | null
+  phone?: string | null
+  email?: string | null
+  star_rating?: number | null
+  total_rooms?: number | null
+  available_rooms?: number | null
+  price_per_night?: number | string | null
+  currency?: string | null
+  [key: string]: unknown
+}
+
+export interface HotelRoomType {
+  id: number
+  hotel_id?: number
+  name: string
+  capacity?: number | null
+  total_rooms?: number | null
+  available_rooms?: number | null
+  price_per_night?: number | string | null
+  currency?: string | null
+  [key: string]: unknown
+}
+
+export type RoomBlockStatus = 'held' | 'partially_released' | 'released' | string
+
+export interface RoomBlock {
+  id: number
+  hotel_id: number
+  hotel_room_type_id: number
+  group_booking_id?: number | null
+  name?: string | null
+  blocked_rooms: number
+  released_rooms?: number | null
+  start_date?: string | null
+  end_date?: string | null
+  status: RoomBlockStatus
+  notes?: string | null
+  hotel?: { id: number; name?: string } | null
+  roomType?: { id: number; name?: string } | null
+  [key: string]: unknown
+}
+
+export type VisaStatus = 'pending' | 'submitted' | 'approved' | 'rejected' | string
+
+export interface VisaApplication {
+  id: number
+  booking_id?: number | null
+  booking_traveler_id?: number | null
+  destination_country?: string | null
+  embassy?: string | null
+  embassy_id?: number | null
+  visa_type?: string | null
+  application_date?: string | null
+  submission_date?: string | null
+  appointment_date?: string | null
+  approval_date?: string | null
+  visa_number?: string | null
+  issue_date?: string | null
+  expiry_date?: string | null
+  status: VisaStatus
+  agency_name?: string | null
+  notes?: string | null
+  [key: string]: unknown
+}
+
+export type VisaChecklistItemStatus = 'missing' | 'submitted' | 'verified' | 'rejected' | string
+
+export interface VisaChecklistItem {
+  id: number
+  document_name: string
+  status: VisaChecklistItemStatus
+  [key: string]: unknown
+}
+
+export interface VisaBookingStatus {
+  total_travelers?: number
+  approved?: number
+  pending?: number
+  submitted?: number
+  expired?: number
+  [key: string]: unknown
+}
+
+export interface Embassy {
+  id: number
+  name: string
+  country?: string | null
+  city?: string | null
+  address?: string | null
+  contact_email?: string | null
+  contact_phone?: string | null
+  website?: string | null
+  average_processing_days?: number | null
+  notes?: string | null
   [key: string]: unknown
 }
 

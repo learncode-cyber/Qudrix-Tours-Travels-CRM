@@ -12,7 +12,7 @@ class VisaApplication extends Model
 
     protected $fillable = [
         'tenant_id', 'booking_id', 'booking_traveler_id', 'destination_country',
-        'embassy', 'visa_type', 'application_date', 'submission_date',
+        'embassy', 'embassy_id', 'visa_type', 'application_date', 'submission_date',
         'appointment_date', 'expected_completion_date', 'approval_date',
         'visa_number', 'issue_date', 'expiry_date', 'status', 'documents',
         'notes', 'agency_name', 'agency_reference', 'assigned_to'
@@ -52,6 +52,11 @@ class VisaApplication extends Model
     public function checklistItems()
     {
         return $this->hasMany(VisaChecklistItem::class);
+    }
+
+    public function embassyRecord(): BelongsTo
+    {
+        return $this->belongsTo(Embassy::class, 'embassy_id');
     }
 
     public function isApproved(): bool

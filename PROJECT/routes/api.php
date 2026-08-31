@@ -166,6 +166,7 @@ Route::prefix('v1')->group(function () {
         // quotations block: a literal segment after a wildcard is
         // unreachable under Laravel's registration-order route matching.
         Route::get('/bookings/stats', '\App\Http\Controllers\BookingController@getBookingStats');
+        Route::get('/bookings/calendar', '\App\Http\Controllers\BookingController@calendar');
         Route::apiResource('bookings', '\App\Http\Controllers\BookingController');
         Route::post('/bookings/{id}/confirm', '\App\Http\Controllers\BookingController@confirmBooking');
         Route::post('/bookings/{id}/cancel', '\App\Http\Controllers\BookingController@cancelBooking');
@@ -216,6 +217,10 @@ Route::prefix('v1')->group(function () {
         // Destinations
         Route::apiResource('destinations', '\App\Http\Controllers\DestinationController');
 
+        // Packages (basic CRUD) — Booking/QuotationItem/booking UI all
+        // depend on this and had no plain list/create endpoint until now.
+        Route::apiResource('packages', '\App\Http\Controllers\PackageController');
+
         // Visas
         Route::apiResource('visas', '\App\Http\Controllers\VisaController');
         Route::post('/visas/{id}/submit', '\App\Http\Controllers\VisaController@submitApplication');
@@ -229,6 +234,18 @@ Route::prefix('v1')->group(function () {
         Route::get('/visa-document-requirements', '\App\Http\Controllers\VisaDocumentRequirementController@index');
         Route::post('/visa-document-requirements', '\App\Http\Controllers\VisaDocumentRequirementController@store');
         Route::delete('/visa-document-requirements/{id}', '\App\Http\Controllers\VisaDocumentRequirementController@destroy');
+
+        // Embassies (Phase 4)
+        Route::apiResource('embassies', '\App\Http\Controllers\EmbassyController');
+
+        // Visa/passport expiry reminders (Phase 4) — on-demand trigger of
+        // the same sweep routes/console.php schedules daily.
+        Route::post('/visas/check-expiry-reminders', '\App\Http\Controllers\VisaController@checkExpiryReminders');
+
+        // Hotel room blocks (Phase 4) — group inventory holds, distinct
+        // from HotelController@bookHotel's per-guest booking flow.
+        Route::apiResource('room-blocks', '\App\Http\Controllers\RoomBlockController')->except('update');
+        Route::post('/room-blocks/{id}/release', '\App\Http\Controllers\RoomBlockController@release');
     });
 
     // Phase 5: Hajj/Umrah/Tours & Expense/Supplier/Complaint Management

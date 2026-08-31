@@ -107,7 +107,11 @@ class CustomerController extends Controller
         ]);
     }
 
-    public function delete(Request $request, $id)
+    // apiResource('customers', ...) registers DELETE /customers/{customer}
+    // routed to destroy() by Laravel convention — this was named delete(),
+    // so that route 500'd with "method does not exist" the moment
+    // anything called it.
+    public function destroy(Request $request, $id)
     {
         $customer = Customer::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
         $customer->delete();

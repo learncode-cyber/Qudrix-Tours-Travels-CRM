@@ -1257,6 +1257,45 @@ Same auth requirements as the Phase 2 addendum above (JWT bearer, `Accept: appli
 
 ---
 
+## MASTER DIRECTIVE PHASE 4 ADDENDUM — Travel Operations (appended, not a rewrite)
+
+Same auth requirements as the Phase 2/3 addenda above.
+
+### Bookings (calendar)
+- `GET /api/v1/bookings/calendar?from=&to=` — bookings whose `[travel_date, return_date]` overlaps the given range (defaults to the current month). Returns the same shape as a booking list row, with `customer`/`package` eager-loaded.
+
+### Embassies (new)
+- `GET/POST /api/v1/embassies`, `GET/PUT/DELETE /api/v1/embassies/{id}` — `{name, country, city?, address?, contact_email?, contact_phone?, website?, average_processing_days?, notes?}`
+- `VisaApplication` gained a nullable `embassy_id` FK to this table (the old free-text `embassy` string column is unchanged, for backward compatibility with existing data).
+
+### Room Blocks (new)
+- `GET/POST /api/v1/room-blocks`, `GET/DELETE /api/v1/room-blocks/{id}` — group inventory holds, distinct from `POST /api/v1/hotels/book`'s per-guest flow. `{hotel_id, hotel_room_type_id, group_booking_id?, name?, blocked_rooms, start_date, end_date, notes?}`
+- `POST /api/v1/room-blocks/{id}/release` — `{rooms}`, releases N rooms back; `status` becomes `partially_released` or `released`. **Does not** mutate `HotelRoomType.available_rooms` — this is a separate allotment ledger staff manage explicitly, not wired into the existing booking-inventory decrement logic.
+
+### Visa/Passport Expiry Reminders (new)
+- `POST /api/v1/visas/check-expiry-reminders` — `{days?: 90}`, on-demand trigger of the same sweep the daily schedule (`routes/console.php`, `php artisan reminders:check-expiry`) runs. Scans `visa_applications.expiry_date` (status=approved) and `booking_travelers.passport_expiry`, creates a `Reminder` for anything expiring within the window. Idempotent — never creates a second pending reminder for the same record.
+
+### Documents on Flight/Hotel Bookings
+- `POST /api/v1/documents` now accepts `documentable_type: flight_booking` and `documentable_type: hotel_booking` in addition to the types already supported (lead, customer, booking, visa_application, support_ticket, student_visa_application, pilgrim, agent).
+
+### Packages (new — basic CRUD)
+- `GET/POST /api/v1/packages`, `GET/PUT/DELETE /api/v1/packages/{id}` — `{name, code?, type?, description?, days?, nights?, destination?, base_price?, inclusions?, exclusions?, is_active?, status?}`. Had no endpoint at all before this phase despite `Booking.package_id` and `QuotationItem.package_id` depending on it — discovered while live-testing the booking creation UI, whose package picker had nothing to populate it with. Distinct from `PackageBuilderController`/`AiPackageBuilderController` (which construct a package from a quotation or an AI-assisted flow) — this is the plain staff CRUD path.
+
+### Fixed: 8 previously-broken CRUD routes across this app
+A systematic scan (every `Route::apiResource(...)` registration checked against its controller's actual public methods) found 8 registered routes pointing at controller methods that didn't exist, or existed under the wrong name — every one of them 500'd with "method does not exist" the moment anything actually called them, invisible to `php -l` and never caught before live end-to-end testing:
+- `DELETE /api/v1/customers/{id}`, `DELETE /api/v1/tasks/{id}` — method was named `delete()` instead of `destroy()`
+- `DELETE /api/v1/bookings/{id}` — didn't exist at all
+- `PUT/DELETE /api/v1/hotels/{id}` — neither existed
+- `GET/PUT/DELETE /api/v1/transports/{id}` — none existed
+- `DELETE /api/v1/flights/{id}`, `DELETE /api/v1/destinations/{id}` — didn't exist
+- `PUT/DELETE /api/v1/suppliers/{id}` — neither existed
+- `PUT/DELETE /api/v1/visas/{id}` — neither existed (also: `embassy_id` was missing from `store()`'s validation whitelist, so it was silently dropped on create even though the column and model support it — fixed alongside)
+
+**Phase 4 addendum version:** 1.0.0
+**Appended:** 2026-08-31
+
+---
+
 **Version:** 1.0.0  
 **Last Updated:** 2026-08-16  
 **Status:** ✅ Production Ready

@@ -51,6 +51,49 @@ class TransportController extends Controller
         return response()->json(['data' => $transport], 201);
     }
 
+    // apiResource('transports', ...) registers GET/PUT/PATCH/DELETE
+    // /transports/{transport} — none of these existed, so all three
+    // 500'd with "method does not exist" the moment anything called them.
+    public function show(Request $request, $id)
+    {
+        $transport = Transport::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
+
+        return response()->json(['data' => $transport]);
+    }
+
+    public function update(Request $request, $id)
+    {
+        $transport = Transport::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
+
+        $validated = $request->validate([
+            'transport_type' => 'sometimes|in:bus,car,van,coach',
+            'vehicle_name' => 'sometimes|string',
+            'vehicle_number' => 'sometimes|string',
+            'pickup_location' => 'sometimes|string',
+            'dropoff_location' => 'sometimes|string',
+            'pickup_date' => 'sometimes|date',
+            'pickup_time' => 'sometimes|date_format:H:i:s',
+            'capacity' => 'sometimes|integer|min:1',
+            'price_per_seat' => 'sometimes|numeric|min:0',
+            'currency' => 'sometimes|string|size:3',
+            'driver_name' => 'sometimes|string',
+            'driver_phone' => 'sometimes|string',
+            'status' => 'sometimes|in:active,inactive',
+        ]);
+
+        $transport->update($validated);
+
+        return response()->json(['message' => 'Transport updated successfully', 'data' => $transport]);
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        $transport = Transport::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
+        $transport->delete();
+
+        return response()->json(['message' => 'Transport deleted successfully']);
+    }
+
     public function bookTransport(Request $request)
     {
         $validated = $request->validate([

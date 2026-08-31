@@ -2,10 +2,17 @@ import { Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthContext'
 import AppLayout from './components/AppLayout'
 import ProtectedRoute from './components/ProtectedRoute'
+import BookingDetailPage from './pages/BookingDetailPage'
+import BookingsCalendarPage from './pages/BookingsCalendarPage'
+import BookingsPage from './pages/BookingsPage'
+import PackagesPage from './pages/PackagesPage'
 import CustomerDetailPage from './pages/CustomerDetailPage'
 import CustomersPage from './pages/CustomersPage'
 import DashboardPage from './pages/DashboardPage'
 import DealsPage from './pages/DealsPage'
+import FlightsPage from './pages/FlightsPage'
+import HotelDetailPage from './pages/HotelDetailPage'
+import HotelsPage from './pages/HotelsPage'
 import InvoicesPage from './pages/InvoicesPage'
 import LeadsPage from './pages/LeadsPage'
 import LoginPage from './pages/LoginPage'
@@ -14,6 +21,7 @@ import QuotationDetailPage from './pages/QuotationDetailPage'
 import QuotationsPage from './pages/QuotationsPage'
 import SalesDashboardPage from './pages/SalesDashboardPage'
 import TasksPage from './pages/TasksPage'
+import VisasPage from './pages/VisasPage'
 
 export default function App() {
   return (
@@ -33,6 +41,14 @@ export default function App() {
             <Route path="/quotations/:id" element={<QuotationDetailPage />} />
             <Route path="/proposals" element={<ProposalsPage />} />
             <Route path="/invoices" element={<InvoicesPage />} />
+            <Route path="/packages" element={<PackagesPage />} />
+            <Route path="/bookings" element={<BookingsPage />} />
+            <Route path="/bookings/calendar" element={<BookingsCalendarPage />} />
+            <Route path="/bookings/:id" element={<BookingDetailPage />} />
+            <Route path="/flights" element={<FlightsPage />} />
+            <Route path="/hotels" element={<HotelsPage />} />
+            <Route path="/hotels/:id" element={<HotelDetailPage />} />
+            <Route path="/visas" element={<VisasPage />} />
           </Route>
         </Route>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

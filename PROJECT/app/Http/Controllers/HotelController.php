@@ -64,6 +64,40 @@ class HotelController extends Controller
         return response()->json(['data' => $hotel]);
     }
 
+    // apiResource('hotels', ...) registers PUT/PATCH and DELETE
+    // /hotels/{hotel} — neither existed, so those routes 500'd with
+    // "method does not exist" the moment anything called them.
+    public function update(Request $request, $id)
+    {
+        $hotel = Hotel::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'sometimes|string',
+            'city' => 'sometimes|string',
+            'country' => 'sometimes|string',
+            'address' => 'sometimes|string',
+            'phone' => 'sometimes|string',
+            'email' => 'sometimes|email',
+            'website' => 'nullable|url',
+            'star_rating' => 'sometimes|integer|min:1|max:5',
+            'price_per_night' => 'sometimes|numeric|min:0',
+            'currency' => 'sometimes|string|size:3',
+            'status' => 'sometimes|in:active,inactive',
+        ]);
+
+        $hotel->update($validated);
+
+        return response()->json(['message' => 'Hotel updated successfully', 'data' => $hotel]);
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        $hotel = Hotel::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
+        $hotel->delete();
+
+        return response()->json(['message' => 'Hotel deleted successfully']);
+    }
+
     public function bookHotel(Request $request)
     {
         $validated = $request->validate([

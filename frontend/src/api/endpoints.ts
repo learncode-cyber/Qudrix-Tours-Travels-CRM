@@ -2,26 +2,38 @@ import client, { downloadFile } from './client'
 import type {
   ApiItemResponse,
   ApiListResponse,
+  Booking,
+  BookingStats,
   ConversionFunnelResponse,
   CrmDashboardResponse,
   Customer,
   Customer360Response,
   Deal,
   DealPipelineColumn,
+  Embassy,
+  Flight,
+  FlightBooking,
   FollowUp,
+  Hotel,
+  HotelRoomType,
   Invoice,
   InvoiceStats,
   Lead,
   LoginResponse,
+  Package,
   PipelineFullResponse,
   ProfileResponse,
   Proposal,
   ProposalStats,
   Quotation,
   QuotationStats,
+  RoomBlock,
   SalesDashboardResponse,
   Task,
   TaskStats,
+  VisaApplication,
+  VisaBookingStatus,
+  VisaChecklistItem,
 } from '../types'
 
 // --- Auth ---
@@ -141,3 +153,125 @@ export const downloadInvoicePdf = (id: number | string, filename: string) =>
 // --- Sales dashboard ---
 export const getSalesDashboard = () =>
   client.get<ApiItemResponse<SalesDashboardResponse>>('/sales/dashboard')
+
+// --- Packages (simple lookup for booking form) ---
+export const listPackages = () => client.get<ApiListResponse<Package>>('/packages')
+export const getPackage = (id: number | string) =>
+  client.get<ApiItemResponse<Package>>(`/packages/${id}`)
+export const createPackage = (payload: Partial<Package>) =>
+  client.post<ApiItemResponse<Package>>('/packages', payload)
+export const updatePackage = (id: number | string, payload: Partial<Package>) =>
+  client.put<ApiItemResponse<Package>>(`/packages/${id}`, payload)
+export const deletePackage = (id: number | string) => client.delete(`/packages/${id}`)
+
+// --- Bookings ---
+export const listBookings = () => client.get<ApiListResponse<Booking>>('/bookings')
+export const getBooking = (id: number | string) =>
+  client.get<ApiItemResponse<Booking>>(`/bookings/${id}`)
+export const createBooking = (payload: Partial<Booking>) =>
+  client.post<ApiItemResponse<Booking>>('/bookings', payload)
+export const updateBooking = (id: number | string, payload: Partial<Booking>) =>
+  client.put<ApiItemResponse<Booking>>(`/bookings/${id}`, payload)
+export const deleteBooking = (id: number | string) => client.delete(`/bookings/${id}`)
+export const confirmBooking = (id: number | string) =>
+  client.post<ApiItemResponse<Booking>>(`/bookings/${id}/confirm`)
+export const cancelBooking = (id: number | string) =>
+  client.post<ApiItemResponse<Booking>>(`/bookings/${id}/cancel`)
+export const getBookingStats = () => client.get<ApiItemResponse<BookingStats>>('/bookings/stats')
+export const getBookingsCalendar = (from?: string, to?: string) =>
+  client.get<ApiListResponse<Booking>>('/bookings/calendar', { params: { from, to } })
+
+// --- Flights ---
+export const listFlights = () => client.get<ApiListResponse<Flight>>('/flights')
+export const getFlight = (id: number | string) =>
+  client.get<ApiItemResponse<Flight>>(`/flights/${id}`)
+export const createFlight = (payload: Partial<Flight>) =>
+  client.post<ApiItemResponse<Flight>>('/flights', payload)
+export const updateFlight = (id: number | string, payload: Partial<Flight>) =>
+  client.put<ApiItemResponse<Flight>>(`/flights/${id}`, payload)
+export const deleteFlight = (id: number | string) => client.delete(`/flights/${id}`)
+export const bookFlightSeat = (payload: {
+  flight_id: number | string
+  booking_id: number | string
+  // The API takes an array of traveler IDs and auto-assigns seats — it
+  // does not accept a single traveler + explicit seat number.
+  travelers: (number | string)[]
+  cabin_class?: string
+  baggage_allowance?: string
+  fare_type?: string
+}) => client.post<{ message: string; data: { pnr: string } }>('/flights/book', payload)
+export const cancelFlightBooking = (id: number | string) =>
+  client.post<ApiItemResponse<FlightBooking>>(`/flight-bookings/${id}/cancel`)
+
+// --- Hotels ---
+export const listHotels = () => client.get<ApiListResponse<Hotel>>('/hotels')
+export const getHotel = (id: number | string) =>
+  client.get<ApiItemResponse<Hotel>>(`/hotels/${id}`)
+export const createHotel = (payload: Partial<Hotel>) =>
+  client.post<ApiItemResponse<Hotel>>('/hotels', payload)
+export const updateHotel = (id: number | string, payload: Partial<Hotel>) =>
+  client.put<ApiItemResponse<Hotel>>(`/hotels/${id}`, payload)
+export const deleteHotel = (id: number | string) => client.delete(`/hotels/${id}`)
+export const listHotelRoomTypes = (hotelId: number | string) =>
+  client.get<ApiListResponse<HotelRoomType>>(`/hotels/${hotelId}/room-types`)
+export const createHotelRoomType = (hotelId: number | string, payload: Partial<HotelRoomType>) =>
+  client.post<ApiItemResponse<HotelRoomType>>(`/hotels/${hotelId}/room-types`, payload)
+export const bookHotelRooms = (payload: {
+  hotel_id: number | string
+  hotel_room_type_id?: number | string
+  booking_id: number | string
+  check_in_date: string
+  check_out_date: string
+  number_of_rooms: number
+  room_type: string
+}) => client.post<ApiItemResponse<unknown>>('/hotels/book', payload)
+
+// --- Room blocks ---
+export const listRoomBlocks = () => client.get<ApiListResponse<RoomBlock>>('/room-blocks')
+export const getRoomBlock = (id: number | string) =>
+  client.get<ApiItemResponse<RoomBlock>>(`/room-blocks/${id}`)
+export const createRoomBlock = (payload: Partial<RoomBlock>) =>
+  client.post<ApiItemResponse<RoomBlock>>('/room-blocks', payload)
+export const deleteRoomBlock = (id: number | string) => client.delete(`/room-blocks/${id}`)
+export const releaseRoomBlock = (id: number | string, rooms: number) =>
+  client.post<ApiItemResponse<RoomBlock>>(`/room-blocks/${id}/release`, { rooms })
+
+// --- Visas ---
+export const listVisas = () => client.get<ApiListResponse<VisaApplication>>('/visas')
+export const getVisa = (id: number | string) =>
+  client.get<ApiItemResponse<VisaApplication>>(`/visas/${id}`)
+export const createVisa = (payload: Partial<VisaApplication>) =>
+  client.post<ApiItemResponse<VisaApplication>>('/visas', payload)
+export const updateVisa = (id: number | string, payload: Partial<VisaApplication>) =>
+  client.put<ApiItemResponse<VisaApplication>>(`/visas/${id}`, payload)
+export const deleteVisa = (id: number | string) => client.delete(`/visas/${id}`)
+export const submitVisa = (id: number | string) =>
+  client.post<ApiItemResponse<VisaApplication>>(`/visas/${id}/submit`)
+export const approveVisa = (id: number | string) =>
+  client.post<ApiItemResponse<VisaApplication>>(`/visas/${id}/approve`)
+export const assignVisa = (id: number | string, payload: Record<string, unknown>) =>
+  client.post<ApiItemResponse<VisaApplication>>(`/visas/${id}/assign`, payload)
+export const getVisaChecklist = (id: number | string) =>
+  client.get<ApiListResponse<VisaChecklistItem>>(`/visas/${id}/checklist`)
+export const updateVisaChecklistItem = (
+  id: number | string,
+  itemId: number | string,
+  status: string,
+) => client.put<ApiItemResponse<VisaChecklistItem>>(`/visas/${id}/checklist/${itemId}`, { status })
+export const getVisaBookingStatus = (bookingId: number | string) =>
+  client.get<ApiItemResponse<VisaBookingStatus>>(`/visas/booking/${bookingId}/status`)
+export const checkVisaExpiryReminders = (days?: number) =>
+  client.post<ApiItemResponse<{ visa_reminders_created: number; passport_reminders_created: number }>>(
+    '/visas/check-expiry-reminders',
+    days ? { days } : {},
+  )
+
+// --- Embassies ---
+export const listEmbassies = () => client.get<ApiListResponse<Embassy>>('/embassies')
+export const getEmbassy = (id: number | string) =>
+  client.get<ApiItemResponse<Embassy>>(`/embassies/${id}`)
+export const createEmbassy = (payload: Partial<Embassy>) =>
+  client.post<ApiItemResponse<Embassy>>('/embassies', payload)
+export const updateEmbassy = (id: number | string, payload: Partial<Embassy>) =>
+  client.put<ApiItemResponse<Embassy>>(`/embassies/${id}`, payload)
+export const deleteEmbassy = (id: number | string) => client.delete(`/embassies/${id}`)

@@ -16,6 +16,8 @@ class DocumentController extends Controller
         'student_visa_application' => \App\Models\StudentVisaApplication::class,
         'pilgrim' => \App\Models\Pilgrim::class,
         'agent' => \App\Models\Agent::class,
+        'flight_booking' => \App\Models\FlightBooking::class,
+        'hotel_booking' => \App\Models\HotelBooking::class,
     ];
 
     public function index(Request $request)

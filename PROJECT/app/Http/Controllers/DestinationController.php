@@ -70,4 +70,15 @@ class DestinationController extends Controller
 
         return response()->json(['data' => $destination]);
     }
+
+    // apiResource('destinations', ...) registers DELETE
+    // /destinations/{destination} — it didn't exist, so that route
+    // 500'd the moment anything called it.
+    public function destroy(Request $request, $id)
+    {
+        $destination = Destination::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
+        $destination->delete();
+
+        return response()->json(['message' => 'Destination deleted successfully']);
+    }
 }

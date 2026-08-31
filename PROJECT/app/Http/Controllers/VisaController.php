@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\VisaApplication;
 use App\Models\VisaChecklistItem;
 use App\Models\VisaDocumentRequirement;
+use App\Services\ExpiryReminderService;
 use Illuminate\Http\Request;
 
 class VisaController extends Controller
@@ -34,6 +35,7 @@ class VisaController extends Controller
             'destination_country' => 'required|string|size:2',
             'visa_type' => 'required|string',
             'embassy' => 'nullable|string',
+            'embassy_id' => 'nullable|exists:embassies,id',
             'agency_name' => 'nullable|string',
             'assigned_to' => 'nullable|exists:users,id',
         ]);
@@ -103,6 +105,39 @@ class VisaController extends Controller
         return response()->json(['data' => $visa]);
     }
 
+    // apiResource('visas', ...) registers PUT/PATCH and DELETE
+    // /visas/{visa} — these were missing entirely, which meant those two
+    // routes 500'd with "method does not exist" the moment anything ever
+    // called them. Added to match every other resource in this app.
+    public function update(Request $request, $id)
+    {
+        $visa = VisaApplication::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
+
+        $validated = $request->validate([
+            'destination_country' => 'sometimes|string|size:2',
+            'visa_type' => 'sometimes|string',
+            'embassy' => 'nullable|string',
+            'embassy_id' => 'nullable|exists:embassies,id',
+            'appointment_date' => 'nullable|date',
+            'agency_name' => 'nullable|string',
+            'agency_reference' => 'nullable|string',
+            'assigned_to' => 'nullable|exists:users,id',
+            'notes' => 'nullable|string',
+        ]);
+
+        $visa->update($validated);
+
+        return response()->json(['message' => 'Visa application updated successfully', 'data' => $visa]);
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        $visa = VisaApplication::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
+        $visa->delete();
+
+        return response()->json(['message' => 'Visa application deleted successfully']);
+    }
+
     public function submitApplication(Request $request, $id)
     {
         $visa = VisaApplication::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
@@ -149,5 +184,23 @@ class VisaController extends Controller
         ];
 
         return response()->json(['data' => $status]);
+    }
+
+    // On-demand trigger for the same sweep the daily schedule runs
+    // (routes/console.php) — scoped to this tenant only, and idempotent
+    // (see ExpiryReminderService), so calling it twice in a row is safe.
+    public function checkExpiryReminders(Request $request, ExpiryReminderService $service)
+    {
+        $days = (int) ($request->days ?? 90);
+        $visaReminders = $service->checkVisaExpiries($request->user->tenant_id, $days);
+        $passportReminders = $service->checkPassportExpiries($request->user->tenant_id, $days);
+
+        return response()->json([
+            'message' => 'Expiry check complete',
+            'data' => [
+                'visa_reminders_created' => $visaReminders->count(),
+                'passport_reminders_created' => $passportReminders->count(),
+            ],
+        ]);
     }
 }
