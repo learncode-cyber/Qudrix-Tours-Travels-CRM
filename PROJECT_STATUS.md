@@ -20,7 +20,7 @@ for the fullest recent verification transcript.
 | 9 | AI Provider Management | ✅ Complete — see `DOCUMENTATION/PHASE_9_REPORT.md`. A real call against Anthropic's live API (reachable here) correctly failed on an invalid key; OpenAI is unreachable from this sandbox; Gemini and any successful real completion remain UNVERIFIED |
 | 10 | AI Sales Agent | ✅ Complete — see `DOCUMENTATION/PHASE_10_REPORT.md`. Honest-failure path verified live against Anthropic's real API; a successful real completion remains UNVERIFIED (no valid API key in this sandbox) |
 | 11 | Sales Strategies + AI Copilot | ✅ Complete — see `DOCUMENTATION/PHASE_11_REPORT.md`. Honest-failure path verified live against Anthropic's real API; a successful real completion remains UNVERIFIED (no valid API key in this sandbox) |
-| 12 | Analytics + Behavioral Intelligence | ✅ Backend complete (prior sessions) |
+| 12 | Analytics + Behavioral Intelligence | ✅ Complete — see `DOCUMENTATION/PHASE_12_REPORT.md` |
 | 13 | Upsell/Cross-sell + A/B Testing | ✅ Backend complete (prior sessions) |
 | 14 | Complaint Handling + Automation | ✅ Backend complete (prior sessions) |
 | 15 | Security + Access Logging | ✅ Backend complete (prior sessions) |
@@ -68,11 +68,12 @@ Management surface (provider CRUD, API key management, connection
 testing, usage/cost reporting), Phase 10's AI Sales Agent + AI
 Package Builder surface (a per-lead AI Assistant for qualify/summarize/
 suggest-reply, and an AI Package Assistant for free-text-to-proposal
-package building), and Phase 11's Sales Strategies + Copilot surface (a
+package building), Phase 11's Sales Strategies + Copilot surface (a
 Sales Strategies CRUD page, and Copilot + Extract Memory tabs added to
-the per-lead AI Assistant). Phases 12–16's backend APIs have no
-frontend yet — building it out is expected to track the same
-phase-by-phase cadence going forward, per the directive.
+the per-lead AI Assistant), and Phase 12's Analytics surface (executive
+dashboard, behavioral analytics, quotation funnel). Phases 13–16's
+backend APIs have no frontend yet — building it out is expected to
+track the same phase-by-phase cadence going forward, per the directive.
 
 ## Known Limitations (cross-cutting, not specific to one phase)
 

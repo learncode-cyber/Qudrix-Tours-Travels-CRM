@@ -6,6 +6,7 @@ import BookingDetailPage from './pages/BookingDetailPage'
 import BookingsCalendarPage from './pages/BookingsCalendarPage'
 import AiPackageAssistantPage from './pages/AiPackageAssistantPage'
 import AiProvidersPage from './pages/AiProvidersPage'
+import AnalyticsDashboardPage from './pages/AnalyticsDashboardPage'
 import BookingsPage from './pages/BookingsPage'
 import PackagesPage from './pages/PackagesPage'
 import ConversationsPage from './pages/ConversationsPage'
@@ -75,6 +76,7 @@ export default function App() {
             <Route path="/ai-providers" element={<AiProvidersPage />} />
             <Route path="/ai-package-assistant" element={<AiPackageAssistantPage />} />
             <Route path="/sales-strategies" element={<SalesStrategiesPage />} />
+            <Route path="/analytics" element={<AnalyticsDashboardPage />} />
           </Route>
         </Route>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

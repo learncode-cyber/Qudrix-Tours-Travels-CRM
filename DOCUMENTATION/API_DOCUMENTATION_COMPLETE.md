@@ -1602,6 +1602,46 @@ deterministically via `Http::fake` in the automated suite.
 
 ---
 
+## MASTER DIRECTIVE PHASE 12 ADDENDUM — Analytics + Behavioral Intelligence (appended, not a rewrite)
+
+Same auth requirements as the Phase 2–11 addenda above. Backend
+(`AnalyticsDashboardController`/`BehavioralAnalyticsService`) already
+existed from a prior session. Live-tested end to end for the first time
+(controlled-fixture math verified, not just eyeballed), wrote its first
+automated coverage, and built its frontend. Zero bugs found, matching
+Phase 6, 8, 9 and 10.
+
+Every figure this module returns is computed from a real query — nothing
+stubbed, sampled, or estimated. Where a metric genuinely cannot be
+computed (e.g. a conversion rate with zero leads in the period), it is
+returned as `null` with an explicit note in `unavailable_metrics` rather
+than a `0` that would read as a real measurement — verified directly by
+test.
+
+### Endpoints
+- `GET /api/v1/analytics/executive-dashboard?from=&to=` — revenue (real completed-payment sum), outstanding invoice balance, lead/conversion counts, operational counts across every travel-ops module (bookings, visas, flights, hotels, pilgrims, student visas), plus nested `sales_pipeline`, `revenue_trend`, `lead_source_performance`, `staff_performance`, and `profit_and_loss` blocks.
+- `GET /api/v1/analytics/behavioral?from=&to=` — time-to-conversion (real days between lead creation and its first real booking), deal value stats, follow-up effectiveness, per-channel communication engagement (real read-rate), and customer-base repeat-customer count.
+- `GET /api/v1/analytics/pipeline` — leads grouped by status with `SUM(estimated_value)`, a real `GROUP BY`.
+- `GET /api/v1/analytics/revenue-trend?months=` — completed-payment revenue per month for the last N months, **gap-filled** so a month with genuinely zero revenue reads as `0` rather than silently missing from the series.
+- `GET /api/v1/analytics/quotation-funnel?from=&to=` — quotations grouped by status with real totals.
+
+### Fixed
+Nothing — no bugs were found in this module.
+
+### Verification note
+No AI or external network dependency in this module — every figure comes
+from a deterministic SQL query, so all live testing here used controlled
+fixtures (a booking with a completed and a pending payment, to prove only
+`completed` counts; a lead created and converted exactly 6 days apart, to
+prove `average_days` computes correctly; a memory-only expense/income
+pair, to prove P&L nets correctly) rather than depending on any real
+provider connectivity.
+
+**Phase 12 addendum version:** 1.0.0
+**Appended:** 2026-08-31
+
+---
+
 **Version:** 1.0.0  
 **Last Updated:** 2026-08-16  
 **Status:** ✅ Production Ready

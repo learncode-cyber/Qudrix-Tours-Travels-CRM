@@ -13,6 +13,7 @@ import type {
   AiSuggestedReply,
   AiUsageResponse,
   ApiConnector,
+  BehavioralAnalyticsData,
   ApiConnectorAuthType,
   ApiConnectorCallLog,
   ApiConnectorCategory,
@@ -32,6 +33,7 @@ import type {
   Deal,
   DealPipelineColumn,
   Embassy,
+  ExecutiveDashboardData,
   Flight,
   FlightBooking,
   FollowUp,
@@ -582,6 +584,22 @@ export const aiCopilotAssist = (leadId: number | string, latest_customer_message
   client.post<ApiItemResponse<AiCopilotAssistResult>>(`/ai/leads/${leadId}/copilot`, { latest_customer_message })
 export const aiExtractMemory = (leadId: number | string) =>
   client.post<ApiItemResponse<AiMemoryExtractionResult>>(`/ai/leads/${leadId}/extract-memory`)
+
+// --- Analytics ---
+export const getExecutiveDashboard = (from?: string, to?: string) =>
+  client.get<ApiItemResponse<ExecutiveDashboardData>>('/analytics/executive-dashboard', { params: { from, to } })
+export const getBehavioralAnalytics = (from?: string, to?: string) =>
+  client.get<ApiItemResponse<BehavioralAnalyticsData>>('/analytics/behavioral', { params: { from, to } })
+export const getSalesPipelineAnalytics = () =>
+  client.get<ApiListResponse<{ status: string; lead_count: number; total_estimated_value: number }>>('/analytics/pipeline')
+export const getRevenueTrend = (months?: number) =>
+  client.get<ApiListResponse<{ period: string; revenue: number; payment_count: number }>>('/analytics/revenue-trend', {
+    params: { months },
+  })
+export const getQuotationFunnel = (from?: string, to?: string) =>
+  client.get<ApiListResponse<{ status: string; count: number; value: number }>>('/analytics/quotation-funnel', {
+    params: { from, to },
+  })
 
 // --- Package Builder ---
 export const buildPackage = (payload: {

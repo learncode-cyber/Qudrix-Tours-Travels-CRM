@@ -632,6 +632,56 @@ export interface AiMemoryExtractionResult {
   [key: string]: unknown
 }
 
+export interface ExecutiveDashboardData {
+  period: { from: string; to: string }
+  revenue: { total_revenue: number; outstanding_amount: number; pending_payment_invoices: number }
+  leads: { total_leads: number; qualified_leads: number; won_leads: number; conversion_rate_percent: number | null }
+  operations: {
+    active_bookings: number
+    todays_follow_ups: number
+    upcoming_departures_30d: number
+    visa_applications: number
+    flight_bookings: number
+    hotel_bookings: number
+    hajj_umrah_pilgrims: number
+    student_visa_applications: number
+  }
+  sales_pipeline: { status: string; lead_count: number; total_estimated_value: number }[]
+  revenue_trend: { period: string; revenue: number; payment_count: number }[]
+  lead_source_performance: {
+    source: string
+    total_leads: number
+    won: number
+    conversion_rate_percent: number | null
+    pipeline_value: number
+  }[]
+  staff_performance: {
+    user_id: number
+    name: string
+    leads_assigned: number
+    leads_won: number
+    win_rate_percent: number | null
+    bookings_created: number
+    tasks_completed: number
+  }[]
+  profit_and_loss: { income: number; expenses: number; net: number; margin_percent: number | null }
+  unavailable_metrics: string[]
+}
+
+export interface BehavioralAnalyticsData {
+  period: { from: string; to: string }
+  time_to_conversion: {
+    converted_leads: number
+    average_days: number | null
+    fastest_days: number | null
+    slowest_days: number | null
+  }
+  deal_value: { bookings: number; average_value: number | null; total_value: number }
+  follow_up_effectiveness: { leads_contacted: number; contacted_and_won: number; win_rate_percent: number | null }
+  engagement_by_channel: { channel: string; messages: number; read: number; read_rate_percent: number | null }[]
+  customer_base: { total_customers: number; repeat_customers: number }
+}
+
 export type RoomBlockStatus = 'held' | 'partially_released' | 'released' | string
 
 export interface RoomBlock {

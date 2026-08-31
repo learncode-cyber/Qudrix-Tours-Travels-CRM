@@ -4,6 +4,39 @@ All notable changes to the Qudrix Travel CRM/ERP project, following the
 master development directive's phase numbering (Phase 0 = Foundation,
 Phase 1 = Backend Foundation + Auth + RBAC, Phase 2 = Complete CRM, ...).
 
+## [Unreleased] — Master Directive Phase 12: Analytics + Behavioral Intelligence
+
+Backend (`AnalyticsDashboardController`/`BehavioralAnalyticsService`)
+already existed from a prior session — a pure real-SQL-aggregation
+module with no AI or external dependency. Live-tested end to end with
+controlled fixtures for the first time and wrote its first automated
+coverage. Zero bugs found, matching Phase 6, 8, 9, and 10.
+
+### Added
+- Frontend: an Analytics page (Executive tab — revenue, leads, operations
+  across every travel-ops module, revenue trend, lead-source and staff
+  performance, P&L, all as real numbers with an explicit note whenever a
+  metric is genuinely unavailable rather than shown as a misleading
+  zero; Behavioral tab — time-to-conversion, deal value, follow-up
+  effectiveness, per-channel engagement, customer base; Quotation
+  Funnel tab). No such UI existed anywhere before this phase.
+- `tests/Feature/Phase12AnalyticsBehavioralTest.php` (11 tests) — the
+  first automated coverage this module has ever had, verified against
+  controlled fixtures rather than eyeballed numbers: real revenue
+  correctly excludes a `pending` payment while including a `completed`
+  one; `conversion_rate_percent` and other averages are `null` (not
+  `0`) when there's no data to compute them, with the executive
+  dashboard's `unavailable_metrics` note asserted directly; tenant
+  scoping; real `GROUP BY` pipeline totals; revenue-trend's gap-filling
+  (every requested month present, zero-revenue months explicit); a
+  lead-to-booking time-to-conversion computed to the exact day (6 days,
+  from controlled timestamps); per-channel read-rate math; quotation
+  funnel totals; and P&L correctly netting real income against a real
+  expense with the right margin percentage.
+
+### Fixed
+Nothing — no bugs were found in this module.
+
 ## [Unreleased] — Master Directive Phase 11: Sales Strategies + Customer Memory + AI Copilot
 
 Backend (`SalesStrategyController`, `CustomerMemoryController`,
