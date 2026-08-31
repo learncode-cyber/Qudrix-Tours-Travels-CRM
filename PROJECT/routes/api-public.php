@@ -18,9 +18,14 @@ use App\Http\Controllers\Admin\AdminApiKeyController;
 |
 */
 
-// Public, API-key authenticated (per header): wrapped in /api/v1 to
-// match the prefix documented above.
-Route::prefix('v1')->middleware(['api', 'api.key', 'rate.limit'])->group(function () {
+// Public, API-key authenticated (per header). This file is require()'d
+// directly in bootstrap/app.php's routing `then` callback, outside the
+// api: wrapper that normally adds the leading '/api' segment — so unlike
+// routes/api.php, the '/api' prefix must be written explicitly here or
+// every route in this group resolves to /v1/... instead of /api/v1/...
+// (that mismatch went undetected because nothing had ever hit these
+// routes with a real HTTP request before this verification pass).
+Route::prefix('api/v1')->middleware(['api', 'api.key', 'rate.limit'])->group(function () {
     
     // ============================================
     // PACKAGES (Public Listing)
