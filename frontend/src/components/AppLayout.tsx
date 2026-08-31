@@ -23,6 +23,7 @@ const navItems = [
   { to: '/conversations', label: 'Conversations', icon: '✉' },
   { to: '/notifications', label: 'Notifications', icon: '🔔' },
   { to: '/profile', label: 'Profile', icon: '👤' },
+  { to: '/integrations', label: 'Integrations', icon: '🔌' },
 ]
 
 export default function AppLayout() {

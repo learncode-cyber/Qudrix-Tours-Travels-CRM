@@ -2,6 +2,11 @@ import client, { downloadFile } from './client'
 import type {
   ApiItemResponse,
   ApiListResponse,
+  ApiConnector,
+  ApiConnectorAuthType,
+  ApiConnectorCallLog,
+  ApiConnectorCategory,
+  ApiConnectorEndpoint,
   Booking,
   BookingStats,
   Conversation,
@@ -430,6 +435,54 @@ export const assignConversation = (id: number | string, assigned_to: number | st
   client.put<ApiItemResponse<Conversation>>(`/conversations/${id}/assign`, { assigned_to })
 export const updateConversationStatus = (id: number | string, status: ConversationStatus) =>
   client.put<ApiItemResponse<Conversation>>(`/conversations/${id}/status`, { status })
+
+// --- API Connectors (Integration Manager) ---
+export const listApiConnectors = (category?: string) =>
+  client.get<{ data: (ApiConnector & { contract_required: boolean })[] }>('/api-connectors', {
+    params: category ? { category } : undefined,
+  })
+export const getApiConnector = (id: number | string) =>
+  client.get<{ data: ApiConnector; contract_required: boolean }>(`/api-connectors/${id}`)
+export const createApiConnector = (payload: {
+  name: string
+  category: ApiConnectorCategory
+  provider_name?: string
+  base_url: string
+  auth_type: ApiConnectorAuthType
+  auth_key_name?: string
+  credentials?: Record<string, string>
+  default_headers?: Record<string, string>
+  timeout_seconds?: number
+}) => client.post<{ data: ApiConnector; contract_required: boolean; message: string }>('/api-connectors', payload)
+export const updateApiConnector = (id: number | string, payload: Partial<ApiConnector>) =>
+  client.put<ApiItemResponse<ApiConnector>>(`/api-connectors/${id}`, payload)
+export const updateApiConnectorCredentials = (id: number | string, credentials: Record<string, string>) =>
+  client.put<{ message: string }>(`/api-connectors/${id}/credentials`, { credentials })
+export const deleteApiConnector = (id: number | string) => client.delete(`/api-connectors/${id}`)
+export const upsertApiConnectorEndpoint = (
+  id: number | string,
+  payload: {
+    operation: string
+    http_method: string
+    path: string
+    request_template?: Record<string, unknown>
+    query_template?: Record<string, unknown>
+    response_mapping?: Record<string, string>
+    response_collection_path?: string
+    is_active?: boolean
+  },
+) => client.post<ApiItemResponse<ApiConnectorEndpoint>>(`/api-connectors/${id}/endpoints`, payload)
+export const deleteApiConnectorEndpoint = (id: number | string, endpointId: number | string) =>
+  client.delete(`/api-connectors/${id}/endpoints/${endpointId}`)
+export const testApiConnectorConnection = (id: number | string) =>
+  client.post<ApiItemResponse<{ connected: boolean; error?: string }>>(`/api-connectors/${id}/test-connection`)
+export const executeApiConnector = (id: number | string, operation: string, params?: Record<string, unknown>) =>
+  client.post<ApiItemResponse<{ raw: unknown; mapped: unknown; duration_ms: number; status: number }>>(
+    `/api-connectors/${id}/execute`,
+    { operation, params },
+  )
+export const listApiConnectorCallLogs = (id: number | string) =>
+  client.get<ApiListResponse<ApiConnectorCallLog>>(`/api-connectors/${id}/call-logs`)
 
 // --- Package Builder ---
 export const buildPackage = (payload: {

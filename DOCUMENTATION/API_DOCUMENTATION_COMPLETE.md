@@ -1419,6 +1419,49 @@ existing Telegram contact, then reply). Fixed by adding
 
 ---
 
+## MASTER DIRECTIVE PHASE 8 ADDENDUM — CRM External API Integration (appended, not a rewrite)
+
+Same auth requirements as the Phase 2–7 addenda above. This phase is
+architecture-only per the master directive's own rule: no external
+provider contract was ever supplied, so nothing here is wired to a real
+third party — it is a generic, operator-configurable connector engine
+that only ever calls whatever contract an admin supplies, and refuses to
+pretend otherwise. Backend already existed from a prior session; this
+phase live-tested it end to end (against a local mock, never a real
+third party — see Verification below), wrote its first automated
+coverage, and built its frontend.
+
+### API Connectors (Integration Manager)
+- `GET/POST/PUT/DELETE /api/v1/api-connectors` — `{name, category: flight|hotel|visa|payment|sms|whatsapp|email|ai|analytics|crm|other, provider_name?, base_url, auth_type: none|bearer|api_key_header|api_key_query|basic|custom_headers, auth_key_name?, credentials?, default_headers?, timeout_seconds?}`. Every response includes `contract_required: bool` — true whenever the connector has no active endpoint mapped.
+- `PUT /api-connectors/{id}` refuses `is_active: true` with a `422 CONTRACT REQUIRED` error unless at least one active endpoint is mapped — a connector can never be switched on and left to fail silently at call time.
+- `PUT /api-connectors/{id}/credentials` — the only way to write credentials; `credentials` is `encrypted:array`-cast and `$hidden` on the model, so it is never present in any read response (`index`, `show`, or the update response), including this endpoint's own response.
+- `POST /api-connectors/{id}/endpoints` (upsert by `operation`) — `{operation, http_method, path, request_template?, query_template?, response_mapping?, response_collection_path?, is_active?}`. Templates use `{{param}}` / `{{credential.KEY}}` placeholders, substituted server-side only at call time.
+- `DELETE /api-connectors/{id}/endpoints/{endpointId}`
+- `POST /api-connectors/{id}/test-connection` — calls the connector's own `status` operation if mapped, otherwise a bare `GET` on `base_url`. Always records the real outcome (`connected`/`failed` + `last_test_error`) on the connector — never fabricates success.
+- `POST /api-connectors/{id}/execute` — `{operation, params?}`. Runs the mapped endpoint against the real `base_url`, substitutes real credentials into the outgoing request only (a separately-rendered, credential-free copy is what gets logged), applies the operator's `response_mapping`, and returns `{raw, mapped, duration_ms, status}`. An unmapped operation returns `502 CONTRACT REQUIRED: connector '...' has no active '...' endpoint mapped`; an inactive connector returns `502 ... is not active`; a non-2xx provider response returns `502 Provider returned HTTP <status>` — every one of these is also written to `api_connector_call_logs` with the real outcome, never silently dropped.
+- `GET /api-connectors/{id}/call-logs` — full audit trail of every execute attempt (URL, method, redacted request payload, response status/body truncated to `CONNECTOR_MAX_LOGGED_RESPONSE_BYTES`, duration, success/failure, error).
+- **SSRF guard**: unless `ALLOW_PRIVATE_NETWORK_CONNECTORS=true` is explicitly set, any connector URL that resolves to a private/reserved/loopback address is refused before any HTTP call is made — a tenant admin cannot point a connector at `127.0.0.1` or a cloud metadata endpoint to use the CRM as an internal-network proxy.
+
+### Fixed
+Nothing — no bugs were found in this module either, matching Phase 6.
+
+### Verification note
+Since no real external provider contract exists to integrate against (per
+the directive's own rule for this phase), live verification exercised the
+connector *engine* itself — CRUD, the activation guard, credential
+hiding, the SSRF guard, and (with `ALLOW_PRIVATE_NETWORK_CONNECTORS=true`
+set only for this local verification, never in production) a full
+execute round-trip against a throwaway local mock HTTP server standing in
+for "some real provider," confirming placeholder substitution, response
+mapping, and call logging all work correctly. This is testing the CRM's
+own code, not fabricating a third-party integration — no data from any
+real external system is claimed to have been exchanged.
+
+**Phase 8 addendum version:** 1.0.0
+**Appended:** 2026-08-31
+
+---
+
 **Version:** 1.0.0  
 **Last Updated:** 2026-08-16  
 **Status:** ✅ Production Ready

@@ -387,6 +387,70 @@ export interface ConversationMessage {
   [key: string]: unknown
 }
 
+export type ApiConnectorCategory =
+  | 'flight'
+  | 'hotel'
+  | 'visa'
+  | 'payment'
+  | 'sms'
+  | 'whatsapp'
+  | 'email'
+  | 'ai'
+  | 'analytics'
+  | 'crm'
+  | 'other'
+  | string
+export type ApiConnectorAuthType = 'none' | 'bearer' | 'api_key_header' | 'api_key_query' | 'basic' | 'custom_headers' | string
+export type ApiConnectorStatus = 'unconfigured' | 'configured' | 'connected' | 'failed' | string
+
+export interface ApiConnector {
+  id: number
+  name: string
+  slug?: string
+  category: ApiConnectorCategory
+  provider_name?: string | null
+  base_url: string
+  auth_type: ApiConnectorAuthType
+  auth_key_name?: string | null
+  default_headers?: Record<string, string> | null
+  timeout_seconds?: number | null
+  is_active: boolean
+  status: ApiConnectorStatus
+  last_test_at?: string | null
+  last_test_error?: string | null
+  endpoints_count?: number
+  endpoints?: ApiConnectorEndpoint[]
+  [key: string]: unknown
+}
+
+export interface ApiConnectorEndpoint {
+  id: number
+  api_connector_id: number
+  operation: string
+  http_method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | string
+  path: string
+  request_template?: Record<string, unknown> | null
+  query_template?: Record<string, unknown> | null
+  response_mapping?: Record<string, string> | null
+  response_collection_path?: string | null
+  is_active: boolean
+  [key: string]: unknown
+}
+
+export interface ApiConnectorCallLog {
+  id: number
+  api_connector_id: number
+  operation: string
+  http_method: string
+  url: string
+  response_status?: number | null
+  duration_ms?: number | null
+  success: boolean
+  error_message?: string | null
+  created_at?: string
+  [key: string]: unknown
+}
+
 export type RoomBlockStatus = 'held' | 'partially_released' | 'released' | string
 
 export interface RoomBlock {

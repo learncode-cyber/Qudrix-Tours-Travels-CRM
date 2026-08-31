@@ -4,6 +4,37 @@ All notable changes to the Qudrix Travel CRM/ERP project, following the
 master development directive's phase numbering (Phase 0 = Foundation,
 Phase 1 = Backend Foundation + Auth + RBAC, Phase 2 = Complete CRM, ...).
 
+## [Unreleased] — Master Directive Phase 8: CRM External API Integration
+
+Architecture-only per the master directive's own rule for this phase: no
+external provider contract was ever supplied, so nothing built here talks
+to a real third party — a generic, operator-configurable connector engine
+(`ApiConnectorController`, `ApiConnectorService`) already existed from a
+prior session. This phase live-tested it end to end for the first time
+(against a local mock server, never a real provider) and built its
+frontend. Like Phase 6, zero bugs were found.
+
+### Added
+- Frontend: an Integrations page (list connectors by category, create
+  one) and a connector detail page (a write-only credentials form that
+  never echoes back what was saved, toggle active/inactive, "Test
+  Connection", endpoint-mapping CRUD with request/query/response-mapping
+  JSON editors, a "Try an Operation" ad-hoc executor, and a call-log
+  tab). No such UI existed anywhere before this phase.
+- `tests/Feature/Phase8ApiConnectorTest.php` (13 tests) — the first
+  automated coverage this module has ever had: credentials never leak
+  through any read path, tenant scoping, the activation-refused-without-
+  a-mapped-endpoint guard, endpoint mapping CRUD flipping
+  `contract_required`, the SSRF guard blocking a private-network target,
+  `execute` correctly rejecting an unmapped operation and an inactive
+  connector, a full execute round-trip (via `Http::fake`) proving real
+  credential substitution into the outgoing request and correct response
+  mapping, honest failure recording on a non-2xx provider response, and
+  `test-connection` recording the real outcome on the connector.
+
+### Fixed
+Nothing — no bugs were found in this module, matching Phase 6.
+
 ## [Unreleased] — Master Directive Phase 7: Telegram + Notification System
 
 Like Phases 5/6, this module's backend (`NotificationController`,

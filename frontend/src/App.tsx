@@ -16,6 +16,8 @@ import HajjUmrahGroupDetailPage from './pages/HajjUmrahGroupDetailPage'
 import HajjUmrahPage from './pages/HajjUmrahPage'
 import HotelDetailPage from './pages/HotelDetailPage'
 import HotelsPage from './pages/HotelsPage'
+import IntegrationDetailPage from './pages/IntegrationDetailPage'
+import IntegrationsPage from './pages/IntegrationsPage'
 import InvoicesPage from './pages/InvoicesPage'
 import LeadsPage from './pages/LeadsPage'
 import LoginPage from './pages/LoginPage'
@@ -65,6 +67,8 @@ export default function App() {
             <Route path="/notifications" element={<NotificationsPage />} />
             <Route path="/conversations" element={<ConversationsPage />} />
             <Route path="/profile" element={<ProfilePage />} />
+            <Route path="/integrations" element={<IntegrationsPage />} />
+            <Route path="/integrations/:id" element={<IntegrationDetailPage />} />
           </Route>
         </Route>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

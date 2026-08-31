@@ -16,7 +16,7 @@ for the fullest recent verification transcript.
 | 5 | Hajj & Umrah + Student Visa | ✅ Complete — see `DOCUMENTATION/PHASE_5_REPORT.md` |
 | 6 | Custom Package Builder + Pricing Engine | ✅ Complete — see `DOCUMENTATION/PHASE_6_REPORT.md` |
 | 7 | Telegram + Notification System | ✅ Complete — see `DOCUMENTATION/PHASE_7_REPORT.md`. Telegram message delivery itself is UNVERIFIED — no outbound network in this sandbox; the honest-failure path (`CONTRACT REQUIRED: TELEGRAM_BOT_TOKEN is not configured`) is verified |
-| 8 | CRM External API Integration | Architecture-only per directive rule (no external contract supplied); generic connector engine built |
+| 8 | CRM External API Integration | ✅ Complete (architecture-only per directive rule — no external contract supplied) — see `DOCUMENTATION/PHASE_8_REPORT.md` |
 | 9 | AI Provider Management | ✅ Backend complete (prior sessions); real provider calls UNVERIFIED — no outbound network in this sandbox |
 | 10 | AI Sales Agent | ✅ Backend complete (prior sessions) |
 | 11 | Sales Strategies + AI Copilot | ✅ Backend complete (prior sessions) |
@@ -61,9 +61,11 @@ preview, a custom package builder against real hotel/flight/transport
 inventory), and Phase 7's Telegram + Notifications surface
 (notifications list + read state, a unified conversations inbox across
 channels including Telegram, and a profile page for configuring a
-user's `telegram_chat_id`). Phases 8–16's backend APIs have no frontend
-yet — building it out is expected to track the same phase-by-phase
-cadence going forward, per the directive.
+user's `telegram_chat_id`), and Phase 8's Integration Manager surface
+(operator-configurable API connectors, endpoint mapping, credentials,
+test connection, ad-hoc execute, call logs). Phases 9–16's backend APIs
+have no frontend yet — building it out is expected to track the same
+phase-by-phase cadence going forward, per the directive.
 
 ## Known Limitations (cross-cutting, not specific to one phase)
 
