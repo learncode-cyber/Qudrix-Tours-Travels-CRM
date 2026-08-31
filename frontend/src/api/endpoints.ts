@@ -2,9 +2,11 @@ import client, { downloadFile } from './client'
 import type {
   ApiItemResponse,
   ApiListResponse,
+  AiCopilotAssistResult,
   AiInterpretedRequirements,
   AiLeadQualification,
   AiLeadSummary,
+  AiMemoryExtractionResult,
   AiPackageProposalResult,
   AiProvider,
   AiProviderKey,
@@ -25,6 +27,8 @@ import type {
   CrmDashboardResponse,
   Customer,
   Customer360Response,
+  CustomerMemory,
+  CustomerMemoryCategory,
   Deal,
   DealPipelineColumn,
   Embassy,
@@ -55,6 +59,8 @@ import type {
   QuotationStats,
   RoomBlock,
   SalesDashboardResponse,
+  SalesStrategy,
+  SalesStrategyKey,
   StudentVisaApplication,
   Task,
   TaskStats,
@@ -537,6 +543,45 @@ export const aiProposePackage = (requirements: {
   travel_date?: string
   group_size?: number
 }) => client.post<ApiItemResponse<AiPackageProposalResult>>('/ai/package-builder/propose', { requirements })
+
+// --- Sales Strategies ---
+export const listSalesStrategies = () =>
+  client.get<{ data: SalesStrategy[]; available_keys: SalesStrategyKey[] }>('/sales-strategies')
+export const createSalesStrategy = (payload: {
+  key: SalesStrategyKey
+  name: string
+  description?: string
+  prompt_guidance: string
+  tone?: string
+  priority?: number
+  customer_segment_id?: number
+}) => client.post<ApiItemResponse<SalesStrategy>>('/sales-strategies', payload)
+export const updateSalesStrategy = (id: number | string, payload: Partial<SalesStrategy>) =>
+  client.put<ApiItemResponse<SalesStrategy>>(`/sales-strategies/${id}`, payload)
+export const deleteSalesStrategy = (id: number | string) => client.delete(`/sales-strategies/${id}`)
+
+// --- Customer Memory ---
+export const listCustomerMemories = (params: { customer_id?: number | string; lead_id?: number | string }) =>
+  client.get<{ data: CustomerMemory[]; categories: CustomerMemoryCategory[] }>('/customer-memories', { params })
+export const createCustomerMemory = (payload: {
+  customer_id?: number
+  lead_id?: number
+  category: CustomerMemoryCategory
+  key: string
+  value: string
+  source?: 'human' | 'ai_extracted'
+  confidence?: number
+  is_sensitive?: boolean
+}) => client.post<ApiItemResponse<CustomerMemory>>('/customer-memories', payload)
+export const updateCustomerMemory = (id: number | string, payload: Partial<CustomerMemory>) =>
+  client.put<ApiItemResponse<CustomerMemory>>(`/customer-memories/${id}`, payload)
+export const deleteCustomerMemory = (id: number | string) => client.delete(`/customer-memories/${id}`)
+
+// --- AI Copilot ---
+export const aiCopilotAssist = (leadId: number | string, latest_customer_message?: string) =>
+  client.post<ApiItemResponse<AiCopilotAssistResult>>(`/ai/leads/${leadId}/copilot`, { latest_customer_message })
+export const aiExtractMemory = (leadId: number | string) =>
+  client.post<ApiItemResponse<AiMemoryExtractionResult>>(`/ai/leads/${leadId}/extract-memory`)
 
 // --- Package Builder ---
 export const buildPackage = (payload: {

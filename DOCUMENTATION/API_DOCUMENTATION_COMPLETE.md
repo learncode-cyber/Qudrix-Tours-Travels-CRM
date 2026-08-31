@@ -1552,6 +1552,56 @@ valid API key was available to exercise a real successful completion.
 
 ---
 
+## MASTER DIRECTIVE PHASE 11 ADDENDUM — Sales Strategies + Customer Memory + AI Copilot (appended, not a rewrite)
+
+Same auth requirements as the Phase 2–10 addenda above. Backend
+(`SalesStrategyController`, `CustomerMemoryController`,
+`AiCopilotController`/`AiCopilotService`) already existed from a prior
+session, built on the same Phase 9 gateway. Live-tested end to end for
+the first time (including real round trips to Anthropic's live API),
+found and fixed one real bug, wrote its first automated coverage, and
+built its frontend.
+
+### Sales Strategies
+- `GET/POST/PUT/DELETE /api/v1/sales-strategies` — `{key: consultative|spin|solution|value|relationship|challenger|sandler, name, description?, prompt_guidance, tone?, priority?, customer_segment_id?}`. `index` also returns `available_keys` (the full `key` enum) for building a picker. `prompt_guidance` is fed directly to the AI Copilot as its methodology instructions — it is genuinely admin-editable, not a fixed template per methodology.
+
+### Customer Memory
+- `GET/POST/PUT/DELETE /api/v1/customer-memories` — `{customer_id?, lead_id?, category, key, value, source?: human|ai_extracted, confidence?, is_sensitive?}`. `index` requires `customer_id` or `lead_id` (422 without either) and returns `categories` (the full category enum). Every write passes through the standard `audit` middleware, so who created/changed a memory entry is recorded (Directive S9).
+- Entries marked `is_sensitive: true` are withheld from every AI prompt by default (`CustomerMemory::scopeSafeForAi()`) — verified this phase by inspecting the actual outgoing HTTP request body in a test and confirming a sensitive value never appears in it while a non-sensitive one does.
+
+### AI Copilot
+- `POST /api/v1/ai/leads/{leadId}/copilot` — `{latest_customer_message?}`. Builds its prompt from the lead's highest-priority active `SalesStrategy` (preferring one bound to the lead's customer segment, verified live), the lead's non-sensitive memory, and its recent real communications. Returns `strategy_used`, `is_suggestion: true`, `human_in_control: true` alongside the suggestion fields. The prompt structurally forbids stating prices/availability/bookings, same rule as the Phase 10 Sales Agent.
+- `POST /api/v1/ai/leads/{leadId}/extract-memory` — returns `candidates` (category/key/value/confidence/evidence/`possibly_sensitive`) for a human to review, `requires_human_confirmation: true, stored: false` — **nothing is written to `customer_memories` automatically**; a human confirms each candidate via the normal `POST /customer-memories` endpoint. **Short-circuits with zero AI-gateway calls** when the lead has no communications to extract from — verified live to make zero HTTP calls in that case.
+
+### Fixed: `PUT /leads/{id}` silently dropped `customer_id`
+`LeadController::update()`'s validation whitelist didn't include
+`customer_id`, even though `Lead::$fillable` has included it since
+Phase 2 specifically so "a customer's originating leads can be found
+without guessing." Practical effect: there was no way through the API
+to link an existing lead to a customer after creation — a request with
+`customer_id` in the body silently no-opped on that field. This directly
+blocked a real workflow this phase depends on (a lead needs a linked
+customer for the Copilot/memory-extraction to see that customer's real
+communications). Same bug class as Phase 4's `embassy_id` and Phase 7's
+`external_thread_id`. **Fixed** by adding
+`'customer_id' => 'nullable|exists:customers,id'` to the validation.
+
+### Verification note
+`POST /ai/leads/{leadId}/copilot` was exercised **live against
+Anthropic's real API** (reachable from this sandbox) with a deliberately
+invalid key — reached the real provider, received a genuine `401`,
+propagated honestly. `extract-memory` was verified live both in its
+zero-call short-circuit (no communications) and its real-call path (once
+a real communication existed, it correctly reached Anthropic and got the
+same honest `401`). The grounding/sensitivity-filtering guarantees and
+the "candidates only, never auto-stored" behavior were verified
+deterministically via `Http::fake` in the automated suite.
+
+**Phase 11 addendum version:** 1.0.0
+**Appended:** 2026-08-31
+
+---
+
 **Version:** 1.0.0  
 **Last Updated:** 2026-08-16  
 **Status:** ✅ Production Ready

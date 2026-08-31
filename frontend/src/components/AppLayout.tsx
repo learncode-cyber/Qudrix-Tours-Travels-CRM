@@ -26,6 +26,7 @@ const navItems = [
   { to: '/integrations', label: 'Integrations', icon: '🔌' },
   { to: '/ai-providers', label: 'AI Providers', icon: '✨' },
   { to: '/ai-package-assistant', label: 'AI Package Assistant', icon: '🤖' },
+  { to: '/sales-strategies', label: 'Sales Strategies', icon: '🎯' },
 ]
 
 export default function AppLayout() {

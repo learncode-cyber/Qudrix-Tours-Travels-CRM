@@ -28,6 +28,7 @@ import PackageBuilderPage from './pages/PackageBuilderPage'
 import PricingRulesPage from './pages/PricingRulesPage'
 import ProfilePage from './pages/ProfilePage'
 import ProposalsPage from './pages/ProposalsPage'
+import SalesStrategiesPage from './pages/SalesStrategiesPage'
 import QuotationDetailPage from './pages/QuotationDetailPage'
 import QuotationsPage from './pages/QuotationsPage'
 import SalesDashboardPage from './pages/SalesDashboardPage'
@@ -73,6 +74,7 @@ export default function App() {
             <Route path="/integrations/:id" element={<IntegrationDetailPage />} />
             <Route path="/ai-providers" element={<AiProvidersPage />} />
             <Route path="/ai-package-assistant" element={<AiPackageAssistantPage />} />
+            <Route path="/sales-strategies" element={<SalesStrategiesPage />} />
           </Route>
         </Route>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

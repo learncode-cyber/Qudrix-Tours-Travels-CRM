@@ -19,7 +19,7 @@ for the fullest recent verification transcript.
 | 8 | CRM External API Integration | ✅ Complete (architecture-only per directive rule — no external contract supplied) — see `DOCUMENTATION/PHASE_8_REPORT.md` |
 | 9 | AI Provider Management | ✅ Complete — see `DOCUMENTATION/PHASE_9_REPORT.md`. A real call against Anthropic's live API (reachable here) correctly failed on an invalid key; OpenAI is unreachable from this sandbox; Gemini and any successful real completion remain UNVERIFIED |
 | 10 | AI Sales Agent | ✅ Complete — see `DOCUMENTATION/PHASE_10_REPORT.md`. Honest-failure path verified live against Anthropic's real API; a successful real completion remains UNVERIFIED (no valid API key in this sandbox) |
-| 11 | Sales Strategies + AI Copilot | ✅ Backend complete (prior sessions) |
+| 11 | Sales Strategies + AI Copilot | ✅ Complete — see `DOCUMENTATION/PHASE_11_REPORT.md`. Honest-failure path verified live against Anthropic's real API; a successful real completion remains UNVERIFIED (no valid API key in this sandbox) |
 | 12 | Analytics + Behavioral Intelligence | ✅ Backend complete (prior sessions) |
 | 13 | Upsell/Cross-sell + A/B Testing | ✅ Backend complete (prior sessions) |
 | 14 | Complaint Handling + Automation | ✅ Backend complete (prior sessions) |
@@ -65,10 +65,12 @@ user's `telegram_chat_id`), Phase 8's Integration Manager surface
 (operator-configurable API connectors, endpoint mapping, credentials,
 test connection, ad-hoc execute, call logs), Phase 9's AI Provider
 Management surface (provider CRUD, API key management, connection
-testing, usage/cost reporting), and Phase 10's AI Sales Agent + AI
+testing, usage/cost reporting), Phase 10's AI Sales Agent + AI
 Package Builder surface (a per-lead AI Assistant for qualify/summarize/
 suggest-reply, and an AI Package Assistant for free-text-to-proposal
-package building). Phases 11–16's backend APIs have no
+package building), and Phase 11's Sales Strategies + Copilot surface (a
+Sales Strategies CRUD page, and Copilot + Extract Memory tabs added to
+the per-lead AI Assistant). Phases 12–16's backend APIs have no
 frontend yet — building it out is expected to track the same
 phase-by-phase cadence going forward, per the directive.
 

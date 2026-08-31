@@ -4,6 +4,45 @@ All notable changes to the Qudrix Travel CRM/ERP project, following the
 master development directive's phase numbering (Phase 0 = Foundation,
 Phase 1 = Backend Foundation + Auth + RBAC, Phase 2 = Complete CRM, ...).
 
+## [Unreleased] — Master Directive Phase 11: Sales Strategies + Customer Memory + AI Copilot
+
+Backend (`SalesStrategyController`, `CustomerMemoryController`,
+`AiCopilotController`/`Service`) already existed from a prior session,
+built on the Phase 9 gateway. Live-tested end to end for the first time
+— including real round trips to Anthropic's live API for the Copilot —
+and found one real bug in an unrelated-but-blocking spot.
+
+### Added
+- Frontend: a Sales Strategies page (CRUD, activate/deactivate); two new
+  tabs on the existing per-lead AI Assistant modal (Copilot — live
+  suggestions grounded in the lead's active strategy, non-sensitive
+  memory, and recent communications; Extract Memory — AI-suggested
+  memory candidates a human reviews and confirms one at a time before
+  anything is actually saved). No such UI existed anywhere before this
+  phase.
+- `tests/Feature/Phase11SalesStrategyCopilotTest.php` (11 tests) — the
+  first automated coverage this module has ever had: sales strategy CRUD
+  + key/tenant validation, customer memory CRUD + category validation +
+  the customer-or-lead requirement, the `LeadController` fix below (as a
+  regression test), Copilot honest failure with no active provider, the
+  extract-memory zero-HTTP-call short-circuit, the Copilot correctly
+  picking up the active strategy, **a live assertion (via
+  `Http::assertSent`) that a sensitive memory value never reaches the
+  outgoing prompt while a non-sensitive one does**, and extract-memory
+  returning unconfirmed candidates that are never auto-written to
+  `customer_memories`.
+
+### Fixed
+- `PUT /api/v1/leads/{id}` silently dropped `customer_id` — present on
+  `Lead::$fillable` since Phase 2 specifically so a lead could be linked
+  back to the customer it originated from, but missing from
+  `LeadController::update()`'s validation whitelist. There was no way
+  through the API to link an existing lead to a customer after creation.
+  Same bug class as Phase 4's `embassy_id` and Phase 7's
+  `external_thread_id`. Found live-testing this phase's Copilot feature
+  (which needs a lead linked to a customer to see real communications),
+  fixed by adding the field to the validation.
+
 ## [Unreleased] — Master Directive Phase 10: AI Sales Agent + AI Package Builder
 
 Backend (`AiSalesAgentController`/`Service`,

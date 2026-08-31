@@ -123,6 +123,7 @@ class LeadController extends Controller
             'priority' => 'sometimes|in:low,medium,high,urgent',
             'notes' => 'nullable|string',
             'assigned_to' => 'nullable|exists:users,id',
+            'customer_id' => 'nullable|exists:customers,id',
         ]);
 
         $lead->update($validated);

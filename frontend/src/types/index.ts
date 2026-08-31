@@ -552,6 +552,86 @@ export interface AiPackageProposalResult {
   [key: string]: unknown
 }
 
+export type SalesStrategyKey =
+  | 'consultative'
+  | 'spin'
+  | 'solution'
+  | 'value'
+  | 'relationship'
+  | 'challenger'
+  | 'sandler'
+  | string
+
+export interface SalesStrategy {
+  id: number
+  key: SalesStrategyKey
+  name: string
+  description?: string | null
+  prompt_guidance: string
+  tone?: string | null
+  priority?: number | null
+  is_active: boolean
+  customer_segment_id?: number | null
+  [key: string]: unknown
+}
+
+export type CustomerMemoryCategory =
+  | 'budget'
+  | 'travel_preference'
+  | 'destination'
+  | 'group_size'
+  | 'previous_trip'
+  | 'preferred_channel'
+  | 'objection'
+  | 'requirement'
+  | string
+
+export interface CustomerMemory {
+  id: number
+  customer_id?: number | null
+  lead_id?: number | null
+  category: CustomerMemoryCategory
+  key: string
+  value: string
+  source?: 'human' | 'ai_extracted' | string
+  confidence?: number | string | null
+  is_sensitive?: boolean
+  created_by?: { id: number; name: string } | number | null
+  [key: string]: unknown
+}
+
+export interface AiCopilotAssistResult {
+  suggested_next_question?: string
+  objection_handling?: { objection: string; suggested_response: string }[]
+  recommended_products?: string[]
+  upsell_opportunities?: string[]
+  suggested_follow_up_timing?: string
+  customer_sentiment?: 'positive' | 'neutral' | 'negative' | string
+  context_notes?: string
+  facts_to_verify?: string[]
+  strategy_used?: string
+  is_suggestion?: boolean
+  human_in_control?: boolean
+  [key: string]: unknown
+}
+
+export interface AiMemoryCandidate {
+  category: CustomerMemoryCategory
+  key: string
+  value: string
+  confidence: number
+  evidence: string
+  possibly_sensitive: boolean
+}
+
+export interface AiMemoryExtractionResult {
+  candidates: AiMemoryCandidate[]
+  message?: string
+  requires_human_confirmation?: boolean
+  stored?: boolean
+  [key: string]: unknown
+}
+
 export type RoomBlockStatus = 'held' | 'partially_released' | 'released' | string
 
 export interface RoomBlock {
