@@ -30,6 +30,8 @@ const navItems = [
   { to: '/analytics', label: 'Analytics', icon: '📊' },
   { to: '/upsell', label: 'Upsell', icon: '⬆' },
   { to: '/ab-testing', label: 'A/B Testing', icon: '🧪' },
+  { to: '/support-tickets', label: 'Support Tickets', icon: '🎫' },
+  { to: '/automations', label: 'Automations', icon: '⚙' },
 ]
 
 export default function AppLayout() {

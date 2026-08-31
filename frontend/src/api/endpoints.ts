@@ -12,6 +12,23 @@ import type {
   AiProviderKey,
   AiSuggestedReply,
   AiUsageResponse,
+  Automation,
+  AutomationDashboardMetrics,
+  AutomationDashboardSummary,
+  AutomationLogData,
+  AutomationStats,
+  AutomationStatus,
+  AutomationTemplateData,
+  AutomationTriggerType,
+  Complaint,
+  ComplaintPriority,
+  ComplaintStatus,
+  SupportTicket,
+  SupportTicketPriority,
+  SupportTicketReply,
+  SupportTicketStatus,
+  TicketAiTriage,
+  TriageResult,
   AbAssignment,
   AbExperiment,
   AbExperimentResults,
@@ -673,3 +690,74 @@ export const buildPackage = (payload: {
   save_as_package?: boolean
   create_quotation?: boolean
 }) => client.post<ApiItemResponse<PackageBuilderResult>>('/package-builder/build', payload)
+
+// --- Support Tickets + AI Complaint Triage (Phase 14) ---
+export const listSupportTickets = (params?: { status?: string; priority?: string }) =>
+  client.get<ApiListResponse<SupportTicket>>('/support-tickets', { params })
+export const createSupportTicket = (payload: {
+  customer_id?: number
+  assigned_to?: number
+  subject: string
+  description: string
+  category?: string
+  priority?: SupportTicketPriority
+}) => client.post<ApiItemResponse<SupportTicket>>('/support-tickets', payload)
+export const getSupportTicket = (id: number | string) =>
+  client.get<ApiItemResponse<SupportTicket>>(`/support-tickets/${id}`)
+export const updateSupportTicketStatus = (id: number | string, status: SupportTicketStatus) =>
+  client.put<ApiItemResponse<SupportTicket>>(`/support-tickets/${id}/status`, { status })
+export const escalateSupportTicket = (id: number | string, escalated_to: number) =>
+  client.post<ApiItemResponse<SupportTicket>>(`/support-tickets/${id}/escalate`, { escalated_to })
+export const replySupportTicket = (id: number | string, message: string, is_internal_note = false) =>
+  client.post<ApiItemResponse<SupportTicketReply>>(`/support-tickets/${id}/reply`, { message, is_internal_note })
+export const triageSupportTicket = (ticketId: number | string) =>
+  client.post<TriageResult>(`/support-tickets/${ticketId}/ai-triage`)
+export const listSupportTicketTriages = (ticketId: number | string) =>
+  client.get<ApiListResponse<TicketAiTriage>>(`/support-tickets/${ticketId}/ai-triage`)
+export const applySupportTicketTriage = (ticketId: number | string, triageId: number | string) =>
+  client.post<ApiItemResponse<{ ticket: SupportTicket; triage: TicketAiTriage }>>(
+    `/support-tickets/${ticketId}/ai-triage/${triageId}/apply`,
+  )
+
+// --- Complaints (legacy) ---
+export const listComplaints = (status?: string) =>
+  client.get<ApiListResponse<Complaint>>('/complaints', { params: { status } })
+export const createComplaint = (payload: {
+  booking_id: number
+  customer_id: number
+  title: string
+  description: string
+  category: string
+  priority: ComplaintPriority
+}) => client.post<ApiItemResponse<Complaint>>('/complaints', payload)
+export const updateComplaintStatus = (id: number | string, status: ComplaintStatus) =>
+  client.put<ApiItemResponse<Complaint>>(`/complaints/${id}/status`, { status })
+
+// --- Automation Engine ---
+export const listAutomations = () => client.get<ApiListResponse<Automation>>('/automations')
+export const createAutomation = (payload: {
+  name: string
+  trigger_type: AutomationTriggerType
+  status: AutomationStatus
+}) => client.post<ApiItemResponse<Automation>>('/automations', payload)
+export const getAutomation = (id: number | string) => client.get<ApiItemResponse<Automation>>(`/automations/${id}`)
+export const updateAutomation = (id: number | string, payload: Partial<Automation>) =>
+  client.put<ApiItemResponse<Automation>>(`/automations/${id}`, payload)
+export const executeAutomation = (id: number | string, trigger_data?: Record<string, unknown>) =>
+  client.post<ApiItemResponse<Record<string, unknown>>>(`/automations/${id}/execute`, { trigger_data })
+export const testAutomation = (id: number | string, test_data?: Record<string, unknown>) =>
+  client.post<ApiItemResponse<{ automation_id: number; steps_count: number; valid: boolean }>>(
+    `/automations/${id}/test`,
+    { test_data },
+  )
+export const getAutomationLogs = (id: number | string) =>
+  client.get<ApiListResponse<AutomationLogData>>(`/automations/${id}/logs`)
+export const getAutomationStats = (id: number | string) =>
+  client.get<ApiItemResponse<AutomationStats>>(`/automations/${id}/stats`)
+export const clearAutomationLogs = (id: number | string) => client.delete(`/automations/${id}/logs`)
+export const getAutomationDashboardSummary = () =>
+  client.get<ApiItemResponse<AutomationDashboardSummary>>('/automation-dashboard/summary')
+export const getAutomationDashboardMetrics = () =>
+  client.get<ApiItemResponse<AutomationDashboardMetrics>>('/automation-dashboard/metrics')
+export const listAutomationTemplates = () =>
+  client.get<ApiListResponse<AutomationTemplateData>>('/automation-templates')

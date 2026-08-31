@@ -1190,3 +1190,173 @@ export interface ApiItemResponse<T> {
   message?: string
   data: T
 }
+
+// --- Phase 14: Complaint Handling + Automation ---
+export type SupportTicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed' | string
+export type SupportTicketPriority = 'low' | 'normal' | 'high' | 'urgent' | string
+
+export interface SupportTicket {
+  id: number
+  tenant_id: number
+  customer_id: number | null
+  assigned_to: number | null
+  subject: string
+  description: string
+  category: string
+  priority: SupportTicketPriority
+  status: SupportTicketStatus
+  sla_due_at: string | null
+  resolved_at: string | null
+  escalated: boolean
+  escalated_at: string | null
+  escalated_to: number | null
+  escalation_source: string | null
+  escalation_note: string | null
+  replies?: SupportTicketReply[]
+  created_at: string
+  updated_at: string
+}
+
+export interface SupportTicketReply {
+  id: number
+  support_ticket_id: number
+  user_id: number
+  is_internal_note: boolean
+  message: string
+  created_at: string
+}
+
+export type TriageSeverity = 'low' | 'medium' | 'high' | 'critical' | string
+
+export interface TicketAiTriage {
+  id: number
+  tenant_id: number
+  support_ticket_id: number
+  suggested_severity: TriageSeverity | null
+  suggested_category: string | null
+  suggested_response: string | null
+  suggested_resolution: string | null
+  recommends_escalation: boolean
+  escalation_reason: string | null
+  sentiment: string | null
+  detected_issues: string[]
+  applied_by: number | null
+  applied_at: string | null
+  created_at: string
+}
+
+export interface TriageResult {
+  data: TicketAiTriage
+  is_suggestion: boolean
+  applied_to_ticket: boolean
+  note: string
+}
+
+export type ComplaintStatus = 'open' | 'in_progress' | 'resolved' | 'closed' | string
+export type ComplaintPriority = 'low' | 'medium' | 'high' | 'urgent' | string
+
+export interface Complaint {
+  id: number
+  tenant_id: number
+  booking_id: number | null
+  customer_id: number | null
+  title: string
+  description: string
+  category: string
+  priority: ComplaintPriority
+  status: ComplaintStatus
+  assigned_to: number | null
+  resolution: string | null
+  resolution_date: string | null
+  created_at: string
+}
+
+export type AutomationTriggerType =
+  | 'booking_created'
+  | 'customer_added'
+  | 'invoice_created'
+  | 'payment_received'
+  | 'webhook'
+  | 'schedule'
+  | string
+export type AutomationStatus = 'draft' | 'active' | 'paused' | 'archived' | string
+export type AutomationActionType =
+  | 'send_email'
+  | 'send_sms'
+  | 'create_task'
+  | 'update_customer'
+  | 'create_notification'
+  | 'webhook'
+  | 'delay'
+  | string
+
+export interface AutomationStepData {
+  id: number
+  automation_id: number
+  step_order: number
+  action_type: AutomationActionType
+  action_config: Record<string, unknown>
+  condition_type: string | null
+  condition_config: Record<string, unknown> | null
+  delay_seconds: number
+}
+
+export interface Automation {
+  id: number
+  tenant_id: number
+  name: string
+  description: string | null
+  trigger_type: AutomationTriggerType
+  status: AutomationStatus
+  is_active: boolean
+  run_count: number
+  last_run_at: string | null
+  logs_count?: number
+  steps?: AutomationStepData[]
+  created_at: string
+}
+
+export interface AutomationLogData {
+  id: number
+  automation_id: number
+  trigger_data: Record<string, unknown>
+  status: 'running' | 'success' | 'error' | string
+  result_data: Record<string, unknown> | null
+  error_message: string | null
+  execution_time_ms: number | null
+  started_at: string
+  completed_at: string | null
+}
+
+export interface AutomationStats {
+  total_runs: number
+  success_count: number
+  error_count: number
+  avg_execution_time_ms: number
+}
+
+export interface AutomationDashboardSummary {
+  total_automations: number
+  active_automations: number
+  total_runs: number
+  recent_executions: AutomationLogData[]
+}
+
+export interface AutomationDashboardMetrics {
+  success_rate: number
+  error_rate: number
+  avg_execution_time: number
+  peak_hour: string | null
+}
+
+export interface AutomationTemplateData {
+  id: number
+  tenant_id: number
+  name: string
+  description: string | null
+  category: string
+  workflow_config: { steps?: Array<Record<string, unknown>> }
+  preview_data: Record<string, unknown> | null
+  usage_count: number
+  status: string
+}

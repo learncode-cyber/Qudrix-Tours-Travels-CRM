@@ -191,6 +191,14 @@ class AutomationEngine
             return ['type' => 'webhook', 'status' => 'error', 'reason' => 'No "url" configured on this step'];
         }
         $url = $config['url'];
+
+        try {
+            $this->guardAgainstPrivateNetwork($url);
+        } catch (\Throwable $e) {
+            Log::warning('Automation webhook step blocked', ['url' => $url, 'error' => $e->getMessage()]);
+            return ['type' => 'webhook', 'url' => $url, 'status' => 'error', 'reason' => $e->getMessage()];
+        }
+
         $payload = $config['payload'] ?? $context;
         try {
             $response = Http::timeout(10)->post($url, $payload);
@@ -198,6 +206,37 @@ class AutomationEngine
         } catch (\Throwable $e) {
             Log::warning('Automation webhook step failed', ['url' => $url, 'error' => $e->getMessage()]);
             return ['type' => 'webhook', 'url' => $url, 'status' => 'error', 'reason' => $e->getMessage()];
+        }
+    }
+
+    // Same SSRF protection as ApiConnectorService::guardAgainstPrivateNetwork():
+    // an automation's webhook URL is tenant-configurable data, so without this
+    // guard a tenant admin could point a webhook step at 127.0.0.1 or a cloud
+    // metadata endpoint and use the CRM as an SSRF proxy into the host's own
+    // network.
+    private function guardAgainstPrivateNetwork(string $url): void
+    {
+        if (config('integrations.allow_private_network_connectors')) {
+            return;
+        }
+
+        $host = parse_url($url, PHP_URL_HOST);
+        if (!$host) {
+            throw new \RuntimeException("Webhook URL is malformed: {$url}");
+        }
+
+        $scheme = parse_url($url, PHP_URL_SCHEME);
+        if (!in_array($scheme, ['http', 'https'], true)) {
+            throw new \RuntimeException("Webhook URL scheme '{$scheme}' is not allowed.");
+        }
+
+        $ip = filter_var($host, FILTER_VALIDATE_IP) ? $host : gethostbyname($host);
+
+        if (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+            throw new \RuntimeException(
+                "Webhook URL resolves to a private or reserved address ({$ip}). "
+                . 'Set ALLOW_PRIVATE_NETWORK_CONNECTORS=true only if this is intentional.'
+            );
         }
     }
 

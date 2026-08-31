@@ -4,6 +4,55 @@ All notable changes to the Qudrix Travel CRM/ERP project, following the
 master development directive's phase numbering (Phase 0 = Foundation,
 Phase 1 = Backend Foundation + Auth + RBAC, Phase 2 = Complete CRM, ...).
 
+## [Unreleased] — Master Directive Phase 14: Complaint Handling + Automation
+
+Backend (`SupportTicketController`, `AiComplaintController`/
+`AiComplaintService`, legacy `ComplaintController`, `AutomationController`/
+`AutomationEngine`, `AutomationTemplateController`, `AutomationLogController`,
+`AutomationDashboardController`) already existed from a prior session.
+Live-tested end to end for the first time and wrote its first automated
+coverage: 19 new tests. Two real bugs found and fixed this phase.
+
+### Added
+- Frontend: a Support Tickets page (list + create) and a ticket detail
+  page (status workflow, replies, escalate, and an AI Triage panel that
+  runs triage, shows the suggestion history, and lets a human apply a
+  suggestion to the ticket — with an explicit "suggestion, not an
+  automatic action" note matching the backend's actual behavior). An
+  Automations page (list + dashboard summary) and an automation detail
+  page (steps table, Test/Execute actions, execution result, execution
+  logs with clear-logs, and stats).
+- `tests/Feature/Phase14ComplaintAutomationTest.php` — 19 tests covering
+  support ticket CRUD/status/reply/escalate, legacy complaint CRUD, AI
+  triage's honest-failure path (no provider, real provider 401),
+  non-critical triage as a pure suggestion, critical-triage
+  auto-escalation (including that `escalation_source`/`escalation_note`
+  are actually persisted — see Fixed below), triage history + apply +
+  apply-twice rejection, tenant scoping, automation CRUD + trigger-type
+  validation, step execution (`create_task`, condition-skip, the honest
+  `send_sms` "no provider configured" message, and the new webhook SSRF
+  block), the test-vs-execute distinction, automation logs/stats/clear,
+  the automation dashboard, and automation templates.
+
+### Fixed
+- **`SupportTicket` was missing `escalation_source` and
+  `escalation_note` from its `$fillable` array**, even though both
+  columns exist on the table (added in this same feature's own
+  migration). Every AI critical-severity auto-escalation was silently
+  dropping the audit trail of *why* it escalated and that the source was
+  `ai_critical` — the ticket's `escalated`/`escalated_at` flipped, but
+  the note explaining the escalation vanished. Added both fields to
+  `$fillable`; verified live that a critical triage now persists both.
+- **`AutomationEngine::callWebhook()` had no SSRF guard**, unlike the
+  functionally identical `ApiConnectorService::guardAgainstPrivateNetwork()`
+  already enforced on Integration Manager connectors. A tenant-configured
+  automation webhook step could be pointed at `127.0.0.1` or any other
+  private/reserved address and used as an SSRF proxy into the host's own
+  network. Added the same guard (respecting the existing
+  `ALLOW_PRIVATE_NETWORK_CONNECTORS` override) to the webhook step;
+  verified live that a step targeting `127.0.0.1` is now rejected with an
+  honest reason instead of being attempted.
+
 ## [Unreleased] — Master Directive Phase 13: Upsell/Cross-sell Engine + Sales Script A/B Testing
 
 Backend (`UpsellController`/`UpsellEngine`, `AbTestingController`/

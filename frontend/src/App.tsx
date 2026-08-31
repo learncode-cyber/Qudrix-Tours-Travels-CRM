@@ -9,6 +9,10 @@ import AiProvidersPage from './pages/AiProvidersPage'
 import AnalyticsDashboardPage from './pages/AnalyticsDashboardPage'
 import AbTestingPage from './pages/AbTestingPage'
 import AbTestingDetailPage from './pages/AbTestingDetailPage'
+import SupportTicketsPage from './pages/SupportTicketsPage'
+import SupportTicketDetailPage from './pages/SupportTicketDetailPage'
+import AutomationsPage from './pages/AutomationsPage'
+import AutomationDetailPage from './pages/AutomationDetailPage'
 import BookingsPage from './pages/BookingsPage'
 import PackagesPage from './pages/PackagesPage'
 import ConversationsPage from './pages/ConversationsPage'
@@ -83,6 +87,10 @@ export default function App() {
             <Route path="/upsell" element={<UpsellPage />} />
             <Route path="/ab-testing" element={<AbTestingPage />} />
             <Route path="/ab-testing/:id" element={<AbTestingDetailPage />} />
+            <Route path="/support-tickets" element={<SupportTicketsPage />} />
+            <Route path="/support-tickets/:id" element={<SupportTicketDetailPage />} />
+            <Route path="/automations" element={<AutomationsPage />} />
+            <Route path="/automations/:id" element={<AutomationDetailPage />} />
           </Route>
         </Route>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

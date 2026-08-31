@@ -22,7 +22,7 @@ for the fullest recent verification transcript.
 | 11 | Sales Strategies + AI Copilot | ✅ Complete — see `DOCUMENTATION/PHASE_11_REPORT.md`. Honest-failure path verified live against Anthropic's real API; a successful real completion remains UNVERIFIED (no valid API key in this sandbox) |
 | 12 | Analytics + Behavioral Intelligence | ✅ Complete — see `DOCUMENTATION/PHASE_12_REPORT.md` |
 | 13 | Upsell/Cross-sell + A/B Testing | ✅ Complete — see `DOCUMENTATION/PHASE_13_REPORT.md` |
-| 14 | Complaint Handling + Automation | ✅ Backend complete (prior sessions) |
+| 14 | Complaint Handling + Automation | ✅ Complete — see `DOCUMENTATION/PHASE_14_REPORT.md` |
 | 15 | Security + Access Logging | ✅ Backend complete (prior sessions) |
 | 16 | SEO + Tracking + Marketing | ✅ Backend complete (prior sessions) |
 | 17 | Final QA + Production Release | Not started — waits for all prior phases |
@@ -71,11 +71,15 @@ suggest-reply, and an AI Package Assistant for free-text-to-proposal
 package building), Phase 11's Sales Strategies + Copilot surface (a
 Sales Strategies CRUD page, and Copilot + Extract Memory tabs added to
 the per-lead AI Assistant), Phase 12's Analytics surface (executive
-dashboard, behavioral analytics, quotation funnel), and Phase 13's
+dashboard, behavioral analytics, quotation funnel), Phase 13's
 Upsell + A/B Testing surface (upsell rules CRUD + effectiveness, A/B
-experiment management + results). Phases 14–16's backend APIs have no
-frontend yet — building it out is expected to track the same
-phase-by-phase cadence going forward, per the directive.
+experiment management + results), and Phase 14's Complaint Handling +
+Automation surface (support tickets list + detail with status/replies/
+escalation and an AI Triage panel, and an automations list + detail
+page with steps, test/execute, logs, and a dashboard summary). Phases
+15–16's backend APIs have no frontend yet — building it out is
+expected to track the same phase-by-phase cadence going forward, per
+the directive.
 
 ## Known Limitations (cross-cutting, not specific to one phase)
 

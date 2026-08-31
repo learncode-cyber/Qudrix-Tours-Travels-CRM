@@ -13,6 +13,7 @@ class SupportTicket extends Model
         'tenant_id', 'customer_id', 'assigned_to', 'subject', 'description',
         'category', 'priority', 'status', 'sla_due_at', 'resolved_at',
         'escalated', 'escalated_at', 'escalated_to',
+        'escalation_source', 'escalation_note',
     ];
 
     protected $casts = [

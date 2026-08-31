@@ -1672,6 +1672,49 @@ Nothing — no bugs were found in this module.
 
 ---
 
+## MASTER DIRECTIVE PHASE 14 ADDENDUM — Complaint Handling + Automation
+
+Backend (`SupportTicketController`, `AiComplaintController`/
+`AiComplaintService`, legacy `ComplaintController`, `AutomationController`/
+`AutomationEngine`, `AutomationTemplateController`, `AutomationLogController`,
+`AutomationDashboardController`) already existed from a prior session.
+Live-tested end to end for the first time, wrote its first automated
+coverage, and built its frontend. Two real bugs found and fixed — see
+Fixed below.
+
+### Support Tickets
+- `GET/POST /api/v1/support-tickets`, `GET /support-tickets/{id}` — `{customer_id?, assigned_to?, subject, description, category?, priority?: low|normal|high|urgent}`. Created with `status: open`.
+- `PUT /support-tickets/{id}/status` — `{status: open|in_progress|resolved|closed}`; setting `resolved` also stamps `resolved_at`.
+- `POST /support-tickets/{id}/escalate` — `{escalated_to}` (a human decision, distinct from the AI auto-escalation path below).
+- `POST /support-tickets/{id}/reply` — `{message, is_internal_note?}`.
+
+### AI Complaint Triage (Directive S15)
+- `POST /support-tickets/{ticketId}/ai-triage` — reads the ticket's subject/description/category/priority/status and its non-internal replies, and asks the AI Gateway for `{severity, category, sentiment, detected_issues[], suggested_response, suggested_resolution, recommends_escalation, escalation_reason}`. Stored as a new `ticket_ai_triages` row, returned with `is_suggestion: true, applied_to_ticket: false` — **the ticket's own priority/status/category are never touched by this call.** The one exception, mandated by the directive: a `severity: critical` result automatically escalates the ticket (`escalated: true`, `escalation_source: ai_critical`, `escalation_note`) and notifies the assignee (or every active tenant user if unassigned) — escalation only ever *adds* human attention; it never changes `status`, never answers, never resolves. The model is instructed never to promise a refund, price, booking change, or visa outcome in the draft reply — it must write a `[AGENT: CONFIRM ...]` placeholder instead.
+- `GET /support-tickets/{ticketId}/ai-triage` — the ticket's full triage history, newest first.
+- `POST /support-tickets/{ticketId}/ai-triage/{triageId}/apply` — the explicit human action that copies a triage's `suggested_severity`/`suggested_category` onto the ticket (severity mapped onto the ticket's own priority vocabulary: critical→urgent, high→high, medium→normal, else low) and stamps `applied_by`/`applied_at`. Refuses with `422` if this triage was already applied.
+- No active AI provider or a real provider failure both propagate as an honest `502` with the real error text — nothing is silently retried or faked.
+
+### Legacy Complaints
+- `GET/POST /api/v1/complaints`, `PUT /complaints/{id}/status` — `{booking_id, customer_id, title, description, category, priority: low|medium|high|urgent}`. Setting `status: resolved` stamps `resolution_date`.
+
+### Automation Engine
+- `GET/POST/PUT /api/v1/automations`, `GET /automations/{id}` — `{name, trigger_type: booking_created|customer_added|invoice_created|payment_received|webhook|schedule, status: draft|active|paused|archived}`.
+- `POST /automations/{id}/execute` — `{trigger_data?}`. Runs each `AutomationStep` in `step_order`, skipping any whose `condition_config` (`field`/`operator`/`value`) isn't met against the trigger context. Action types: `send_email` (real `Mail::raw`), `send_sms` (honestly reports `CONTRACT REQUIRED: no SMS provider is configured` — no SMS integration exists anywhere in this codebase, so none is invented), `create_task`, `update_customer` (rejects any field not in the customer's own `$fillable`), `create_notification`, `webhook`, and `delay`. Every run is logged to `automation_logs` with real timing and increments the automation's `run_count`/`last_run_at`.
+- `POST /automations/{id}/test` — `{test_data?}` — a dry-run preview (`steps_count`, `valid`) that never executes a step or writes a log row.
+- `webhook` steps are guarded against SSRF (see Fixed below): a URL resolving to a private/reserved/loopback address is rejected unless `ALLOW_PRIVATE_NETWORK_CONNECTORS=true`, the same override used by Integration Manager connectors.
+- `GET /automations/{id}/logs`, `GET /automations/{id}/stats` (`total_runs`, `success_count`, `error_count`, `avg_execution_time_ms`), `DELETE /automations/{id}/logs`.
+- `GET /automation-templates`, `GET /automation-templates/{id}`, `GET /automation-templates/category/{category}`, `POST /automation-templates/{id}/use` (increments `usage_count`, returns the template's `workflow_config` for the caller to instantiate — creating the automation/steps from it is left to the caller; no API currently creates `AutomationStep` rows directly).
+- `GET /automation-dashboard/summary` (counts + 10 most recent executions), `GET /automation-dashboard/metrics` (success/error rate, average execution time, busiest hour).
+
+### Fixed
+- `SupportTicket::$fillable` was missing `escalation_source`/`escalation_note` even though both columns exist on the table — every AI critical-severity escalation was silently dropping the audit trail of why it escalated. Added to `$fillable`.
+- `AutomationEngine::callWebhook()` had no SSRF guard, unlike the identical protection already enforced on Integration Manager connectors — a tenant-configured webhook step could reach `127.0.0.1` or any other private/reserved address. Added the same `guardAgainstPrivateNetwork()` check used by `ApiConnectorService`.
+
+**Phase 14 addendum version:** 1.0.0
+**Appended:** 2026-08-31
+
+---
+
 **Version:** 1.0.0  
 **Last Updated:** 2026-08-16  
 **Status:** ✅ Production Ready
