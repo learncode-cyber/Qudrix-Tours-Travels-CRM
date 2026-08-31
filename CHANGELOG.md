@@ -4,6 +4,41 @@ All notable changes to the Qudrix Travel CRM/ERP project, following the
 master development directive's phase numbering (Phase 0 = Foundation,
 Phase 1 = Backend Foundation + Auth + RBAC, Phase 2 = Complete CRM, ...).
 
+## [Unreleased] — Master Directive Phase 10: AI Sales Agent + AI Package Builder
+
+Backend (`AiSalesAgentController`/`Service`,
+`AiPackageBuilderController`/`Service`) already existed from a prior
+session, built entirely on the Phase 9 gateway and the Phase 6 pricing/
+inventory engine. Live-tested end to end for the first time — including
+a real round trip to Anthropic's live API — and wrote its first
+automated coverage. Zero bugs found, matching Phase 6, 8, and 9.
+
+### Added
+- Frontend: an "AI Assistant" action on every lead (Leads page, both
+  kanban and list views) opening a modal with Qualify / Summarize /
+  Suggest Reply tabs — every result rendered as an explicit suggestion
+  or draft, never applied automatically. An AI Package Assistant page
+  (free-text → structured requirements → a proposal built only from
+  real, currently-available inventory, re-verified and priced
+  deterministically, shown as a draft with an explicit "nothing has
+  been booked" notice). No such UI existed anywhere before this phase.
+- `tests/Feature/Phase10AiSalesAgentTest.php` (10 tests) — the first
+  automated coverage this module has ever had: honest failure with no
+  active provider and on real provider failure (via `Http::fake`);
+  `summarize`'s short-circuit making zero HTTP calls when a lead has no
+  communications; `qualify`'s AI-suggested score being persisted and
+  visible without overwriting anything; a live assertion that only real
+  grounded data (the lead's actual name and message text) reaches the
+  prompt payload; `suggest-reply` always returning `is_draft: true,
+  sent: false`; `interpret` extracting structured requirements;
+  `propose`'s zero-HTTP-call short-circuit when no inventory matches;
+  `propose` correctly verifying an AI-named component against real
+  inventory and pricing it deterministically; and `propose` rejecting a
+  hallucinated component id with a `422`.
+
+### Fixed
+Nothing — no bugs were found in this module.
+
 ## [Unreleased] — Master Directive Phase 9: AI Provider Management
 
 Backend (`AiProviderController`, `AiGateway`, and the Anthropic/OpenAI/

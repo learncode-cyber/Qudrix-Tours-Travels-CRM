@@ -1506,6 +1506,52 @@ is deterministic.
 
 ---
 
+## MASTER DIRECTIVE PHASE 10 ADDENDUM — AI Sales Agent + AI Package Builder (appended, not a rewrite)
+
+Same auth requirements as the Phase 2–9 addenda above. Backend
+(`AiSalesAgentController`/`AiSalesAgentService`,
+`AiPackageBuilderController`/`AiPackageBuilderService`) already existed
+from a prior session and is built entirely on the Phase 9 gateway and the
+Phase 6 pricing/inventory engine — no new AI infrastructure, only new
+prompts and grounding contracts. Live-tested end to end for the first
+time (including a real round trip to Anthropic's live API), wrote its
+first automated coverage, and built its frontend. Zero bugs found.
+
+Every response from this module is a suggestion or draft for a human to
+act on — nothing is sent, booked, priced by the model, or applied
+automatically. This is enforced structurally (grounding + verification),
+not just by prompt wording.
+
+### AI Sales Agent (per-lead)
+- `POST /api/v1/ai/leads/{leadId}/qualify` — the model sees only real rows (the lead itself, its real `Communication`/`Quotation`/`Booking` history) and returns a score/buying-intent/reasoning/next-action JSON object. The score is **persisted as an `ai_suggested` `LeadScore` row** a human can see and override — it never overwrites or is treated as a human score.
+- `POST /api/v1/ai/leads/{leadId}/summarize` — summarizes real communications. **Short-circuits before ever calling the AI gateway** if the lead has no recorded communications (`{"summary": null, "message": "This lead has no recorded communications to summarize."}`) — verified live to make zero HTTP calls in that case.
+- `POST /api/v1/ai/leads/{leadId}/suggest-reply` — `{rep_intent?}` → a reply draft for a rep to review and send themselves; response includes `is_draft: true, sent: false`. The prompt forbids stating any price, availability, or booking confirmation — those must appear as an explicit `[CONFIRM ...]` placeholder instead.
+- All three return `502` with the real provider/gateway error message on AI failure — never a fabricated result.
+
+### AI Package Builder (AI-assisted version of the Phase 6 builder)
+- `POST /api/v1/ai/package-builder/interpret` — `{text}` → structured requirements (`destination`, `travel_date`, `group_size`, `needs`, `missing_information`, ...) extracted from free text. No inventory or pricing claim at this step.
+- `POST /api/v1/ai/package-builder/propose` — `{requirements: {destination?, travel_date?, group_size?}}`. Shows the model **only real, currently-available inventory** matching the requirements (flights with enough seats, hotel room types with rooms available, transport with enough capacity) and lets it choose among what it was shown. **Every component the model names is then re-resolved against real inventory by the same `InventoryResolver` from Phase 6** — a hallucinated `reference_id` (one that doesn't exist, or lacks capacity) causes the whole request to fail with `422 {"error": "The proposed package failed inventory verification.", "details": {...}}` rather than being silently accepted. Real components are priced by the same deterministic `PricingEngine` from Phase 6 — the model never sets a price. If no inventory matches the requirements at all, the endpoint returns `200` with `proposal: null` and a plain message, **without ever calling the AI gateway** (verified live to make zero HTTP calls in that case). Every successful response includes `requires_human_approval: true`.
+
+### Fixed
+Nothing — no bugs were found in this module.
+
+### Verification note
+As with Phase 9, `POST /ai/leads/{leadId}/qualify` and
+`POST /ai/package-builder/propose` were both exercised **live against
+Anthropic's real API** (reachable from this sandbox) with a deliberately
+invalid key — both correctly reached the real provider, received a
+genuine `401`, and propagated it honestly through the full stack
+(adapter → gateway → service → controller → JSON response). The
+success path (grounding, score persistence, hallucination rejection,
+short-circuit-without-a-network-call behavior) was verified
+deterministically via `Http::fake` in the automated suite, since no
+valid API key was available to exercise a real successful completion.
+
+**Phase 10 addendum version:** 1.0.0
+**Appended:** 2026-08-31
+
+---
+
 **Version:** 1.0.0  
 **Last Updated:** 2026-08-16  
 **Status:** ✅ Production Ready

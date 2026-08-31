@@ -18,7 +18,7 @@ for the fullest recent verification transcript.
 | 7 | Telegram + Notification System | ✅ Complete — see `DOCUMENTATION/PHASE_7_REPORT.md`. Telegram message delivery itself is UNVERIFIED — no outbound network in this sandbox; the honest-failure path (`CONTRACT REQUIRED: TELEGRAM_BOT_TOKEN is not configured`) is verified |
 | 8 | CRM External API Integration | ✅ Complete (architecture-only per directive rule — no external contract supplied) — see `DOCUMENTATION/PHASE_8_REPORT.md` |
 | 9 | AI Provider Management | ✅ Complete — see `DOCUMENTATION/PHASE_9_REPORT.md`. A real call against Anthropic's live API (reachable here) correctly failed on an invalid key; OpenAI is unreachable from this sandbox; Gemini and any successful real completion remain UNVERIFIED |
-| 10 | AI Sales Agent | ✅ Backend complete (prior sessions) |
+| 10 | AI Sales Agent | ✅ Complete — see `DOCUMENTATION/PHASE_10_REPORT.md`. Honest-failure path verified live against Anthropic's real API; a successful real completion remains UNVERIFIED (no valid API key in this sandbox) |
 | 11 | Sales Strategies + AI Copilot | ✅ Backend complete (prior sessions) |
 | 12 | Analytics + Behavioral Intelligence | ✅ Backend complete (prior sessions) |
 | 13 | Upsell/Cross-sell + A/B Testing | ✅ Backend complete (prior sessions) |
@@ -63,9 +63,12 @@ inventory), and Phase 7's Telegram + Notifications surface
 channels including Telegram, and a profile page for configuring a
 user's `telegram_chat_id`), Phase 8's Integration Manager surface
 (operator-configurable API connectors, endpoint mapping, credentials,
-test connection, ad-hoc execute, call logs), and Phase 9's AI Provider
+test connection, ad-hoc execute, call logs), Phase 9's AI Provider
 Management surface (provider CRUD, API key management, connection
-testing, usage/cost reporting). Phases 10–16's backend APIs have no
+testing, usage/cost reporting), and Phase 10's AI Sales Agent + AI
+Package Builder surface (a per-lead AI Assistant for qualify/summarize/
+suggest-reply, and an AI Package Assistant for free-text-to-proposal
+package building). Phases 11–16's backend APIs have no
 frontend yet — building it out is expected to track the same
 phase-by-phase cadence going forward, per the directive.
 

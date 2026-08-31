@@ -2,8 +2,13 @@ import client, { downloadFile } from './client'
 import type {
   ApiItemResponse,
   ApiListResponse,
+  AiInterpretedRequirements,
+  AiLeadQualification,
+  AiLeadSummary,
+  AiPackageProposalResult,
   AiProvider,
   AiProviderKey,
+  AiSuggestedReply,
   AiUsageResponse,
   ApiConnector,
   ApiConnectorAuthType,
@@ -515,6 +520,23 @@ export const testAiProvider = (id: number | string) =>
   >(`/ai-providers/${id}/test`)
 export const getAiUsage = (since?: string) =>
   client.get<ApiItemResponse<AiUsageResponse>>('/ai-usage', { params: since ? { since } : undefined })
+
+// --- AI Sales Agent (suggestions/drafts only, never auto-applied) ---
+export const aiQualifyLead = (leadId: number | string) =>
+  client.post<ApiItemResponse<AiLeadQualification>>(`/ai/leads/${leadId}/qualify`)
+export const aiSummarizeLead = (leadId: number | string) =>
+  client.post<ApiItemResponse<AiLeadSummary>>(`/ai/leads/${leadId}/summarize`)
+export const aiSuggestReply = (leadId: number | string, rep_intent?: string) =>
+  client.post<ApiItemResponse<AiSuggestedReply>>(`/ai/leads/${leadId}/suggest-reply`, { rep_intent })
+
+// --- AI Package Builder (interpret + propose, human approves) ---
+export const aiInterpretRequirements = (text: string) =>
+  client.post<ApiItemResponse<AiInterpretedRequirements>>('/ai/package-builder/interpret', { text })
+export const aiProposePackage = (requirements: {
+  destination?: string
+  travel_date?: string
+  group_size?: number
+}) => client.post<ApiItemResponse<AiPackageProposalResult>>('/ai/package-builder/propose', { requirements })
 
 // --- Package Builder ---
 export const buildPackage = (payload: {

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent } from 'react'
 import { createLead, getFullPipeline, updateLeadStatus } from '../api/endpoints'
+import AiLeadAssistantModal from '../components/AiLeadAssistantModal'
 import { EmptyState, ErrorBanner, Loading, Modal } from '../components/ui'
 import type { Lead, PipelineColumn } from '../types'
 import { formatCurrency, getErrorMessage, titleCase } from '../utils/format'
@@ -56,6 +57,7 @@ export default function LeadsPage() {
   const [saving, setSaving] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
   const [movingId, setMovingId] = useState<number | null>(null)
+  const [aiLead, setAiLead] = useState<Lead | null>(null)
 
   async function load() {
     setLoading(true)
@@ -182,6 +184,9 @@ export default function LeadsPage() {
                           </option>
                         ))}
                       </select>
+                      <button type="button" className="btn btn-ghost btn-sm" onClick={() => setAiLead(lead)}>
+                        AI Assistant
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -201,6 +206,7 @@ export default function LeadsPage() {
                 <th>Priority</th>
                 <th>Est. Value</th>
                 <th>Move</th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
@@ -226,12 +232,19 @@ export default function LeadsPage() {
                       ))}
                     </select>
                   </td>
+                  <td>
+                    <button type="button" className="btn btn-ghost btn-sm" onClick={() => setAiLead(lead)}>
+                      AI Assistant
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
       )}
+
+      {aiLead ? <AiLeadAssistantModal lead={aiLead} onClose={() => setAiLead(null)} /> : null}
 
       {showForm ? (
         <Modal title="New Lead" onClose={() => setShowForm(false)}>

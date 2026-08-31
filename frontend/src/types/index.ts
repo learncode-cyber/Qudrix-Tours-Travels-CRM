@@ -491,6 +491,67 @@ export interface AiUsageResponse {
   providers_without_cost_rates: number[]
 }
 
+export interface AiLeadQualification {
+  score?: number
+  buying_intent?: 'low' | 'medium' | 'high' | string
+  reasoning?: string
+  signals?: { signal: string; impact: 'positive' | 'negative' }[]
+  recommended_next_action?: string
+  suggested_follow_up_days?: number
+  objections_detected?: string[]
+  missing_information?: string[]
+  is_suggestion?: boolean
+  human_can_override?: boolean
+  [key: string]: unknown
+}
+
+export interface AiLeadSummary {
+  summary?: string | null
+  message?: string
+  customer_requirements?: string[]
+  open_questions?: string[]
+  commitments_made?: string[]
+  sentiment?: 'positive' | 'neutral' | 'negative' | string
+  [key: string]: unknown
+}
+
+export interface AiSuggestedReply {
+  draft?: string
+  tone?: string
+  rationale?: string
+  facts_to_verify_before_sending?: string[]
+  is_draft?: boolean
+  sent?: boolean
+  [key: string]: unknown
+}
+
+export interface AiInterpretedRequirements {
+  destination?: string | null
+  travel_date?: string | null
+  return_date?: string | null
+  group_size?: number | null
+  budget_amount?: number | null
+  budget_currency?: string | null
+  needs?: { flight?: boolean; hotel?: boolean; transport?: boolean }
+  notes?: string | null
+  missing_information?: string[]
+  [key: string]: unknown
+}
+
+export interface AiPackageProposalResult {
+  proposal: {
+    components?: { type: string; reference_id: number; quantity: number; why?: string }[]
+    alternatives?: { reference_id: number; type: string; why?: string }[]
+    upsell_suggestions?: string[]
+    summary?: string
+  } | null
+  verified: PackageBuilderResolvedLine[]
+  pricing: PricingPreviewResult | null
+  message?: string
+  requires_human_approval?: boolean
+  [key: string]: unknown
+}
+
 export type RoomBlockStatus = 'held' | 'partially_released' | 'released' | string
 
 export interface RoomBlock {
