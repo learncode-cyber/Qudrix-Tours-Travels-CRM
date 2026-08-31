@@ -14,7 +14,7 @@ for the fullest recent verification transcript.
 | 3 | Sales + Quotation | ✅ Complete — see `DOCUMENTATION/PHASE_3_REPORT.md` |
 | 4 | Travel Operations (Flights/Hotels/Visa/Bookings) | ✅ Complete — see `DOCUMENTATION/PHASE_4_REPORT.md` |
 | 5 | Hajj & Umrah + Student Visa | ✅ Complete — see `DOCUMENTATION/PHASE_5_REPORT.md` |
-| 6 | Custom Package Builder + Pricing Engine | ✅ Backend complete (prior sessions); no frontend yet |
+| 6 | Custom Package Builder + Pricing Engine | ✅ Complete — see `DOCUMENTATION/PHASE_6_REPORT.md` |
 | 7 | Telegram + Notification System | ✅ Backend complete (prior sessions); Telegram delivery UNVERIFIED — no outbound network in this sandbox |
 | 8 | CRM External API Integration | Architecture-only per directive rule (no external contract supplied); generic connector engine built |
 | 9 | AI Provider Management | ✅ Backend complete (prior sessions); real provider calls UNVERIFIED — no outbound network in this sandbox |
@@ -53,12 +53,14 @@ surface (sales dashboard, quotations incl. approval workflow + PDF,
 proposals, invoices incl. payments + PDF), Phase 4's Travel
 Operations surface (packages, bookings + calendar, flights + seat
 booking, hotels + room types + room blocks, visas + embassies +
-expiry-reminder trigger), and Phase 5's Hajj/Umrah + Student Visa
+expiry-reminder trigger), Phase 5's Hajj/Umrah + Student Visa
 surface (Hajj/Umrah packages, departure groups + pilgrim management +
-group report, student visa applications + status workflow). Phases
-6–16's backend APIs have no frontend yet — building it out is expected
-to track the same phase-by-phase cadence going forward, per the
-directive.
+group report, student visa applications + status workflow), and Phase
+6's Pricing/Package Builder surface (pricing rules + calculation
+preview, a custom package builder against real hotel/flight/transport
+inventory). Phases 7–16's backend APIs have no frontend yet — building
+it out is expected to track the same phase-by-phase cadence going
+forward, per the directive.
 
 ## Known Limitations (cross-cutting, not specific to one phase)
 

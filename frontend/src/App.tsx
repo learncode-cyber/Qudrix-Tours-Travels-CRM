@@ -18,6 +18,8 @@ import HotelsPage from './pages/HotelsPage'
 import InvoicesPage from './pages/InvoicesPage'
 import LeadsPage from './pages/LeadsPage'
 import LoginPage from './pages/LoginPage'
+import PackageBuilderPage from './pages/PackageBuilderPage'
+import PricingRulesPage from './pages/PricingRulesPage'
 import ProposalsPage from './pages/ProposalsPage'
 import QuotationDetailPage from './pages/QuotationDetailPage'
 import QuotationsPage from './pages/QuotationsPage'
@@ -55,6 +57,8 @@ export default function App() {
             <Route path="/hajj-umrah" element={<HajjUmrahPage />} />
             <Route path="/hajj-umrah/groups/:id" element={<HajjUmrahGroupDetailPage />} />
             <Route path="/student-visa" element={<StudentVisaPage />} />
+            <Route path="/pricing-rules" element={<PricingRulesPage />} />
+            <Route path="/package-builder" element={<PackageBuilderPage />} />
           </Route>
         </Route>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

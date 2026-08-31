@@ -4,6 +4,42 @@ All notable changes to the Qudrix Travel CRM/ERP project, following the
 master development directive's phase numbering (Phase 0 = Foundation,
 Phase 1 = Backend Foundation + Auth + RBAC, Phase 2 = Complete CRM, ...).
 
+## [Unreleased] — Master Directive Phase 6: Custom Package Builder + Pricing Engine
+
+Like Phase 5, this module's backend (`PricingRuleController`,
+`PackageBuilderController`, `PricingEngine`, `InventoryResolver`) already
+existed from a prior session but had never been executed live or covered
+by a test. This phase live-tested it end to end, wrote its first
+automated coverage, and built its frontend for the first time. Unlike
+Phase 4/5, the audit and live-testing found **zero bugs** — every
+endpoint behaved exactly as its code and schema describe.
+
+### Added
+- Frontend: Pricing Rules page (create/activate/deactivate/delete rules,
+  a "Preview Calculation" tool showing the full applied-rules breakdown
+  for an arbitrary base cost/context) and a Package Builder page (pick
+  real hotel room types / flights / transports as line-item components,
+  build against real inventory and see the resolved cost + pricing
+  breakdown, optionally save as a reusable package or generate a
+  quotation against a lead).
+- `listTransports` API wrapper and a `Transport` frontend type — the
+  backend has had a full transports CRUD route since Phase 4's route-gap
+  fixes, but no page had ever called it; needed here to populate the
+  Package Builder's transport picker.
+- `tests/Feature/Phase6PricingPackageBuilderTest.php` (11 tests) — the
+  first automated coverage this module has ever had: pricing rule CRUD +
+  tenant scoping, preview calculation (matching rule application,
+  non-matching/inactive rules correctly skipped, multi-rule compounding
+  in priority order), and package builder (real inventory resolution and
+  cost totals, cross-tenant component rejection, insufficient-capacity
+  rejection, save-as-package persistence, create-quotation's `lead_id`
+  requirement and the resulting quotation's line items).
+
+### Fixed
+Nothing — no bugs were found in this module. Flagging this explicitly
+per the project's "report honestly" rule rather than silently having an
+empty section.
+
 ## [Unreleased] — Master Directive Phase 5: Hajj & Umrah + Student Visa
 
 The backend for this module already existed from a prior session

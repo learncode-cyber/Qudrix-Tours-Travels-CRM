@@ -241,6 +241,97 @@ export interface HotelRoomType {
   [key: string]: unknown
 }
 
+export interface Transport {
+  id: number
+  transport_type?: string | null
+  vehicle_name?: string | null
+  vehicle_number?: string | null
+  pickup_location?: string | null
+  dropoff_location?: string | null
+  pickup_date?: string | null
+  pickup_time?: string | null
+  capacity?: number | null
+  price_per_seat?: number | string | null
+  currency?: string | null
+  driver_name?: string | null
+  driver_phone?: string | null
+  status?: string | null
+  [key: string]: unknown
+}
+
+export type PricingRuleFactor =
+  | 'season'
+  | 'demand'
+  | 'group_size'
+  | 'customer_segment'
+  | 'booking_timing'
+  | string
+export type PricingAdjustmentType = 'percentage' | 'fixed' | string
+
+export interface PricingRule {
+  id: number
+  name: string
+  factor: PricingRuleFactor
+  season_start?: string | null
+  season_end?: string | null
+  min_group_size?: number | null
+  max_group_size?: number | null
+  booking_days_before_travel_min?: number | null
+  booking_days_before_travel_max?: number | null
+  customer_segment_id?: number | null
+  adjustment_type: PricingAdjustmentType
+  adjustment_value: number | string
+  priority?: number | null
+  is_active: boolean
+  [key: string]: unknown
+}
+
+export interface PricingAppliedRule {
+  rule_id: number
+  name: string
+  factor: string
+  adjustment_type: string
+  adjustment_value: number
+  amount: number
+  price_after: number
+}
+
+export interface PricingPreviewResult {
+  base_cost: number
+  applied_rules: PricingAppliedRule[]
+  final_price: number
+  calculation_log_id: number
+  [key: string]: unknown
+}
+
+export type PackageBuilderComponentType = 'hotel' | 'flight' | 'transport'
+
+export interface PackageBuilderComponentInput {
+  type: PackageBuilderComponentType
+  reference_id: number
+  quantity: number
+}
+
+export interface PackageBuilderResolvedLine {
+  type: PackageBuilderComponentType
+  reference_id: number
+  description: string
+  quantity: number
+  unit_price: number
+  line_total: number
+}
+
+export interface PackageBuilderResult {
+  destination: string
+  travel_date: string
+  group_size: number
+  components: PackageBuilderResolvedLine[]
+  pricing: PricingPreviewResult
+  package?: Package
+  quotation?: Quotation
+  [key: string]: unknown
+}
+
 export type RoomBlockStatus = 'held' | 'partially_released' | 'released' | string
 
 export interface RoomBlock {

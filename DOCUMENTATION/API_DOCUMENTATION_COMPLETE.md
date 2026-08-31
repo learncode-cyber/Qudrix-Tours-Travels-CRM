@@ -1351,6 +1351,29 @@ these lists as a result.
 
 ---
 
+## MASTER DIRECTIVE PHASE 6 ADDENDUM — Custom Package Builder + Pricing Engine (appended, not a rewrite)
+
+Same auth requirements as the Phase 2–5 addenda above. Like Phase 5, this
+module's backend already existed from a prior session; this phase's work
+was live-testing it end to end for the first time, writing its first
+automated test coverage, and building its frontend. Unlike Phase 4/5, no
+bugs were found in this module's backend — every endpoint behaved exactly
+as its code describes on first live execution.
+
+### Pricing Rules
+- `GET/POST/PUT/DELETE /api/v1/pricing-rules` — `{name, factor: season|demand|group_size|customer_segment|booking_timing, season_start?, season_end?, min_group_size?, max_group_size?, booking_days_before_travel_min?, booking_days_before_travel_max?, customer_segment_id?, adjustment_type: percentage|fixed, adjustment_value, priority?}`. `update` only accepts `{name?, adjustment_type?, adjustment_value?, priority?, is_active?}` — the condition fields (season/group-size/booking-timing bounds) are set at creation and not editable afterward through this endpoint.
+- `POST /api/v1/pricing-rules/preview` — `{base_cost, travel_date?, group_size?, booking_days_before_travel?, customer_segment_id?}` → `{base_cost, applied_rules: [{rule_id, name, factor, adjustment_type, adjustment_value, amount, price_after}], final_price, calculation_log_id}`. Every preview call is logged to `pricing_calculation_logs` (auditable, no side-effect-free "dry run" exists by design). Rules apply in ascending `priority` order (ties broken by rule id), each adjustment compounding on the running price, not the original base cost — verified: `1000 → +10% → 1100 → +50 fixed → 1150`.
+
+### Package Builder
+- `POST /api/v1/package-builder/build` — `{lead_id?, customer_id?, destination, travel_date, group_size, components: [{type: hotel|flight|transport, reference_id, quantity}], save_as_package?, create_quotation?}`. Every component's `reference_id` is resolved against real, tenant-owned inventory (`HotelRoomType`/`Flight`/`Transport`) by `InventoryResolver` — a reference to another tenant's inventory or to a component with insufficient capacity/seats returns `422` with a `components` validation error, never a fabricated price. The resolved base cost is then run through the same `PricingEngine` used by the preview endpoint.
+  - `save_as_package: true` persists the build as a real `Package` row (`type: custom`, `is_custom_built: true`, the raw `components` array preserved for reference).
+  - `create_quotation: true` requires `lead_id` (422 without it) and creates a real `Quotation` + `QuotationItem` rows — one item per resolved component plus, when the pricing engine's markup is non-zero, one additional "Pricing adjustment" line referencing the `pricing_calculation_logs` row it came from.
+
+**Phase 6 addendum version:** 1.0.0
+**Appended:** 2026-08-31
+
+---
+
 **Version:** 1.0.0  
 **Last Updated:** 2026-08-16  
 **Status:** ✅ Production Ready

@@ -24,8 +24,12 @@ import type {
   Lead,
   LoginResponse,
   Package,
+  PackageBuilderComponentInput,
+  PackageBuilderResult,
   Pilgrim,
   PipelineFullResponse,
+  PricingPreviewResult,
+  PricingRule,
   ProfileResponse,
   Proposal,
   ProposalStats,
@@ -36,6 +40,7 @@ import type {
   StudentVisaApplication,
   Task,
   TaskStats,
+  Transport,
   UmrahPackage,
   VisaApplication,
   VisaBookingStatus,
@@ -364,3 +369,33 @@ export const assignStudentVisaCounsellor = (id: number | string, assigned_counse
     `/student-visa-applications/${id}/assign-counsellor`,
     { assigned_counsellor_id },
   )
+
+// --- Transports (inventory lookup only, for the package builder) ---
+export const listTransports = () => client.get<ApiListResponse<Transport>>('/transports')
+
+// --- Pricing Rules ---
+export const listPricingRules = () => client.get<ApiListResponse<PricingRule>>('/pricing-rules')
+export const createPricingRule = (payload: Partial<PricingRule>) =>
+  client.post<ApiItemResponse<PricingRule>>('/pricing-rules', payload)
+export const updatePricingRule = (id: number | string, payload: Partial<PricingRule>) =>
+  client.put<ApiItemResponse<PricingRule>>(`/pricing-rules/${id}`, payload)
+export const deletePricingRule = (id: number | string) => client.delete(`/pricing-rules/${id}`)
+export const previewPricing = (payload: {
+  base_cost: number
+  travel_date?: string
+  group_size?: number
+  booking_days_before_travel?: number
+  customer_segment_id?: number
+}) => client.post<ApiItemResponse<PricingPreviewResult>>('/pricing-rules/preview', payload)
+
+// --- Package Builder ---
+export const buildPackage = (payload: {
+  lead_id?: number
+  customer_id?: number
+  destination: string
+  travel_date: string
+  group_size: number
+  components: PackageBuilderComponentInput[]
+  save_as_package?: boolean
+  create_quotation?: boolean
+}) => client.post<ApiItemResponse<PackageBuilderResult>>('/package-builder/build', payload)
