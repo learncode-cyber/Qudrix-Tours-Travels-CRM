@@ -32,6 +32,7 @@ const navItems = [
   { to: '/ab-testing', label: 'A/B Testing', icon: '🧪' },
   { to: '/support-tickets', label: 'Support Tickets', icon: '🎫' },
   { to: '/automations', label: 'Automations', icon: '⚙' },
+  { to: '/security', label: 'Security', icon: '🛡' },
 ]
 
 export default function AppLayout() {

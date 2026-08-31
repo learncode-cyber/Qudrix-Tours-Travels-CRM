@@ -1360,3 +1360,51 @@ export interface AutomationTemplateData {
   usage_count: number
   status: string
 }
+
+// --- Phase 15: Security + Access Logging ---
+export interface AccessLogEntry {
+  id: number
+  tenant_id: number | null
+  user_id: number | null
+  method: string
+  url: string
+  route_name: string | null
+  ip_address: string | null
+  user_agent: string | null
+  status_code: number | null
+  duration_ms: number | null
+  is_suspicious: boolean
+  suspicion_reason: string | null
+  created_at: string
+}
+
+export interface AuditLogEntry {
+  id: number
+  tenant_id: number
+  user_id: number | null
+  action: string
+  entity_type: string
+  entity_id: number | null
+  old_values: Record<string, unknown> | null
+  new_values: Record<string, unknown> | null
+  ip_address: string | null
+  description: string | null
+  created_at: string
+}
+
+export interface FailedLoginAttemptEntry {
+  id: number
+  email: string
+  ip_address: string | null
+  reason: string
+  created_at: string
+}
+
+export interface SecuritySummary {
+  window: string
+  total_requests: number
+  suspicious_requests: number
+  by_reason: Array<{ suspicion_reason: string; total: number }>
+  top_ips_by_failure: Array<{ ip_address: string; total: number }>
+  failed_logins: number
+}

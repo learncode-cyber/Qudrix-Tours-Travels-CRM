@@ -23,7 +23,7 @@ for the fullest recent verification transcript.
 | 12 | Analytics + Behavioral Intelligence | ✅ Complete — see `DOCUMENTATION/PHASE_12_REPORT.md` |
 | 13 | Upsell/Cross-sell + A/B Testing | ✅ Complete — see `DOCUMENTATION/PHASE_13_REPORT.md` |
 | 14 | Complaint Handling + Automation | ✅ Complete — see `DOCUMENTATION/PHASE_14_REPORT.md` |
-| 15 | Security + Access Logging | ✅ Backend complete (prior sessions) |
+| 15 | Security + Access Logging | ✅ Complete — see `DOCUMENTATION/PHASE_15_REPORT.md` |
 | 16 | SEO + Tracking + Marketing | ✅ Backend complete (prior sessions) |
 | 17 | Final QA + Production Release | Not started — waits for all prior phases |
 
@@ -73,13 +73,15 @@ Sales Strategies CRUD page, and Copilot + Extract Memory tabs added to
 the per-lead AI Assistant), Phase 12's Analytics surface (executive
 dashboard, behavioral analytics, quotation funnel), Phase 13's
 Upsell + A/B Testing surface (upsell rules CRUD + effectiveness, A/B
-experiment management + results), and Phase 14's Complaint Handling +
+experiment management + results), Phase 14's Complaint Handling +
 Automation surface (support tickets list + detail with status/replies/
 escalation and an AI Triage panel, and an automations list + detail
-page with steps, test/execute, logs, and a dashboard summary). Phases
-15–16's backend APIs have no frontend yet — building it out is
-expected to track the same phase-by-phase cadence going forward, per
-the directive.
+page with steps, test/execute, logs, and a dashboard summary), and
+Phase 15's Security Trail surface (24h summary, access logs with a
+suspicious-only filter, audit logs, failed logins — admin-gated the
+same way the backend gates it). Phase 16's backend API has no frontend
+yet — building it out is expected to track the same phase-by-phase
+cadence going forward, per the directive.
 
 ## Known Limitations (cross-cutting, not specific to one phase)
 
@@ -90,7 +92,13 @@ the directive.
   role permit this action." Flagging this plainly rather than silently
   leaving it; fixing it app-wide is a cross-cutting change bigger than
   any single CRM feature and should be its own reviewed pass rather
-  than folded into Phase 2 CRM work.
+  than folded into Phase 2 CRM work. Phase 15 fixed a narrower,
+  adjacent gap in the same area: the `$this->authorize('admin')` Gate
+  used by `AdminController`/`SecurityLogController` was previously
+  undefined (denying every request, including from real admins) — see
+  `DOCUMENTATION/PHASE_15_REPORT.md`. That single admin/non-admin Gate
+  is now real; the broader per-permission `rbac` middleware rollout
+  described above is still not applied to any route.
 - **Production database is MySQL 8.0+; local verification here uses
   SQLite** (no MySQL server available in this sandbox). Code that used
   to be MySQL-only (`DATE_FORMAT()`) was made driver-portable during the

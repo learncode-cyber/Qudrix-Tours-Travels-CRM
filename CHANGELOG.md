@@ -4,6 +4,63 @@ All notable changes to the Qudrix Travel CRM/ERP project, following the
 master development directive's phase numbering (Phase 0 = Foundation,
 Phase 1 = Backend Foundation + Auth + RBAC, Phase 2 = Complete CRM, ...).
 
+## [Unreleased] — Master Directive Phase 15: Security + Access Logging
+
+Backend (`SecurityLogController`, `AccessLogMiddleware`, `AuditMiddleware`,
+`AdminController`, login lockout in `AuthController`) already existed from
+a prior session. Live-tested end to end for the first time and wrote its
+first automated coverage: 17 new tests. **Three real bugs found and
+fixed** — the most in a single phase since Phase 4/5/7/11 combined.
+
+### Added
+- Frontend: a Security Trail page (24h summary stat cards; Access Logs
+  tab with a suspicious-only filter; Audit Logs tab; Failed Logins tab),
+  gated the same way the backend gates it — a non-admin sees an
+  explanatory message instead of a raw 403.
+- `tests/Feature/Phase15SecurityAccessLoggingTest.php` — 17 tests
+  covering the admin gate (both the fix that makes it work for real
+  admins and that it still denies non-admins), all four security
+  endpoints' authorization + tenant scoping, self-registration's role
+  assignment (the bug below), login lockout + failed-attempt recording,
+  the "don't reveal whether the email exists" property, and that real
+  requests actually produce `AccessLog`/`AuditLog` rows including the
+  suspicious-request flag.
+
+### Fixed
+- **`Gate::authorize('admin')` was undefined and JWT auth never
+  registered with Laravel's `Auth` facade** — two compounding bugs that
+  together meant every admin-gated endpoint (`AdminController`'s backup/
+  optimize-db endpoints) denied *every* request, including from real
+  admins, and would keep doing so silently forever, since a 403 looks
+  like "working as designed" from the outside. Root cause: `JwtAuth`
+  middleware sets `$request->user` as a plain property but never calls
+  `Auth::setUser()`, so `Gate`/`$this->authorize()` — which resolve the
+  current user via `Auth::user()` — always saw a guest. Fixed by having
+  `JwtAuth` also register the user with `Auth::setUser()` (in-memory
+  only, no session persisted) and defining the missing
+  `Gate::define('admin', ...)` ability against the real role system
+  (`hasAnyRole(['super_admin', 'admin'])`). Verified live: a real admin
+  now gets `200` from `/admin/backups`; a non-admin still gets `403`.
+- **`SecurityLogController`'s four methods had no authorization check at
+  all**, despite being mounted in the exact same "requires super-admin
+  role" route group as `AdminController`, whose every method calls
+  `$this->authorize('admin')`. Any authenticated user — not just an
+  admin — could read the tenant's full access log, audit log, and
+  failed-login history. Added the same `$this->authorize('admin')` call
+  used by its sibling controller. Verified live: a plain user now gets
+  `403` from all four endpoints; a real admin still gets `200`.
+- **Self-registration (`POST /register`) never granted the new tenant's
+  first user any role**, silently. `AuthController::register()` looked
+  up `$tenant->roles()->where('name', 'super-admin')` (tenant-scoped,
+  hyphenated) but the system roles this app actually seeds
+  (`RoleSeeder`) are global (`tenant_id` null) and named `super_admin`
+  (underscore) — so the lookup always returned null and the attach never
+  ran. Every self-registered account was a fully authenticated user with
+  zero roles, permanently unable to pass any role check. Fixed to look
+  up the real global role the same way `DatabaseSeeder` does for the
+  seeded admin. Verified live: a freshly self-registered user now holds
+  `super_admin` and can immediately reach an admin-gated endpoint.
+
 ## [Unreleased] — Master Directive Phase 14: Complaint Handling + Automation
 
 Backend (`SupportTicketController`, `AiComplaintController`/

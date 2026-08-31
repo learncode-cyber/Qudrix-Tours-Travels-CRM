@@ -12,6 +12,10 @@ import type {
   AiProviderKey,
   AiSuggestedReply,
   AiUsageResponse,
+  AccessLogEntry,
+  AuditLogEntry,
+  FailedLoginAttemptEntry,
+  SecuritySummary,
   Automation,
   AutomationDashboardMetrics,
   AutomationDashboardSummary,
@@ -761,3 +765,12 @@ export const getAutomationDashboardMetrics = () =>
   client.get<ApiItemResponse<AutomationDashboardMetrics>>('/automation-dashboard/metrics')
 export const listAutomationTemplates = () =>
   client.get<ApiListResponse<AutomationTemplateData>>('/automation-templates')
+
+// --- Security Trail (Phase 15) ---
+export const getSecuritySummary = () => client.get<ApiItemResponse<SecuritySummary>>('/admin/security/summary')
+export const getAccessLogs = (params?: { suspicious_only?: boolean; ip?: string; status_code?: number }) =>
+  client.get<{ data: AccessLogEntry[]; total: number }>('/admin/security/access-logs', { params })
+export const getAuditLogs = (params?: { entity_type?: string; user_id?: number }) =>
+  client.get<{ data: AuditLogEntry[]; total: number }>('/admin/security/audit-logs', { params })
+export const getFailedLogins = (params?: { email?: string; ip_address?: string }) =>
+  client.get<{ data: FailedLoginAttemptEntry[]; total: number }>('/admin/security/failed-logins', { params })

@@ -13,6 +13,7 @@ class SecurityLogController extends Controller
 {
     public function accessLogs(Request $request)
     {
+        $this->authorize('admin');
         $validated = $request->validate([
             'suspicious_only' => 'nullable|boolean',
             'ip' => 'nullable|string|max:45',
@@ -33,6 +34,7 @@ class SecurityLogController extends Controller
 
     public function auditLogs(Request $request)
     {
+        $this->authorize('admin');
         $logs = AuditLog::where('tenant_id', $request->user->tenant_id)
             ->when($request->entity_type, fn ($q, $v) => $q->where('entity_type', $v))
             ->when($request->user_id, fn ($q, $v) => $q->where('user_id', $v))
@@ -47,6 +49,7 @@ class SecurityLogController extends Controller
     // all. Access is restricted by the admin route prefix instead.
     public function failedLogins(Request $request)
     {
+        $this->authorize('admin');
         $attempts = FailedLoginAttempt::when($request->email, fn ($q, $v) => $q->where('email', $v))
             ->when($request->ip_address, fn ($q, $v) => $q->where('ip_address', $v))
             ->latest('created_at')
@@ -58,6 +61,7 @@ class SecurityLogController extends Controller
     // Aggregated view of what is currently worth attention.
     public function summary(Request $request)
     {
+        $this->authorize('admin');
         $tenantId = $request->user->tenant_id;
         $since = now()->subDay();
 

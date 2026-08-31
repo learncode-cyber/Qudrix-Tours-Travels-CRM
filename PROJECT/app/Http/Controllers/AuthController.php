@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Role;
 use App\Models\User;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
@@ -36,9 +37,17 @@ class AuthController extends Controller
             'status' => 'active',
         ]);
 
-        $superAdminRole = $tenant->roles()->where('name', 'super-admin')->first();
+        // FIXED: this looked up $tenant->roles() (tenant-scoped roles) for a
+        // role named 'super-admin' (hyphen). Neither matched reality: the
+        // system roles this app actually seeds (RoleSeeder) are global
+        // (tenant_id null) and named 'super_admin' (underscore) — so this
+        // lookup always returned null and every self-registered tenant's
+        // first user silently got zero roles, permanently unable to pass
+        // any role-based check. Mirrors the same lookup DatabaseSeeder uses
+        // for the seeded admin.
+        $superAdminRole = Role::whereNull('tenant_id')->where('name', 'super_admin')->first();
         if ($superAdminRole) {
-            $user->roles()->attach($superAdminRole);
+            $user->roles()->attach($superAdminRole->id, ['tenant_id' => $tenant->id]);
         }
 
         $token = JWTAuth::fromUser($user);

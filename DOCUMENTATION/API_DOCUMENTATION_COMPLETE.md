@@ -1715,6 +1715,37 @@ Fixed below.
 
 ---
 
+## MASTER DIRECTIVE PHASE 15 ADDENDUM — Security + Access Logging
+
+Backend (`SecurityLogController`, `AccessLogMiddleware`, `AuditMiddleware`,
+`AdminController`, the login-lockout logic in `AuthController`) already
+existed from a prior session. Live-tested end to end for the first time,
+wrote its first automated coverage, and built its frontend. **Three real
+bugs found and fixed** — see Fixed below.
+
+### Security Trail (mounted under the configurable admin prefix, `config('admin.path')`, default `admin`)
+- `GET /api/v1/admin/security/access-logs` — `{suspicious_only?, ip?, status_code?, from?}`. Every request (successful or not) is recorded by `AccessLogMiddleware` with method/URL (query string redacted for password/token/secret/credential-shaped keys — request bodies are never stored at all)/route name/IP/user agent/status/duration, and flagged `is_suspicious` for `401`/`403`/`429`/`5xx` responses and requests slower than a configurable threshold.
+- `GET /admin/security/audit-logs` — `{entity_type?, user_id?}`. Every `POST`/`PUT`/`PATCH`/`DELETE` by an authenticated user is recorded by `AuditMiddleware` with action/entity type/id/IP/description.
+- `GET /admin/security/failed-logins` — `{email?, ip_address?}`. Deliberately **not** tenant-scoped (a failed login has no tenant until credentials resolve one, and access is restricted by the admin route/gate instead).
+- `GET /admin/security/summary` — real 24-hour counts: total requests, suspicious requests, a breakdown by suspicion reason, the top IPs by failure count, and failed logins.
+- **All four now require the `admin` Gate** (a real admin — `super_admin` or `admin` role) — see Fixed below; previously this was completely unenforced.
+
+### Login hardening
+- `POST /login` blunts credential stuffing: after `LOGIN_MAX_FAILED_ATTEMPTS` (default 5) consecutive failures for one `email + source IP` pair within `LOGIN_LOCKOUT_MINUTES` (default 15), further attempts return `429` without even checking the password — the lockout key includes the IP specifically so an attacker cannot lock out a real user globally by hammering their address from elsewhere. A successful login clears the failure streak. The error message is identical whether the email is unknown or the password is wrong, so the endpoint cannot be used to enumerate valid addresses — the *reason* (`unknown_email` vs `bad_password` vs `inactive_account` vs `locked_out`) is still recorded server-side in `failed_login_attempts` for the admin trail above.
+
+### Admin-gated operational endpoints (`AdminController`, under the same admin prefix)
+- `POST /admin/optimize-db`, `POST /admin/analyze-db`, `POST /admin/backup`, `GET /admin/backups`, `POST /admin/cleanup-backups` — all now actually reachable by a real admin (see Fixed below); previously denied unconditionally.
+
+### Fixed
+- `Gate::authorize('admin')` was undefined, and `JwtAuth` middleware never registered the authenticated user with Laravel's `Auth` facade — together, every admin-gated endpoint denied every request, including from real admins, permanently. Fixed by having `JwtAuth` call `Auth::setUser()` (in-memory only) and defining `Gate::define('admin', fn ($user) => $user->hasAnyRole(['super_admin', 'admin']))`.
+- `SecurityLogController`'s four methods had no authorization check at all, unlike its sibling `AdminController` in the same "requires super-admin" route group — any authenticated user could read the tenant's full security trail. Added `$this->authorize('admin')` to all four.
+- `AuthController::register()`'s role lookup (`$tenant->roles()->where('name', 'super-admin')`) could never match the real system roles this app seeds (global, `tenant_id` null, named `super_admin`) — every self-registered account got zero roles. Fixed to look up the real role the way `DatabaseSeeder` does.
+
+**Phase 15 addendum version:** 1.0.0
+**Appended:** 2026-08-31
+
+---
+
 **Version:** 1.0.0  
 **Last Updated:** 2026-08-16  
 **Status:** ✅ Production Ready
