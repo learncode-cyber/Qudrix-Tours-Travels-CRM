@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Tenant;
 use App\Models\Role;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Tymon\JWTAuth\Facades\JWTAuth;
 
 class AuthService
@@ -14,7 +15,7 @@ class AuthService
     {
         $tenant = Tenant::create([
             'name' => $data['tenant_name'],
-            'slug' => str_slug($data['tenant_name']),
+            'slug' => Str::slug($data['tenant_name']),
             'is_active' => true,
             'timezone' => 'UTC',
             'currency' => 'USD',

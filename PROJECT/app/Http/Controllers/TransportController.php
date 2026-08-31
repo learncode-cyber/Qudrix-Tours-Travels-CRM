@@ -33,7 +33,7 @@ class TransportController extends Controller
             'vehicle_number' => 'required|string',
             'pickup_location' => 'required|string',
             'dropoff_location' => 'required|string',
-            'pickup_date' => 'required|datetime',
+            'pickup_date' => 'required|date',
             'pickup_time' => 'required|date_format:H:i:s',
             'capacity' => 'required|integer|min:1',
             'price_per_seat' => 'required|numeric|min:0',

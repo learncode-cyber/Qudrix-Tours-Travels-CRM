@@ -7,11 +7,12 @@ use App\Models\HajjPackage;
 use App\Models\Complaint;
 use App\Models\Booking;
 use App\Models\Customer;
-use Laravel\Lumen\Testing\DatabaseMigrations;
+use App\Models\Package;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class Phase5Test extends TestCase
 {
-    use DatabaseMigrations;
+    use RefreshDatabase;
     private $token;
     private $tenant;
     private $user;
@@ -19,14 +20,14 @@ class Phase5Test extends TestCase
     public function setUp(): void
     {
         parent::setUp();
-        $this->tenant = Tenant::create(['name' => 'Test Travel Agency', 'db_host' => 'localhost']);
+        $this->tenant = Tenant::create(['name' => 'Test Travel Agency', 'slug' => 'test-travel-agency']);
         $this->user = User::create([
             'tenant_id' => $this->tenant->id,
+            'name' => 'Test User',
             'email' => 'test@travel.com',
             'password' => bcrypt('password'),
-            'role' => 'admin'
         ]);
-        $this->token = 'test_jwt_token';
+        $this->token = \Tymon\JWTAuth\Facades\JWTAuth::fromUser($this->user);
     }
 
     public function test_create_hajj_package()
@@ -86,17 +87,29 @@ class Phase5Test extends TestCase
 
     public function test_create_complaint()
     {
-        $booking = Booking::create([
-            'tenant_id' => $this->tenant->id,
-            'reference_number' => 'BK001',
-            'status' => 'confirmed',
-            'total_price' => 5000
-        ]);
-        
         $customer = Customer::create([
             'tenant_id' => $this->tenant->id,
-            'first_name' => 'Ahmed',
+            'name' => 'Ahmed',
             'email' => 'ahmed@test.com'
+        ]);
+
+        $package = Package::create([
+            'tenant_id' => $this->tenant->id,
+            'name' => 'Dubai Tour',
+        ]);
+
+        $booking = Booking::create([
+            'tenant_id' => $this->tenant->id,
+            'customer_id' => $customer->id,
+            'package_id' => $package->id,
+            'created_by' => $this->user->id,
+            'booking_number' => 'BK001',
+            'booking_type' => 'individual',
+            'status' => 'confirmed',
+            'travel_date' => now()->addDays(30),
+            'return_date' => now()->addDays(37),
+            'number_of_travelers' => 1,
+            'total_amount' => 5000,
         ]);
 
         $response = $this->postJson('/api/v1/complaints', [
@@ -130,11 +143,29 @@ class Phase5Test extends TestCase
 
     public function test_add_expense()
     {
+        $customer = Customer::create([
+            'tenant_id' => $this->tenant->id,
+            'name' => 'Fatima',
+            'email' => 'fatima@test.com'
+        ]);
+
+        $package = Package::create([
+            'tenant_id' => $this->tenant->id,
+            'name' => 'Dubai Tour',
+        ]);
+
         $booking = Booking::create([
             'tenant_id' => $this->tenant->id,
-            'reference_number' => 'BK002',
+            'customer_id' => $customer->id,
+            'package_id' => $package->id,
+            'created_by' => $this->user->id,
+            'booking_number' => 'BK002',
+            'booking_type' => 'individual',
             'status' => 'confirmed',
-            'total_price' => 3000
+            'travel_date' => now()->addDays(30),
+            'return_date' => now()->addDays(37),
+            'number_of_travelers' => 1,
+            'total_amount' => 3000,
         ]);
 
         $response = $this->postJson('/api/v1/expenses', [

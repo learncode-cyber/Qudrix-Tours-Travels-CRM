@@ -25,8 +25,16 @@ use App\Http\Controllers\Admin\AdminApiKeyController;
 // every route in this group resolves to /v1/... instead of /api/v1/...
 // (that mismatch went undetected because nothing had ever hit these
 // routes with a real HTTP request before this verification pass).
-Route::prefix('api/v1')->middleware(['api', 'api.key', 'rate.limit'])->group(function () {
-    
+//
+// Nested under 'public/' (matching the QuotationShareController routes
+// further down this same file) because 'packages'/'bookings'/'quotations'
+// are already resource names owned by the JWT-protected admin CRUD routes
+// in routes/api.php. Registering identical method+URI pairs there (e.g.
+// POST /api/v1/quotations) silently overwrites the earlier route in
+// Laravel's RouteCollection — the exact bug already found and fixed once
+// for /api/v1/health — so this group needs its own namespace to coexist.
+Route::prefix('api/v1/public')->middleware(['api', 'api.key', 'rate.limit'])->group(function () {
+
     // ============================================
     // PACKAGES (Public Listing)
     // ============================================
@@ -67,18 +75,11 @@ Route::prefix('api/v1')->middleware(['api', 'api.key', 'rate.limit'])->group(fun
             ->name('api.quotations.show');
     });
 
-    // ============================================
-    // HEALTH & STATUS
-    // ============================================
-    Route::get('/health', function () {
-        return response()->json([
-            'success' => true,
-            'message' => 'API is healthy',
-            'timestamp' => now()->toIso8601String(),
-            'api_version' => 'v1',
-            'crm_status' => 'operational',
-        ]);
-    })->name('api.health')->withoutMiddleware(['throttle:api']);
+    // Health & status: intentionally NOT duplicated here. routes/api.php
+    // already registers the public GET /api/v1/health -> HealthController.
+    // A second registration at the same method+URI would silently
+    // overwrite it in Laravel's RouteCollection (see the note above the
+    // group this block belongs to).
 });
 
 // ============================================

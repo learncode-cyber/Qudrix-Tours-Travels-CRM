@@ -64,26 +64,35 @@ Route::prefix('v1')->group(function () {
 
     // Phase 1: Task Management (protected routes)
     Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
+        // /tasks/stats must precede the apiResource's GET /tasks/{task}
+        // (see the note above the quotations block for why).
+        Route::get('/tasks/stats', '\App\Http\Controllers\TaskController@getTaskStats');
         Route::apiResource('tasks', '\App\Http\Controllers\TaskController');
         Route::put('/tasks/{id}/complete', '\App\Http\Controllers\TaskController@markComplete');
         Route::put('/tasks/{id}/incomplete', '\App\Http\Controllers\TaskController@markIncomplete');
-        Route::get('/tasks/stats', '\App\Http\Controllers\TaskController@getTaskStats');
     });
 
     // Phase 2: Sales Pipeline & Quotations (protected routes)
     Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         // Quotation Management
+        // /quotations/stats must be registered before the apiResource's
+        // GET /quotations/{quotation}: Laravel matches routes in
+        // registration order, so a literal segment registered after a
+        // wildcard route is unreachable — a request for /quotations/stats
+        // would resolve as {quotation}='stats' and 404 on model binding.
+        Route::get('/quotations/stats', '\App\Http\Controllers\QuotationController@getQuotationStats');
         Route::apiResource('quotations', '\App\Http\Controllers\QuotationController')->except('destroy');
         Route::post('/quotations/{id}/send', '\App\Http\Controllers\QuotationController@sendQuotation');
-        Route::get('/quotations/stats', '\App\Http\Controllers\QuotationController@getQuotationStats');
 
         // Proposal Management
+        // /proposals/stats must precede the apiResource's GET
+        // /proposals/{proposal} (see the note above the quotations block).
+        Route::get('/proposals/stats', '\App\Http\Controllers\ProposalController@getProposalStats');
         Route::apiResource('proposals', '\App\Http\Controllers\ProposalController')->only(['index', 'show']);
         Route::post('/proposals/from-quotation', '\App\Http\Controllers\ProposalController@createFromQuotation');
         Route::post('/proposals/{id}/send', '\App\Http\Controllers\ProposalController@sendProposal');
         Route::post('/proposals/{id}/sign', '\App\Http\Controllers\ProposalController@signProposal');
         Route::post('/proposals/{id}/reject', '\App\Http\Controllers\ProposalController@rejectProposal');
-        Route::get('/proposals/stats', '\App\Http\Controllers\ProposalController@getProposalStats');
 
         // Sales Pipeline
         Route::get('/pipeline/full', '\App\Http\Controllers\PipelineController@getFullPipeline');
@@ -102,10 +111,12 @@ Route::prefix('v1')->group(function () {
         Route::apiResource('quotation-templates', '\App\Http\Controllers\QuotationTemplateController')->only(['index', 'store', 'show', 'update', 'destroy']);
 
         // Invoices
+        // /invoices/stats must precede the apiResource's GET
+        // /invoices/{invoice} (see the note above the quotations block).
+        Route::get('/invoices/stats', '\App\Http\Controllers\InvoiceController@stats');
         Route::apiResource('invoices', '\App\Http\Controllers\InvoiceController')->only(['index', 'store', 'show']);
         Route::post('/invoices/{id}/payments', '\App\Http\Controllers\InvoiceController@recordPayment');
         Route::post('/invoices/{id}/send', '\App\Http\Controllers\InvoiceController@send');
-        Route::get('/invoices/stats', '\App\Http\Controllers\InvoiceController@stats');
     });
 
     // Public, token-authenticated quotation sharing — no JWT session.
@@ -119,10 +130,14 @@ Route::prefix('v1')->group(function () {
     // Phase 3: Booking Engine (protected routes)
     Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
         // Booking Management
+        // /bookings/stats must precede the apiResource's GET
+        // /bookings/{booking} for the same reason documented above the
+        // quotations block: a literal segment after a wildcard is
+        // unreachable under Laravel's registration-order route matching.
+        Route::get('/bookings/stats', '\App\Http\Controllers\BookingController@getBookingStats');
         Route::apiResource('bookings', '\App\Http\Controllers\BookingController');
         Route::post('/bookings/{id}/confirm', '\App\Http\Controllers\BookingController@confirmBooking');
         Route::post('/bookings/{id}/cancel', '\App\Http\Controllers\BookingController@cancelBooking');
-        Route::get('/bookings/stats', '\App\Http\Controllers\BookingController@getBookingStats');
 
         // Booking Travelers
         Route::post('/travelers/add', '\App\Http\Controllers\TravelerController@addTraveler');

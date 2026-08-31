@@ -13,7 +13,7 @@ class BookingService
     {
         $booking = Booking::create([
             'tenant_id' => $tenantId,
-            'booking_number' => 'BK-' . time(),
+            'booking_number' => 'BK-' . time() . '-' . strtoupper(\Illuminate\Support\Str::random(6)),
             'status' => 'pending',
             'payment_status' => 'pending',
             ...$data
@@ -29,7 +29,7 @@ class BookingService
         BookingConfirmation::create([
             'tenant_id' => $booking->tenant_id,
             'booking_id' => $booking->id,
-            'confirmation_number' => 'CONF-' . time(),
+            'confirmation_number' => 'CONF-' . time() . '-' . strtoupper(\Illuminate\Support\Str::random(6)),
             'confirmation_date' => now(),
             'confirmed_by' => $userId,
             'confirmation_method' => 'system',

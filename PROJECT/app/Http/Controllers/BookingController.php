@@ -70,7 +70,7 @@ class BookingController extends Controller
         $booking = Booking::create([
             'tenant_id' => $request->user->tenant_id,
             'created_by' => $request->user->id,
-            'booking_number' => 'BK-' . time(),
+            'booking_number' => 'BK-' . time() . '-' . strtoupper(\Illuminate\Support\Str::random(6)),
             'status' => 'pending',
             'payment_status' => 'pending',
             ...$validated
@@ -137,7 +137,7 @@ class BookingController extends Controller
         BookingConfirmation::create([
             'tenant_id' => $request->user->tenant_id,
             'booking_id' => $booking->id,
-            'confirmation_number' => 'CONF-' . time(),
+            'confirmation_number' => 'CONF-' . time() . '-' . strtoupper(\Illuminate\Support\Str::random(6)),
             'confirmation_date' => now(),
             'confirmed_by' => $request->user->id,
             'confirmation_method' => 'system',

@@ -9,11 +9,11 @@ use App\Models\DataInsight;
 use App\Models\CustomerSegment;
 use App\Models\Prediction;
 use App\Models\Dashboard;
-use Laravel\Lumen\Testing\DatabaseMigrations;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class Phase7Test extends TestCase
 {
-    use DatabaseMigrations;
+    use RefreshDatabase;
     private $token;
     private $tenant;
     private $user;
@@ -21,14 +21,14 @@ class Phase7Test extends TestCase
     public function setUp(): void
     {
         parent::setUp();
-        $this->tenant = Tenant::create(['name' => 'Analytics Agency', 'db_host' => 'localhost']);
+        $this->tenant = Tenant::create(['name' => 'Analytics Agency', 'slug' => 'analytics-agency']);
         $this->user = User::create([
             'tenant_id' => $this->tenant->id,
+            'name' => 'Analyst User',
             'email' => 'analyst@agency.com',
             'password' => bcrypt('password'),
-            'role' => 'admin'
         ]);
-        $this->token = 'test_jwt_token';
+        $this->token = \Tymon\JWTAuth\Facades\JWTAuth::fromUser($this->user);
     }
 
     public function test_get_analytics_metrics()

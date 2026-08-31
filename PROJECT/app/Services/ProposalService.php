@@ -14,7 +14,7 @@ class ProposalService
             'quotation_id' => $quotation->id,
             'lead_id' => $quotation->lead_id,
             'customer_id' => $quotation->customer_id,
-            'proposal_number' => 'PROP-' . time(),
+            'proposal_number' => 'PROP-' . time() . '-' . strtoupper(\Illuminate\Support\Str::random(6)),
             'status' => 'draft',
             'proposal_date' => now(),
             ...$data

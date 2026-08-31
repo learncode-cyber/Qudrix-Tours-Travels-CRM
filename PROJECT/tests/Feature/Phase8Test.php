@@ -8,11 +8,11 @@ use App\Models\SyncQueue;
 use App\Models\CachePolicy;
 use App\Models\PWASettings;
 use App\Models\OfflineData;
-use Laravel\Lumen\Testing\DatabaseMigrations;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class Phase8Test extends TestCase
 {
-    use DatabaseMigrations;
+    use RefreshDatabase;
     private $token;
     private $tenant;
     private $user;
@@ -20,14 +20,14 @@ class Phase8Test extends TestCase
     public function setUp(): void
     {
         parent::setUp();
-        $this->tenant = Tenant::create(['name' => 'PWA Agency', 'db_host' => 'localhost']);
+        $this->tenant = Tenant::create(['name' => 'PWA Agency', 'slug' => 'pwa-agency']);
         $this->user = User::create([
             'tenant_id' => $this->tenant->id,
+            'name' => 'PWA User',
             'email' => 'pwa@agency.com',
             'password' => bcrypt('password'),
-            'role' => 'admin'
         ]);
-        $this->token = 'test_jwt_token';
+        $this->token = \Tymon\JWTAuth\Facades\JWTAuth::fromUser($this->user);
     }
 
     public function test_sync_offline_changes()
@@ -124,7 +124,10 @@ class Phase8Test extends TestCase
         $response = $this->getJson('/api/v1/pwa/manifest.json', ['Authorization' => "Bearer $this->token"]);
         
         $this->assertEquals(200, $response->status());
-        $this->assertArrayHasKey('name', $response->json('data'));
+        // The manifest is served flat, not wrapped in {"data": ...}: the
+        // Web App Manifest spec requires top-level keys like "name" so
+        // browsers can read it directly as manifest.json.
+        $this->assertArrayHasKey('name', $response->json());
     }
 
     public function test_update_pwa_settings()

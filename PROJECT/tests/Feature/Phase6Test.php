@@ -7,11 +7,11 @@ use App\Models\Automation;
 use App\Models\AutomationStep;
 use App\Models\AutomationTemplate;
 use App\Models\AutomationLog;
-use Laravel\Lumen\Testing\DatabaseMigrations;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class Phase6Test extends TestCase
 {
-    use DatabaseMigrations;
+    use RefreshDatabase;
     private $token;
     private $tenant;
     private $user;
@@ -19,14 +19,14 @@ class Phase6Test extends TestCase
     public function setUp(): void
     {
         parent::setUp();
-        $this->tenant = Tenant::create(['name' => 'Test Agency', 'db_host' => 'localhost']);
+        $this->tenant = Tenant::create(['name' => 'Test Agency', 'slug' => 'test-agency']);
         $this->user = User::create([
             'tenant_id' => $this->tenant->id,
+            'name' => 'Test User',
             'email' => 'test@agency.com',
             'password' => bcrypt('password'),
-            'role' => 'admin'
         ]);
-        $this->token = 'test_jwt_token';
+        $this->token = \Tymon\JWTAuth\Facades\JWTAuth::fromUser($this->user);
     }
 
     public function test_create_automation()

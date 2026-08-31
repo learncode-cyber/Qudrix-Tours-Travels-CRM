@@ -6,6 +6,7 @@ use App\Models\User;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Tymon\JWTAuth\Facades\JWTAuth;
 use Illuminate\Validation\ValidationException;
 
@@ -22,7 +23,7 @@ class AuthController extends Controller
 
         $tenant = Tenant::create([
             'name' => $validated['tenant_name'],
-            'slug' => str_slug($validated['tenant_name']),
+            'slug' => Str::slug($validated['tenant_name']),
             'is_active' => true,
         ]);
 

@@ -12,7 +12,7 @@ class QuotationService
     {
         $quotation = Quotation::create([
             'tenant_id' => $tenantId,
-            'quotation_number' => 'QT-' . time(),
+            'quotation_number' => 'QT-' . time() . '-' . strtoupper(\Illuminate\Support\Str::random(6)),
             'status' => 'draft',
             'tax_amount' => 0,
             'discount_amount' => 0,

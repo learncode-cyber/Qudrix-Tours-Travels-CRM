@@ -87,7 +87,7 @@ class PackageBuilderController extends Controller
                 'lead_id' => $validated['lead_id'],
                 'customer_id' => $validated['customer_id'] ?? null,
                 'created_by' => $request->user->id,
-                'quotation_number' => 'QT-' . time(),
+                'quotation_number' => 'QT-' . time() . '-' . strtoupper(\Illuminate\Support\Str::random(6)),
                 'share_token' => bin2hex(random_bytes(20)),
                 'subject' => 'Custom Package: ' . $validated['destination'],
                 'status' => 'draft',

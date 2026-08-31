@@ -71,7 +71,7 @@ class QuotationController extends Controller
         $quotation = Quotation::create([
             'tenant_id' => $request->user->tenant_id,
             'created_by' => $request->user->id,
-            'quotation_number' => 'QT-' . time(),
+            'quotation_number' => 'QT-' . time() . '-' . strtoupper(\Illuminate\Support\Str::random(6)),
             'share_token' => bin2hex(random_bytes(20)),
             'status' => 'draft',
             'tax_amount' => 0,
@@ -202,7 +202,7 @@ class QuotationController extends Controller
             'lead_id' => $original->lead_id,
             'customer_id' => $original->customer_id,
             'created_by' => $request->user->id,
-            'quotation_number' => 'QT-' . time(),
+            'quotation_number' => 'QT-' . time() . '-' . strtoupper(\Illuminate\Support\Str::random(6)),
             'share_token' => bin2hex(random_bytes(20)),
             'subject' => $original->subject,
             'description' => $original->description,
