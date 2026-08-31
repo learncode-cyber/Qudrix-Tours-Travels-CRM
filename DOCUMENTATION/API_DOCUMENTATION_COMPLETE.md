@@ -1374,6 +1374,51 @@ as its code describes on first live execution.
 
 ---
 
+## MASTER DIRECTIVE PHASE 7 ADDENDUM — Telegram + Notification System (appended, not a rewrite)
+
+Same auth requirements as the Phase 2–6 addenda above. As with Phase 5/6,
+this module's backend (`NotificationController`, `NotificationService`,
+`TelegramNotificationService`, `ConversationController`) already existed
+from a prior session; this phase live-tested it end to end for the first
+time, found and fixed one real bug, wrote its first automated test
+coverage, and built its frontend.
+
+### In-app Notifications
+- `GET /api/v1/notifications` — `?unread_only=1` filters to unread. User- and tenant-scoped (a user only ever sees their own).
+- `PUT /api/v1/notifications/{id}/read`, `PUT /api/v1/notifications/read-all`
+- `GET /api/v1/notifications/unread-count`
+- `NotificationService::send()` (internal, called by other controllers e.g. `LeadController`, `BookingController` on assignment) always writes a real `Notification` row, then attempts each requested delivery channel (`telegram`, `email`) honestly — never marks a channel `sent` unless the transport actually accepted it. A user with no `telegram_chat_id` set gets `{"sent": false, "reason": "User has no telegram_chat_id configured"}`, not a silent no-op.
+
+### Telegram
+- `TelegramNotificationService` is a real client for Telegram's public Bot API (`https://api.telegram.org/bot{token}/sendMessage`), gated entirely on `config('services.telegram.bot_token')` (server-side only, never exposed to the frontend). With no token configured — the case in this sandbox, no outbound network — every send attempt returns `{"sent": false, "reason": "CONTRACT REQUIRED: TELEGRAM_BOT_TOKEN is not configured"}` rather than fabricating success. **UNVERIFIED**: real message delivery against a live bot token, since this sandbox has no outbound network — see Known Limitations.
+- `PUT /api/v1/profile` accepts `telegram_chat_id` (nullable string) — this is how a user's Telegram delivery target gets configured; there is no separate Telegram-specific endpoint.
+
+### Conversations (unified inbox)
+- `GET/POST /api/v1/conversations`, `GET /api/v1/conversations/{id}` — channels: `website_chat, email, whatsapp, telegram, sms, internal`. `store` requires a `customer_id` or `lead_id` (422 without either) and now also accepts `external_thread_id` (see Fixed below) — for `telegram` this is the chat id replies get sent to.
+- `POST /api/v1/conversations/{id}/inbound` — records an inbound message (from a webhook or manual entry), bumps `unread_count`, reopens a `closed` conversation.
+- `POST /api/v1/conversations/{id}/reply` — `{body, is_internal_note?}`. An internal note is never sent anywhere (`delivery_status: null`). A real reply attempts delivery per the conversation's `channel`: `email` through Laravel's configured mailer, `telegram` through `TelegramNotificationService`, `internal` is always `not_attempted`, any other channel (`whatsapp`/`sms`/`website_chat`) requires an active `ApiConnector` for that category with a mapped `send` endpoint — absent one, the message is honestly recorded `not_attempted` with a `CONTRACT REQUIRED` reason, never fabricated as sent.
+- `PUT /api/v1/conversations/{id}/assign`, `PUT /api/v1/conversations/{id}/status`
+- `GET /api/v1/conversations/{id}` clears the thread's `unread_count` and marks its inbound messages read as a side effect of opening it.
+
+### Fixed: `POST /conversations` silently dropped `external_thread_id`
+The validation whitelist in `ConversationController::store()` didn't
+include `external_thread_id`, even though the column has existed on
+`conversations` since its migration and `attemptDelivery()` depends on it
+entirely for `telegram` (and, implicitly, any connector-based channel that
+uses it as the send target). The practical effect: there was no way,
+through the API, to create a Telegram (or WhatsApp/SMS) conversation with
+a real target chat id — every reply on such a conversation was
+permanently `not_attempted` with "No Telegram chat id stored on this
+conversation," regardless of intent. Caught live-testing the exact
+workflow a real support agent would use (create a conversation for an
+existing Telegram contact, then reply). Fixed by adding
+`external_thread_id => nullable|string|max:255` to the validation.
+
+**Phase 7 addendum version:** 1.0.0
+**Appended:** 2026-08-31
+
+---
+
 **Version:** 1.0.0  
 **Last Updated:** 2026-08-16  
 **Status:** ✅ Production Ready

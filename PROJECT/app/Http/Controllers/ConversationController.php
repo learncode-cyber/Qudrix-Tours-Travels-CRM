@@ -59,6 +59,7 @@ class ConversationController extends Controller
             'customer_id' => 'nullable|exists:customers,id',
             'lead_id' => 'nullable|exists:leads,id',
             'channel' => ['required', Rule::in(Conversation::CHANNELS)],
+            'external_thread_id' => 'nullable|string|max:255',
             'subject' => 'nullable|string|max:255',
             'assigned_to' => 'nullable|exists:users,id',
         ]);

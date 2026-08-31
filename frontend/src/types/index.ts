@@ -332,6 +332,61 @@ export interface PackageBuilderResult {
   [key: string]: unknown
 }
 
+export interface Notification {
+  id: number
+  user_id: number
+  type: string
+  title: string
+  message: string
+  data?: Record<string, unknown> | null
+  read_at?: string | null
+  created_at?: string
+  [key: string]: unknown
+}
+
+export type ConversationChannel =
+  | 'website_chat'
+  | 'email'
+  | 'whatsapp'
+  | 'telegram'
+  | 'sms'
+  | 'internal'
+  | string
+export type ConversationStatus = 'open' | 'pending' | 'closed' | string
+
+export interface Conversation {
+  id: number
+  customer_id?: number | null
+  lead_id?: number | null
+  channel: ConversationChannel
+  external_thread_id?: string | null
+  subject?: string | null
+  status: ConversationStatus
+  assigned_to?: number | null
+  last_message_at?: string | null
+  unread_count?: number
+  customer?: { id: number; name: string; email?: string | null; phone?: string | null } | null
+  assignee?: { id: number; name: string } | null
+  messages?: ConversationMessage[]
+  [key: string]: unknown
+}
+
+export type ConversationMessageDirection = 'inbound' | 'outbound'
+export type ConversationMessageDeliveryStatus = 'pending' | 'sent' | 'failed' | 'not_attempted' | null
+
+export interface ConversationMessage {
+  id: number
+  conversation_id: number
+  direction: ConversationMessageDirection
+  sender_user_id?: number | null
+  body: string
+  is_internal_note?: boolean
+  delivery_status?: ConversationMessageDeliveryStatus
+  delivery_error?: string | null
+  created_at?: string
+  [key: string]: unknown
+}
+
 export type RoomBlockStatus = 'held' | 'partially_released' | 'released' | string
 
 export interface RoomBlock {

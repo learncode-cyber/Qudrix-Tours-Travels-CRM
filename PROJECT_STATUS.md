@@ -15,7 +15,7 @@ for the fullest recent verification transcript.
 | 4 | Travel Operations (Flights/Hotels/Visa/Bookings) | ✅ Complete — see `DOCUMENTATION/PHASE_4_REPORT.md` |
 | 5 | Hajj & Umrah + Student Visa | ✅ Complete — see `DOCUMENTATION/PHASE_5_REPORT.md` |
 | 6 | Custom Package Builder + Pricing Engine | ✅ Complete — see `DOCUMENTATION/PHASE_6_REPORT.md` |
-| 7 | Telegram + Notification System | ✅ Backend complete (prior sessions); Telegram delivery UNVERIFIED — no outbound network in this sandbox |
+| 7 | Telegram + Notification System | ✅ Complete — see `DOCUMENTATION/PHASE_7_REPORT.md`. Telegram message delivery itself is UNVERIFIED — no outbound network in this sandbox; the honest-failure path (`CONTRACT REQUIRED: TELEGRAM_BOT_TOKEN is not configured`) is verified |
 | 8 | CRM External API Integration | Architecture-only per directive rule (no external contract supplied); generic connector engine built |
 | 9 | AI Provider Management | ✅ Backend complete (prior sessions); real provider calls UNVERIFIED — no outbound network in this sandbox |
 | 10 | AI Sales Agent | ✅ Backend complete (prior sessions) |
@@ -55,12 +55,15 @@ Operations surface (packages, bookings + calendar, flights + seat
 booking, hotels + room types + room blocks, visas + embassies +
 expiry-reminder trigger), Phase 5's Hajj/Umrah + Student Visa
 surface (Hajj/Umrah packages, departure groups + pilgrim management +
-group report, student visa applications + status workflow), and Phase
+group report, student visa applications + status workflow), Phase
 6's Pricing/Package Builder surface (pricing rules + calculation
 preview, a custom package builder against real hotel/flight/transport
-inventory). Phases 7–16's backend APIs have no frontend yet — building
-it out is expected to track the same phase-by-phase cadence going
-forward, per the directive.
+inventory), and Phase 7's Telegram + Notifications surface
+(notifications list + read state, a unified conversations inbox across
+channels including Telegram, and a profile page for configuring a
+user's `telegram_chat_id`). Phases 8–16's backend APIs have no frontend
+yet — building it out is expected to track the same phase-by-phase
+cadence going forward, per the directive.
 
 ## Known Limitations (cross-cutting, not specific to one phase)
 

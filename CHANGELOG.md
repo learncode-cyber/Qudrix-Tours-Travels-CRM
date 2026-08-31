@@ -4,6 +4,47 @@ All notable changes to the Qudrix Travel CRM/ERP project, following the
 master development directive's phase numbering (Phase 0 = Foundation,
 Phase 1 = Backend Foundation + Auth + RBAC, Phase 2 = Complete CRM, ...).
 
+## [Unreleased] — Master Directive Phase 7: Telegram + Notification System
+
+Like Phases 5/6, this module's backend (`NotificationController`,
+`NotificationService`, `TelegramNotificationService`,
+`ConversationController`) already existed from a prior session but had
+never been executed live or covered by a test. Live-tested end to end,
+found and fixed one real bug, wrote its first automated coverage, and
+built its frontend.
+
+### Added
+- Frontend: a Notifications page (list, filter to unread, mark
+  read/mark-all-read), a Conversations page (unified inbox across
+  website_chat/email/whatsapp/telegram/sms/internal — filter by channel
+  and status, create a conversation, open a thread to see every message
+  with its honest per-message delivery status, reply or leave an
+  internal note, assign, change status), and a Profile page (the only
+  place a user's `telegram_chat_id` — where their Telegram-channel
+  notifications actually go — can be set; no such UI existed anywhere
+  before this phase).
+- `tests/Feature/Phase7NotificationsTelegramTest.php` (15 tests) — the
+  first automated coverage this module has ever had: notification
+  lifecycle + user/tenant scoping, a real lead-assignment notification
+  firing, profile `telegram_chat_id` persistence, conversation creation
+  (including the customer-or-lead requirement and the `external_thread_id`
+  fix below), reply delivery status across telegram/internal channels
+  including the "no chat id" and "no bot token configured" honest-failure
+  paths, internal notes never attempting delivery, inbound-message
+  unread-count/reopen behavior, and tenant scoping.
+
+### Fixed
+- `POST /api/v1/conversations` silently dropped `external_thread_id` —
+  present on the `conversations` table and load-bearing for
+  `attemptDelivery()`, but missing from `store()`'s validation whitelist.
+  Real-world effect: there was no way through the API to create a
+  Telegram (or connector-based WhatsApp/SMS) conversation with an actual
+  target chat id — every reply would permanently record
+  `delivery_status: not_attempted`. Same bug class as Phase 4's
+  `embassy_id` and Phase 5's status-enum finding: a real, schema-backed
+  field silently dropped by an incomplete validation array. Fixed by
+  adding it to the whitelist.
+
 ## [Unreleased] — Master Directive Phase 6: Custom Package Builder + Pricing Engine
 
 Like Phase 5, this module's backend (`PricingRuleController`,

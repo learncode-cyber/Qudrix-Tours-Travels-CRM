@@ -6,6 +6,7 @@ import BookingDetailPage from './pages/BookingDetailPage'
 import BookingsCalendarPage from './pages/BookingsCalendarPage'
 import BookingsPage from './pages/BookingsPage'
 import PackagesPage from './pages/PackagesPage'
+import ConversationsPage from './pages/ConversationsPage'
 import CustomerDetailPage from './pages/CustomerDetailPage'
 import CustomersPage from './pages/CustomersPage'
 import DashboardPage from './pages/DashboardPage'
@@ -18,8 +19,10 @@ import HotelsPage from './pages/HotelsPage'
 import InvoicesPage from './pages/InvoicesPage'
 import LeadsPage from './pages/LeadsPage'
 import LoginPage from './pages/LoginPage'
+import NotificationsPage from './pages/NotificationsPage'
 import PackageBuilderPage from './pages/PackageBuilderPage'
 import PricingRulesPage from './pages/PricingRulesPage'
+import ProfilePage from './pages/ProfilePage'
 import ProposalsPage from './pages/ProposalsPage'
 import QuotationDetailPage from './pages/QuotationDetailPage'
 import QuotationsPage from './pages/QuotationsPage'
@@ -59,6 +62,9 @@ export default function App() {
             <Route path="/student-visa" element={<StudentVisaPage />} />
             <Route path="/pricing-rules" element={<PricingRulesPage />} />
             <Route path="/package-builder" element={<PackageBuilderPage />} />
+            <Route path="/notifications" element={<NotificationsPage />} />
+            <Route path="/conversations" element={<ConversationsPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
           </Route>
         </Route>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

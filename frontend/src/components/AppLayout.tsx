@@ -20,6 +20,9 @@ const navItems = [
   { to: '/quotations', label: 'Quotations', icon: '≡' },
   { to: '/proposals', label: 'Proposals', icon: '▤' },
   { to: '/invoices', label: 'Invoices', icon: '¤' },
+  { to: '/conversations', label: 'Conversations', icon: '✉' },
+  { to: '/notifications', label: 'Notifications', icon: '🔔' },
+  { to: '/profile', label: 'Profile', icon: '👤' },
 ]
 
 export default function AppLayout() {

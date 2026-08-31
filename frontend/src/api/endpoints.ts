@@ -4,6 +4,10 @@ import type {
   ApiListResponse,
   Booking,
   BookingStats,
+  Conversation,
+  ConversationChannel,
+  ConversationMessage,
+  ConversationStatus,
   ConversionFunnelResponse,
   CrmDashboardResponse,
   Customer,
@@ -23,6 +27,7 @@ import type {
   InvoiceStats,
   Lead,
   LoginResponse,
+  Notification,
   Package,
   PackageBuilderComponentInput,
   PackageBuilderResult,
@@ -42,6 +47,7 @@ import type {
   TaskStats,
   Transport,
   UmrahPackage,
+  User,
   VisaApplication,
   VisaBookingStatus,
   VisaChecklistItem,
@@ -52,6 +58,8 @@ export const login = (email: string, password: string) =>
   client.post<LoginResponse>('/login', { email, password })
 
 export const getProfile = () => client.get<ProfileResponse>('/profile')
+export const updateProfile = (payload: { name?: string; phone?: string; avatar_url?: string; telegram_chat_id?: string }) =>
+  client.put<{ user: User }>('/profile', payload)
 
 // --- Customers ---
 export const listCustomers = () => client.get<ApiListResponse<Customer>>('/customers')
@@ -387,6 +395,41 @@ export const previewPricing = (payload: {
   booking_days_before_travel?: number
   customer_segment_id?: number
 }) => client.post<ApiItemResponse<PricingPreviewResult>>('/pricing-rules/preview', payload)
+
+// --- Notifications ---
+export const listNotifications = (unreadOnly?: boolean) =>
+  client.get<ApiListResponse<Notification>>('/notifications', {
+    params: unreadOnly ? { unread_only: 1 } : undefined,
+  })
+export const markNotificationRead = (id: number | string) =>
+  client.put<ApiItemResponse<Notification>>(`/notifications/${id}/read`)
+export const markAllNotificationsRead = () => client.put<{ message: string }>('/notifications/read-all')
+export const getUnreadNotificationCount = () =>
+  client.get<ApiItemResponse<{ unread_count: number }>>('/notifications/unread-count')
+
+// --- Conversations (unified inbox) ---
+export const listConversations = (params?: { channel?: string; status?: string; assigned_to?: number | string }) =>
+  client.get<{ data: Conversation[]; total: number }>('/conversations', { params })
+export const getConversation = (id: number | string) =>
+  client.get<ApiItemResponse<Conversation>>(`/conversations/${id}`)
+export const createConversation = (payload: {
+  customer_id?: number
+  lead_id?: number
+  channel: ConversationChannel
+  external_thread_id?: string
+  subject?: string
+  assigned_to?: number
+}) => client.post<ApiItemResponse<Conversation>>('/conversations', payload)
+export const recordInboundMessage = (id: number | string, payload: { body: string; external_message_id?: string }) =>
+  client.post<ApiItemResponse<ConversationMessage>>(`/conversations/${id}/inbound`, payload)
+export const replyToConversation = (
+  id: number | string,
+  payload: { body: string; is_internal_note?: boolean },
+) => client.post<ApiItemResponse<ConversationMessage>>(`/conversations/${id}/reply`, payload)
+export const assignConversation = (id: number | string, assigned_to: number | string) =>
+  client.put<ApiItemResponse<Conversation>>(`/conversations/${id}/assign`, { assigned_to })
+export const updateConversationStatus = (id: number | string, status: ConversationStatus) =>
+  client.put<ApiItemResponse<Conversation>>(`/conversations/${id}/status`, { status })
 
 // --- Package Builder ---
 export const buildPackage = (payload: {
