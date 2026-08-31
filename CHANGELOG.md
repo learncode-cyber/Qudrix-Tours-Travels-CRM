@@ -4,6 +4,43 @@ All notable changes to the Qudrix Travel CRM/ERP project, following the
 master development directive's phase numbering (Phase 0 = Foundation,
 Phase 1 = Backend Foundation + Auth + RBAC, Phase 2 = Complete CRM, ...).
 
+## [Unreleased] — Master Directive Phase 16: SEO + Tracking + Marketing
+
+Backend (`MarketingController`/`CampaignDispatcher` — contact lists,
+campaigns, coupons) already existed from a prior session. Live-tested
+end to end for the first time and wrote its first automated coverage.
+Zero bugs found, matching Phase 6, 8, 9, 10, 12, and 13. This codebase
+has no dedicated SEO tooling (meta tags, sitemaps) or a separate
+UTM/click-tracking system as distinct built features — the concrete,
+existing deliverable that maps to this phase's directive name is the
+Marketing Tools module (contact lists, multi-channel campaigns with
+real per-recipient delivery outcomes, coupons with server-side discount
+enforcement), documented honestly as such rather than inventing SEO/
+tracking features with no supplied requirements.
+
+### Added
+- Frontend: a Marketing page with three tabs — Campaigns (create,
+  prepare, send, and a per-campaign delivery report showing real sent/
+  failed/skipped counts and every failure's reason), Contact Lists
+  (create + add members by customer/lead ID), and Coupons (create,
+  and a "Test" action that previews the discount for a given booking
+  amount without redeeming it).
+- `tests/Feature/Phase16MarketingTest.php` — 13 tests covering contact
+  list CRUD + member attachment, tenant scoping, a full email campaign
+  lifecycle (prepare correctly splits recipients into pending/skipped
+  by real destination availability, send delivers to the pending ones
+  and the report shows the full real picture), an SMS campaign honestly
+  skipping every recipient with the exact `CONTRACT REQUIRED` reason
+  when no provider is configured, guard rails (`prepare` refused without
+  a contact list, `send` refused twice), coupon CRUD and validation
+  (percentage-over-100 rejected at creation, expired/below-minimum
+  coupons rejected with the real reason), and a real transactional
+  redemption that increments `used_count` and cannot be applied twice
+  to the same booking.
+
+### Fixed
+Nothing — no bugs were found in this module.
+
 ## [Unreleased] — Master Directive Phase 15: Security + Access Logging
 
 Backend (`SecurityLogController`, `AccessLogMiddleware`, `AuditMiddleware`,

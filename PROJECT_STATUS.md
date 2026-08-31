@@ -24,7 +24,7 @@ for the fullest recent verification transcript.
 | 13 | Upsell/Cross-sell + A/B Testing | ✅ Complete — see `DOCUMENTATION/PHASE_13_REPORT.md` |
 | 14 | Complaint Handling + Automation | ✅ Complete — see `DOCUMENTATION/PHASE_14_REPORT.md` |
 | 15 | Security + Access Logging | ✅ Complete — see `DOCUMENTATION/PHASE_15_REPORT.md` |
-| 16 | SEO + Tracking + Marketing | ✅ Backend complete (prior sessions) |
+| 16 | SEO + Tracking + Marketing | ✅ Complete — see `DOCUMENTATION/PHASE_16_REPORT.md`. No dedicated SEO/tracking tooling exists as a distinct feature in this codebase; this phase covers the Marketing Tools module (contact lists, campaigns, coupons), the concrete deliverable that maps to this phase's directive name. |
 | 17 | Final QA + Production Release | Not started — waits for all prior phases |
 
 ## What "backend complete" means here
@@ -79,9 +79,10 @@ escalation and an AI Triage panel, and an automations list + detail
 page with steps, test/execute, logs, and a dashboard summary), and
 Phase 15's Security Trail surface (24h summary, access logs with a
 suspicious-only filter, audit logs, failed logins — admin-gated the
-same way the backend gates it). Phase 16's backend API has no frontend
-yet — building it out is expected to track the same phase-by-phase
-cadence going forward, per the directive.
+same way the backend gates it), and Phase 16's Marketing surface
+(campaigns with prepare/send/report, contact lists, coupons with a
+discount-preview test). Phase 17 (Final QA + Production Release) is the
+only remaining phase.
 
 ## Known Limitations (cross-cutting, not specific to one phase)
 

@@ -1746,6 +1746,40 @@ bugs found and fixed** — see Fixed below.
 
 ---
 
+## MASTER DIRECTIVE PHASE 16 ADDENDUM — SEO + Tracking + Marketing
+
+Backend (`MarketingController`/`CampaignDispatcher`) already existed from
+a prior session. Live-tested end to end for the first time, wrote its
+first automated coverage, and built its frontend. **Zero bugs found**,
+matching Phase 6, 8, 9, 10, 12, and 13. Note on scope: this codebase has
+no dedicated SEO tooling (meta tag/sitemap generation) or a distinct
+UTM/click-tracking system built as a feature — the concrete deliverable
+mapping onto this phase's directive name is the Marketing Tools module
+covered below.
+
+### Contact Lists
+- `GET/POST /api/v1/marketing/contact-lists` — `{name, description?, is_dynamic?, criteria?}`. `index` returns each list's real `members_count`.
+- `POST /marketing/contact-lists/{id}/members` — `{customer_ids?, lead_ids?}`. Uses `firstOrCreate` per member so re-adding the same customer/lead is idempotent, not duplicated.
+
+### Campaigns
+- `GET/POST /api/v1/marketing/campaigns`, `GET /marketing/campaigns/{id}` — `{name, channel: email|sms|whatsapp, contact_list_id?, subject?, body, scheduled_at?}`. Created `draft` (or `scheduled` if `scheduled_at` is set).
+- `POST /marketing/campaigns/{id}/prepare` — materialises one `CampaignRecipient` row per contact-list member from **real** destination data (`email` for the email channel, `phone` for sms/whatsapp): a member with no usable destination is recorded `skipped` immediately, with the reason, so the shortfall is visible before anything sends. Refuses `422` without a `draft`/`scheduled` status or without a contact list attached.
+- `POST /marketing/campaigns/{id}/send` — delivers to every `pending` recipient and records the **real** outcome of each attempt: email uses Laravel's configured mailer; sms/whatsapp require an active, `send`-mapped `ApiConnector` from the Phase 8 Integration Manager, or every recipient is honestly skipped with `CONTRACT REQUIRED: no active {channel} provider is configured`. The response's own `result` only reflects recipients processed by *this* send call (build-time skips from `prepare` aren't re-counted) — the campaign's real cumulative totals are always available via its `stats()`/the report endpoint. A run where nothing could be delivered is marked `failed`, not `sent`. Refuses `422` on an already-sending/sent campaign or with no pending recipients.
+- `GET /marketing/campaigns/{id}/report` — real `stats` (`total_recipients`/`sent`/`failed`/`skipped`/`pending`/`delivery_rate_percent`, `null` rate with zero recipients) plus up to 100 real failed/skipped recipient rows with their destination and failure reason.
+
+### Coupons
+- `GET/POST /api/v1/marketing/coupons` — `{code, discount_type: percentage|fixed, discount_value, currency?, min_booking_amount?, usage_limit?, valid_from?, valid_until?}`. A `percentage` discount over 100 is rejected at creation with `422`.
+- `POST /marketing/coupons/validate` — `{code, booking_amount}`. Checks (server-side, never trusting a request-supplied discount) active/not-yet-valid/expired/usage-limit/minimum-amount in order and returns the first rejection reason, or the real computed discount if valid. Does **not** redeem — a UI can preview safely.
+- `POST /marketing/coupons/redeem` — `{code, booking_id}`. Runs inside a DB transaction with `lockForUpdate()` on the coupon row, so concurrent redemptions cannot over-spend a `usage_limit`; a coupon can be applied to a given booking only once (`unique(coupon_id, booking_id)`). The discount is computed server-side and capped at the booking's own total — it can never exceed the booking amount. Deliberately does **not** modify the booking's own total, so the discount must be applied through the quotation/invoice for an auditable trail.
+
+### Fixed
+Nothing — no bugs were found in this module.
+
+**Phase 16 addendum version:** 1.0.0
+**Appended:** 2026-08-31
+
+---
+
 **Version:** 1.0.0  
 **Last Updated:** 2026-08-16  
 **Status:** ✅ Production Ready

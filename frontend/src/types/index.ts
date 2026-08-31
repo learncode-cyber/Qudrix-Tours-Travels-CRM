@@ -1408,3 +1408,80 @@ export interface SecuritySummary {
   top_ips_by_failure: Array<{ ip_address: string; total: number }>
   failed_logins: number
 }
+
+// --- Phase 16: Marketing (contact lists, campaigns, coupons) ---
+export interface ContactListData {
+  id: number
+  tenant_id: number
+  name: string
+  description: string | null
+  is_dynamic: boolean
+  criteria: Record<string, unknown> | null
+  members_count?: number
+  created_at: string
+}
+
+export type CampaignChannel = 'email' | 'sms' | 'whatsapp'
+export type CampaignStatus = 'draft' | 'scheduled' | 'sending' | 'sent' | 'failed' | 'cancelled' | string
+
+export interface CampaignStats {
+  total_recipients: number
+  sent: number
+  failed: number
+  skipped: number
+  pending: number
+  delivery_rate_percent: number | null
+}
+
+export interface CampaignData {
+  id: number
+  tenant_id: number
+  contact_list_id: number | null
+  name: string
+  channel: CampaignChannel
+  subject: string | null
+  body: string
+  status: CampaignStatus
+  scheduled_at: string | null
+  started_at: string | null
+  completed_at: string | null
+  recipients_count?: number
+  stats?: CampaignStats
+  created_at: string
+}
+
+export interface CampaignRecipientFailure {
+  destination: string
+  status: string
+  failure_reason: string | null
+}
+
+export interface CampaignReport {
+  campaign: Pick<CampaignData, 'id' | 'name' | 'channel' | 'status' | 'started_at' | 'completed_at'>
+  stats: CampaignStats
+  failures: CampaignRecipientFailure[]
+}
+
+export type CouponDiscountType = 'percentage' | 'fixed'
+
+export interface CouponData {
+  id: number
+  tenant_id: number
+  code: string
+  discount_type: CouponDiscountType
+  discount_value: number
+  currency: string
+  min_booking_amount: number | null
+  usage_limit: number | null
+  used_count: number
+  valid_from: string | null
+  valid_until: string | null
+  is_active: boolean
+  created_at: string
+}
+
+export interface CouponValidationResult {
+  valid: boolean
+  reason: string | null
+  discount: number | null
+}

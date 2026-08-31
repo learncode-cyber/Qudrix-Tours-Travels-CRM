@@ -12,6 +12,14 @@ import type {
   AiProviderKey,
   AiSuggestedReply,
   AiUsageResponse,
+  CampaignChannel,
+  CampaignData,
+  CampaignReport,
+  CampaignStats,
+  ContactListData,
+  CouponData,
+  CouponDiscountType,
+  CouponValidationResult,
   AccessLogEntry,
   AuditLogEntry,
   FailedLoginAttemptEntry,
@@ -774,3 +782,43 @@ export const getAuditLogs = (params?: { entity_type?: string; user_id?: number }
   client.get<{ data: AuditLogEntry[]; total: number }>('/admin/security/audit-logs', { params })
 export const getFailedLogins = (params?: { email?: string; ip_address?: string }) =>
   client.get<{ data: FailedLoginAttemptEntry[]; total: number }>('/admin/security/failed-logins', { params })
+
+// --- Marketing (Phase 16) ---
+export const listContactLists = () => client.get<ApiListResponse<ContactListData>>('/marketing/contact-lists')
+export const createContactList = (payload: { name: string; description?: string; is_dynamic?: boolean }) =>
+  client.post<ApiItemResponse<ContactListData>>('/marketing/contact-lists', payload)
+export const addContactListMembers = (id: number | string, payload: { customer_ids?: number[]; lead_ids?: number[] }) =>
+  client.post<ApiItemResponse<{ added: number; total_members: number }>>(`/marketing/contact-lists/${id}/members`, payload)
+
+export const listCampaigns = () => client.get<{ data: CampaignData[]; total: number }>('/marketing/campaigns')
+export const createCampaign = (payload: {
+  name: string
+  channel: CampaignChannel
+  contact_list_id?: number
+  subject?: string
+  body: string
+  scheduled_at?: string
+}) => client.post<ApiItemResponse<CampaignData>>('/marketing/campaigns', payload)
+export const getCampaign = (id: number | string) => client.get<ApiItemResponse<CampaignData>>(`/marketing/campaigns/${id}`)
+export const prepareCampaign = (id: number | string) =>
+  client.post<ApiItemResponse<{ recipients_processed: number; stats: CampaignStats }>>(`/marketing/campaigns/${id}/prepare`)
+export const sendCampaign = (id: number | string) =>
+  client.post<{ data: { result: { sent: number; failed: number; skipped: number }; stats: CampaignStats }; note: string | null }>(
+    `/marketing/campaigns/${id}/send`,
+  )
+export const getCampaignReport = (id: number | string) =>
+  client.get<ApiItemResponse<CampaignReport>>(`/marketing/campaigns/${id}/report`)
+
+export const listCoupons = () => client.get<ApiListResponse<CouponData>>('/marketing/coupons')
+export const createCoupon = (payload: {
+  code: string
+  discount_type: CouponDiscountType
+  discount_value: number
+  currency?: string
+  min_booking_amount?: number
+  usage_limit?: number
+  valid_from?: string
+  valid_until?: string
+}) => client.post<ApiItemResponse<CouponData>>('/marketing/coupons', payload)
+export const validateCoupon = (code: string, booking_amount: number) =>
+  client.post<ApiItemResponse<CouponValidationResult>>('/marketing/coupons/validate', { code, booking_amount })

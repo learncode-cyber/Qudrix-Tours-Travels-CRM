@@ -14,6 +14,7 @@ import SupportTicketDetailPage from './pages/SupportTicketDetailPage'
 import AutomationsPage from './pages/AutomationsPage'
 import AutomationDetailPage from './pages/AutomationDetailPage'
 import SecurityPage from './pages/SecurityPage'
+import MarketingPage from './pages/MarketingPage'
 import BookingsPage from './pages/BookingsPage'
 import PackagesPage from './pages/PackagesPage'
 import ConversationsPage from './pages/ConversationsPage'
@@ -93,6 +94,7 @@ export default function App() {
             <Route path="/automations" element={<AutomationsPage />} />
             <Route path="/automations/:id" element={<AutomationDetailPage />} />
             <Route path="/security" element={<SecurityPage />} />
+            <Route path="/marketing" element={<MarketingPage />} />
           </Route>
         </Route>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

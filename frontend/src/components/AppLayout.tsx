@@ -33,6 +33,7 @@ const navItems = [
   { to: '/support-tickets', label: 'Support Tickets', icon: '🎫' },
   { to: '/automations', label: 'Automations', icon: '⚙' },
   { to: '/security', label: 'Security', icon: '🛡' },
+  { to: '/marketing', label: 'Marketing', icon: '📣' },
 ]
 
 export default function AppLayout() {
