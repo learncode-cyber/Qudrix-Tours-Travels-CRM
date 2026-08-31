@@ -49,6 +49,16 @@ class Customer extends Model
         return $this->hasMany(Communication::class);
     }
 
+    public function quotations(): HasMany
+    {
+        return $this->hasMany(Quotation::class);
+    }
+
+    public function deals(): HasMany
+    {
+        return $this->hasMany(Deal::class);
+    }
+
     public function family(): HasMany
     {
         return $this->hasMany(CustomerFamily::class);

@@ -1180,6 +1180,42 @@ export async function completeBookingFlow(bookingData: any) {
 
 ---
 
+## MASTER DIRECTIVE PHASE 2 ADDENDUM — Complete CRM (appended, not a rewrite)
+
+All routes below require `Authorization: Bearer <jwt>` and `Accept: application/json`
+(the standard `app.jwt` + `tenant` + `audit` protected-route middleware group). Live-verified
+over real HTTP against a seeded tenant — see `DOCUMENTATION/PHASE_2_REPORT.md` for the
+verification transcript and honest UNVERIFIED items.
+
+### Leads (now full CRUD)
+- `GET/PUT/DELETE /api/v1/leads/{id}` — `update`/`destroy` added; previously only
+  `index`/`store`/`show` existed.
+
+### Deals (new)
+- `GET /api/v1/deals` — paginated list, filters: `stage`, `customer_id`, `owner_id`
+- `POST /api/v1/deals` — `{title, customer_id?, lead_id?, owner_id?, amount, currency, probability?, expected_close_date?, notes?}`
+- `GET /api/v1/deals/{id}` — includes `stage_history`
+- `PUT /api/v1/deals/{id}` — general fields; rejects a `stage` key (422) to force using the dedicated endpoint below so stage history stays accurate
+- `DELETE /api/v1/deals/{id}`
+- `PUT /api/v1/deals/{id}/stage` — `{stage: new|qualified|proposal|negotiation|won|lost}`, records a `DealStageTransition` row and closes the previous one
+- `GET /api/v1/deals/pipeline` — Kanban-style: deals grouped by stage with per-stage count/value
+
+### Customer 360
+- `GET /api/v1/customers/{id}/360` — `{customer, leads, deals, bookings, quotations, communications, notes, tags, timeline}`
+
+### CRM Dashboard
+- `GET /api/v1/crm/dashboard` — `{total_leads, new_leads_this_month, conversion_rate, pipeline_value_by_stage, deals_won, deals_lost, tasks_due_today, upcoming_follow_ups}`
+- `GET /api/v1/crm/conversion-funnel` — `{stages: [{status, count}], total_leads, won, conversion_rate}`
+- `GET /api/v1/crm/follow-ups/calendar?from=&to=` — merges reminders + lead follow-up dates + task due dates into one dated event feed (defaults to today..+30 days)
+
+### Sales Activity
+- `GET /api/v1/pipeline/sales-activities` — paginated read of the `SalesActivity` log (filters: `lead_id`, `activity_type`); the write path (`POST /api/v1/pipeline/activity`) already existed.
+
+**Phase 2 addendum version:** 1.0.0
+**Appended:** 2026-08-31
+
+---
+
 **Version:** 1.0.0  
 **Last Updated:** 2026-08-16  
 **Status:** ✅ Production Ready

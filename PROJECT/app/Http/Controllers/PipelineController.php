@@ -126,6 +126,32 @@ class PipelineController extends Controller
         ]);
     }
 
+    public function salesActivityHistory(Request $request)
+    {
+        $query = SalesActivity::where('tenant_id', $request->user->tenant_id)
+            ->with(['lead', 'user']);
+
+        if ($request->lead_id) {
+            $query->where('lead_id', $request->lead_id);
+        }
+
+        if ($request->activity_type) {
+            $query->where('activity_type', $request->activity_type);
+        }
+
+        $activities = $query->orderBy('activity_date', 'desc')
+            ->paginate($request->per_page ?? 20);
+
+        return response()->json([
+            'data' => $activities->items(),
+            'pagination' => [
+                'total' => $activities->total(),
+                'per_page' => $activities->perPage(),
+                'current_page' => $activities->currentPage(),
+            ],
+        ]);
+    }
+
     public function getPipelineMetrics(Request $request)
     {
         $tenantId = $request->user->tenant_id;

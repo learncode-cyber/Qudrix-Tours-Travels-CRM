@@ -106,6 +106,38 @@ class LeadController extends Controller
         ]);
     }
 
+    public function update(Request $request, $id)
+    {
+        $lead = Lead::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'email' => 'nullable|email',
+            'phone' => 'nullable|string|max:20',
+            'company' => 'nullable|string|max:255',
+            'designation' => 'nullable|string|max:100',
+            'source' => 'sometimes|string',
+            'priority' => 'sometimes|in:low,medium,high,urgent',
+            'notes' => 'nullable|string',
+            'assigned_to' => 'nullable|exists:users,id',
+        ]);
+
+        $lead->update($validated);
+
+        return response()->json([
+            'message' => 'Lead updated successfully',
+            'data' => $lead,
+        ]);
+    }
+
+    public function destroy(Request $request, $id)
+    {
+        $lead = Lead::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
+        $lead->delete();
+
+        return response()->json(['message' => 'Lead deleted successfully']);
+    }
+
     public function updateStatus(Request $request, $id)
     {
         $lead = Lead::where('tenant_id', $request->user->tenant_id)->findOrFail($id);

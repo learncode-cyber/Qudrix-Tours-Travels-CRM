@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Customer;
 use App\Models\CustomerFamily;
+use App\Models\Note;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -112,6 +113,40 @@ class CustomerController extends Controller
         $customer->delete();
 
         return response()->json(['message' => 'Customer deleted successfully']);
+    }
+
+    // Customer 360: a single aggregated view of everything attached to a
+    // customer, as required by the CRM spec. Reuses the real, already
+    // built sub-endpoints (timeline) rather than duplicating their logic.
+    public function profile360(Request $request, $id)
+    {
+        $customer = Customer::where('tenant_id', $request->user->tenant_id)
+            ->with(['family', 'bookings', 'leads', 'quotations', 'deals', 'communications', 'tags'])
+            ->findOrFail($id);
+
+        $notes = Note::where('tenant_id', $customer->tenant_id)
+            ->where('notable_type', Customer::class)
+            ->where('notable_id', $customer->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        $timeline = app(CustomerTimelineController::class)
+            ->show($request, $id)
+            ->getData(true)['data'];
+
+        return response()->json([
+            'data' => [
+                'customer' => $customer,
+                'leads' => $customer->leads,
+                'deals' => $customer->deals,
+                'bookings' => $customer->bookings,
+                'quotations' => $customer->quotations,
+                'communications' => $customer->communications,
+                'notes' => $notes,
+                'tags' => $customer->tags,
+                'timeline' => $timeline,
+            ],
+        ]);
     }
 
     public function addFamily(Request $request, $customerId)

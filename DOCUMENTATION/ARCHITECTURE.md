@@ -171,3 +171,35 @@ Client receives response
 **Phase 2:** Sales Pipeline, Quotations, Packages  
 **Phase 3:** Booking Engine, Travelers, Groups  
 **Phases 4-10:** Specialized modules, automation, AI integration
+
+---
+
+## Addendum: Frontend tier (Master Directive Phase 2)
+
+The numbering above predates the current Master Development Directive
+and doesn't match its phase numbers — see `PROJECT_STATUS.md` for the
+directive's actual phase tracking. This addendum only documents an
+architectural addition: a frontend tier now exists.
+
+```
+┌─────────────────────────────────┐
+│   React + TypeScript SPA        │  /frontend
+│   (Vite build, static hosting)  │
+├─────────────────────────────────┤
+│   Axios client (JWT bearer)     │  localStorage token,
+│                                  │  Authorization header per request
+└──────────────┬───────────────────┘
+               │  HTTPS, CORS-restricted
+               ▼
+┌─────────────────────────────────┐
+│   Laravel API (unchanged)       │  /PROJECT — everything above
+└─────────────────────────────────┘  this addendum still applies
+```
+
+The frontend is a separate deployable (static files after `npm run
+build`) and talks to the API purely over HTTP, same as any third-party
+client would — no server-side rendering, no shared process, no direct
+database access. `config/cors.php`'s `CORS_ALLOWED_ORIGINS` must list
+the frontend's real origin or every request is rejected by design (see
+`DOCUMENTATION/PHASE_2_REPORT.md` §8 for the bug this caused when it
+was undocumented).

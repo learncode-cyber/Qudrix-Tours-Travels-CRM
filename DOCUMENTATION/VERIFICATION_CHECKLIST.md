@@ -2,6 +2,15 @@
 
 **Date:** 2026-08-30 · **Branch:** `claude/qudrix-travel-crm-master-0opkmx`
 
+> **Superseded, partially.** Section B below was written when this environment had no
+> `vendor/`, no database, and no network — none of it had ever actually run. A later session
+> got the app fully executing (migrate, seed, serve, live authenticated HTTP requests) and
+> found/fixed 6 real runtime bugs that `php -l` alone could never catch (see
+> `DOCUMENTATION/PHASE_2_REPORT.md` §8 for the latest, and the git log on this branch for the
+> full list). Section C's "React/TypeScript admin UI: Not built" is also now out of date — a
+> first frontend was built starting with Master Directive Phase 2; see `PHASE_2_REPORT.md`.
+> Sections A/D below still hold.
+
 The project brief is explicit: *"Do NOT claim a test passed if it was not actually executed."* This
 document separates the two categories honestly.
 

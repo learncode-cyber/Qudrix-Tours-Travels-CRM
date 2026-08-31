@@ -46,7 +46,7 @@ Route::prefix('v1')->group(function () {
 
     // Phase 1: Lead Management (protected routes)
     Route::middleware(['app.jwt', 'tenant', 'audit'])->group(function () {
-        Route::apiResource('leads', '\App\Http\Controllers\LeadController')->only(['index', 'store', 'show']);
+        Route::apiResource('leads', '\App\Http\Controllers\LeadController')->only(['index', 'store', 'show', 'update', 'destroy']);
         Route::put('/leads/{id}/status', '\App\Http\Controllers\LeadController@updateStatus');
         Route::put('/leads/{id}/assign', '\App\Http\Controllers\LeadController@assignLead');
         Route::post('/leads/{id}/score', '\App\Http\Controllers\LeadController@scoreLeadForConversion');
@@ -100,6 +100,24 @@ Route::prefix('v1')->group(function () {
         Route::post('/pipeline/activity', '\App\Http\Controllers\PipelineController@recordActivity');
         Route::put('/pipeline/stage', '\App\Http\Controllers\PipelineController@updateLeadStage');
         Route::get('/pipeline/metrics', '\App\Http\Controllers\PipelineController@getPipelineMetrics');
+        Route::get('/pipeline/sales-activities', '\App\Http\Controllers\PipelineController@salesActivityHistory');
+
+        // Deal Management (Phase 2: CRM)
+        // /deals/pipeline must precede the apiResource's GET /deals/{deal}
+        // — see the note above the quotations apiResource further up this
+        // file for why a literal segment after a wildcard is unreachable.
+        Route::get('/deals/pipeline', '\App\Http\Controllers\DealController@pipeline');
+        Route::apiResource('deals', '\App\Http\Controllers\DealController')->except('destroy');
+        Route::delete('/deals/{id}', '\App\Http\Controllers\DealController@destroy');
+        Route::put('/deals/{id}/stage', '\App\Http\Controllers\DealController@updateStage');
+
+        // CRM Dashboard (Phase 2)
+        Route::get('/crm/dashboard', '\App\Http\Controllers\CrmDashboardController@index');
+        Route::get('/crm/conversion-funnel', '\App\Http\Controllers\CrmDashboardController@conversionFunnel');
+        Route::get('/crm/follow-ups/calendar', '\App\Http\Controllers\CrmDashboardController@followUpCalendar');
+
+        // Customer 360 (Phase 2)
+        Route::get('/customers/{id}/360', '\App\Http\Controllers\CustomerController@profile360');
 
         // Quotation approval workflow + versioning
         Route::post('/quotations/{id}/submit-for-approval', '\App\Http\Controllers\QuotationController@submitForApproval');
