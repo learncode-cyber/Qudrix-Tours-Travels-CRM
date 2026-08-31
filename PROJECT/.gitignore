@@ -31,3 +31,4 @@ yarn-error.log
 /storage/app/public/*
 !/storage/app/public/.gitkeep
 /.phpunit.cache
+/database/database.sqlite
