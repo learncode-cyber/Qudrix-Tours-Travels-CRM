@@ -1,4 +1,4 @@
-import client from './client'
+import client, { downloadFile } from './client'
 import type {
   ApiItemResponse,
   ApiListResponse,
@@ -9,10 +9,17 @@ import type {
   Deal,
   DealPipelineColumn,
   FollowUp,
+  Invoice,
+  InvoiceStats,
   Lead,
   LoginResponse,
   PipelineFullResponse,
   ProfileResponse,
+  Proposal,
+  ProposalStats,
+  Quotation,
+  QuotationStats,
+  SalesDashboardResponse,
   Task,
   TaskStats,
 } from '../types'
@@ -77,3 +84,60 @@ export const getConversionFunnel = () =>
   client.get<ApiItemResponse<ConversionFunnelResponse>>('/crm/conversion-funnel')
 export const getFollowUpsCalendar = (from?: string, to?: string) =>
   client.get<ApiListResponse<FollowUp>>('/crm/follow-ups/calendar', { params: { from, to } })
+
+// --- Quotations ---
+export const listQuotations = () => client.get<ApiListResponse<Quotation>>('/quotations')
+export const getQuotation = (id: number | string) =>
+  client.get<ApiItemResponse<Quotation>>(`/quotations/${id}`)
+export const createQuotation = (payload: Partial<Quotation>) =>
+  client.post<ApiItemResponse<Quotation>>('/quotations', payload)
+export const updateQuotation = (id: number | string, payload: Partial<Quotation>) =>
+  client.put<ApiItemResponse<Quotation>>(`/quotations/${id}`, payload)
+export const submitQuotationForApproval = (id: number | string) =>
+  client.post<ApiItemResponse<Quotation>>(`/quotations/${id}/submit-for-approval`)
+export const approveQuotation = (id: number | string) =>
+  client.post<ApiItemResponse<Quotation>>(`/quotations/${id}/approve`)
+export const sendQuotation = (id: number | string) =>
+  client.post<ApiItemResponse<Quotation>>(`/quotations/${id}/send`)
+export const getQuotationStats = () => client.get<ApiItemResponse<QuotationStats>>('/quotations/stats')
+export const downloadQuotationPdf = (id: number | string, filename: string) =>
+  downloadFile(`/quotations/${id}/pdf`, filename)
+export const generateInvoiceFromQuotation = (id: number | string) =>
+  client.post<ApiItemResponse<Invoice>>(`/quotations/${id}/generate-invoice`)
+export const getCustomerQuotations = (customerId: number | string) =>
+  client.get<ApiListResponse<Quotation>>(`/customers/${customerId}/quotations`)
+
+// --- Proposals ---
+export const listProposals = () => client.get<ApiListResponse<Proposal>>('/proposals')
+export const getProposal = (id: number | string) =>
+  client.get<ApiItemResponse<Proposal>>(`/proposals/${id}`)
+export const createProposalFromQuotation = (payload: {
+  quotation_id: number | string
+  title: string
+  expiry_date?: string
+}) => client.post<ApiItemResponse<Proposal>>('/proposals/from-quotation', payload)
+export const sendProposal = (id: number | string) =>
+  client.post<ApiItemResponse<Proposal>>(`/proposals/${id}/send`)
+export const signProposal = (id: number | string) =>
+  client.post<ApiItemResponse<Proposal>>(`/proposals/${id}/sign`)
+export const rejectProposal = (id: number | string) =>
+  client.post<ApiItemResponse<Proposal>>(`/proposals/${id}/reject`)
+export const getProposalStats = () => client.get<ApiItemResponse<ProposalStats>>('/proposals/stats')
+
+// --- Invoices ---
+export const listInvoices = () => client.get<ApiListResponse<Invoice>>('/invoices')
+export const getInvoice = (id: number | string) =>
+  client.get<ApiItemResponse<Invoice>>(`/invoices/${id}`)
+export const createInvoice = (payload: Partial<Invoice>) =>
+  client.post<ApiItemResponse<Invoice>>('/invoices', payload)
+export const recordInvoicePayment = (id: number | string, amount: number) =>
+  client.post<ApiItemResponse<Invoice>>(`/invoices/${id}/record-payment`, { amount })
+export const sendInvoice = (id: number | string) =>
+  client.post<ApiItemResponse<Invoice>>(`/invoices/${id}/send`)
+export const getInvoiceStats = () => client.get<ApiItemResponse<InvoiceStats>>('/invoices/stats')
+export const downloadInvoicePdf = (id: number | string, filename: string) =>
+  downloadFile(`/invoices/${id}/pdf`, filename)
+
+// --- Sales dashboard ---
+export const getSalesDashboard = () =>
+  client.get<ApiItemResponse<SalesDashboardResponse>>('/sales/dashboard')

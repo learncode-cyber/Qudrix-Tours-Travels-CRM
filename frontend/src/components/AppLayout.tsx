@@ -7,6 +7,10 @@ const navItems = [
   { to: '/leads', label: 'Leads', icon: '⚑' },
   { to: '/deals', label: 'Deals', icon: '◆' },
   { to: '/tasks', label: 'Tasks', icon: '✓' },
+  { to: '/sales', label: 'Sales', icon: '$' },
+  { to: '/quotations', label: 'Quotations', icon: '≡' },
+  { to: '/proposals', label: 'Proposals', icon: '▤' },
+  { to: '/invoices', label: 'Invoices', icon: '¤' },
 ]
 
 export default function AppLayout() {

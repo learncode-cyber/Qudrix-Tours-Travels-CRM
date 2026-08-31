@@ -5,10 +5,15 @@ namespace App\Http\Controllers;
 use App\Models\Lead;
 use App\Models\DealStage;
 use App\Models\SalesActivity;
+use App\Services\LeadConversionService;
 use Illuminate\Http\Request;
 
 class PipelineController extends Controller
 {
+    public function __construct(private LeadConversionService $leadConversion)
+    {
+    }
+
     public function getFullPipeline(Request $request)
     {
         $tenantId = $request->user->tenant_id;
@@ -119,10 +124,11 @@ class PipelineController extends Controller
 
         // Update lead status
         $lead->update(['status' => $validated['new_stage']]);
+        $this->leadConversion->convertIfWon($lead, $validated['new_stage']);
 
         return response()->json([
             'message' => 'Lead stage updated',
-            'data' => $lead
+            'data' => $lead->fresh()
         ]);
     }
 

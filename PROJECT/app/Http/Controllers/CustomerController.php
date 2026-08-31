@@ -149,6 +149,18 @@ class CustomerController extends Controller
         ]);
     }
 
+    public function quotationHistory(Request $request, $id)
+    {
+        $customer = Customer::where('tenant_id', $request->user->tenant_id)->findOrFail($id);
+
+        $quotations = $customer->quotations()
+            ->with('items')
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        return response()->json(['data' => $quotations]);
+    }
+
     public function addFamily(Request $request, $customerId)
     {
         $customer = Customer::where('tenant_id', $request->user->tenant_id)->findOrFail($customerId);

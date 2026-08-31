@@ -29,6 +29,19 @@ export function titleCase(value: string | null | undefined): string {
     .join(' ')
 }
 
+// Maps a status string (quotation/proposal/invoice states, etc.) to a
+// Badge `tone` prop value. Unknown statuses fall back to the default tone.
+export function statusTone(status: string | null | undefined): string {
+  const positive = ['accepted', 'approved', 'sent', 'signed', 'paid', 'won']
+  const warning = ['pending_approval', 'draft', 'partially_paid']
+  const danger = ['rejected', 'overdue', 'lost']
+  const s = (status ?? '').toLowerCase()
+  if (positive.includes(s)) return 'success'
+  if (warning.includes(s)) return 'warning'
+  if (danger.includes(s)) return 'danger'
+  return 'default'
+}
+
 export function getErrorMessage(err: unknown, fallback = 'Something went wrong.'): string {
   if (err && typeof err === 'object') {
     const anyErr = err as { response?: { data?: { message?: string } }; message?: string }

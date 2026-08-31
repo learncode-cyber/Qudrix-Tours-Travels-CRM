@@ -40,7 +40,15 @@ export default function CustomersPage() {
     setSaving(true)
     setFormError(null)
     try {
-      await createCustomer(form)
+      // The backend's field is customer_type, not type — the API rejects
+      // (422) a create/update that only sends `type`.
+      await createCustomer({
+        name: form.name,
+        email: form.email || undefined,
+        phone: form.phone || undefined,
+        customer_type: form.type || 'individual',
+        status: form.status || undefined,
+      })
       setForm(emptyForm)
       setShowForm(false)
       await load()
@@ -84,7 +92,7 @@ export default function CustomersPage() {
                   <td>{c.name}</td>
                   <td>{c.email ?? '—'}</td>
                   <td>{c.phone ?? '—'}</td>
-                  <td>{c.type ?? '—'}</td>
+                  <td>{c.customer_type ?? '—'}</td>
                   <td>{c.status ?? '—'}</td>
                 </tr>
               ))}

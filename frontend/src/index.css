@@ -252,6 +252,17 @@ button {
   line-height: 1;
 }
 
+.btn-sm {
+  padding: 4px 10px;
+  font-size: 12px;
+}
+
+.row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
 /* ---------- View toggle ---------- */
 .view-toggle {
   display: inline-flex;
@@ -591,6 +602,30 @@ button {
   font-weight: 500;
   background: #eef1f6;
   color: var(--color-text-muted);
+}
+
+.badge-success {
+  background: #ecfdf3;
+  color: var(--color-success);
+}
+
+.badge-warning {
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.badge-danger {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.badge-info {
+  background: #eff6ff;
+  color: var(--color-primary);
+}
+
+.data-table tr.row-overdue td {
+  background: var(--color-danger-bg);
 }
 
 .tag-list {

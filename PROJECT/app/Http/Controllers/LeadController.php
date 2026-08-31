@@ -4,13 +4,16 @@ namespace App\Http\Controllers;
 
 use App\Models\Lead;
 use App\Models\LeadScore;
+use App\Services\LeadConversionService;
 use App\Services\NotificationService;
 use Illuminate\Http\Request;
 
 class LeadController extends Controller
 {
-    public function __construct(private NotificationService $notifications)
-    {
+    public function __construct(
+        private NotificationService $notifications,
+        private LeadConversionService $leadConversion,
+    ) {
     }
 
     public function index(Request $request)
@@ -147,10 +150,11 @@ class LeadController extends Controller
         ]);
 
         $lead->update($validated);
+        $this->leadConversion->convertIfWon($lead, $validated['status']);
 
         return response()->json([
             'message' => 'Lead status updated',
-            'data' => $lead
+            'data' => $lead->fresh()
         ]);
     }
 

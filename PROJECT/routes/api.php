@@ -118,12 +118,18 @@ Route::prefix('v1')->group(function () {
 
         // Customer 360 (Phase 2)
         Route::get('/customers/{id}/360', '\App\Http\Controllers\CustomerController@profile360');
+        Route::get('/customers/{id}/quotations', '\App\Http\Controllers\CustomerController@quotationHistory');
 
         // Quotation approval workflow + versioning
         Route::post('/quotations/{id}/submit-for-approval', '\App\Http\Controllers\QuotationController@submitForApproval');
         Route::post('/quotations/{id}/approve', '\App\Http\Controllers\QuotationController@approve');
         Route::post('/quotations/{id}/new-version', '\App\Http\Controllers\QuotationController@newVersion');
         Route::get('/quotations/{id}/pdf', '\App\Http\Controllers\QuotationPdfController@download');
+        // Phase 3: lead/deal -> customer/booking without duplicate records
+        // (directive requirement). Reuses whichever customer is already
+        // linked to the quotation/lead — see QuotationController for detail.
+        Route::post('/quotations/{id}/convert-to-booking', '\App\Http\Controllers\QuotationController@convertToBooking');
+        Route::post('/quotations/{id}/generate-invoice', '\App\Http\Controllers\QuotationController@generateInvoice');
 
         // Quote Templates
         Route::apiResource('quotation-templates', '\App\Http\Controllers\QuotationTemplateController')->only(['index', 'store', 'show', 'update', 'destroy']);
@@ -134,7 +140,14 @@ Route::prefix('v1')->group(function () {
         Route::get('/invoices/stats', '\App\Http\Controllers\InvoiceController@stats');
         Route::apiResource('invoices', '\App\Http\Controllers\InvoiceController')->only(['index', 'store', 'show']);
         Route::post('/invoices/{id}/payments', '\App\Http\Controllers\InvoiceController@recordPayment');
+        // Alias: kept both names since callers may reasonably expect
+        // either verb-shape for "record a payment against this invoice."
+        Route::post('/invoices/{id}/record-payment', '\App\Http\Controllers\InvoiceController@recordPayment');
         Route::post('/invoices/{id}/send', '\App\Http\Controllers\InvoiceController@send');
+        Route::get('/invoices/{id}/pdf', '\App\Http\Controllers\InvoicePdfController@download');
+
+        // Sales Dashboard (Phase 3)
+        Route::get('/sales/dashboard', '\App\Http\Controllers\SalesDashboardController@index');
     });
 
     // Public, token-authenticated quotation sharing — no JWT session.

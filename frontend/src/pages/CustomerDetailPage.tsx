@@ -73,7 +73,7 @@ export default function CustomerDetailPage() {
           </div>
           <div>
             <span className="detail-label">Type</span>
-            <span>{customer.type ?? '—'}</span>
+            <span>{customer.customer_type ?? '—'}</span>
           </div>
           <div>
             <span className="detail-label">Status</span>

@@ -6,6 +6,9 @@ use App\Models\Quotation;
 use App\Models\QuotationItem;
 use App\Models\Lead;
 use App\Models\Customer;
+use App\Models\Booking;
+use App\Models\Invoice;
+use App\Models\InvoiceItem;
 use Illuminate\Http\Request;
 
 class QuotationController extends Controller
@@ -67,6 +70,18 @@ class QuotationController extends Controller
             'items.*.discount' => 'nullable|numeric|min:0',
             'payment_terms' => 'nullable|array',
         ]);
+
+        // If the caller didn't pass customer_id but the lead already has
+        // one linked (it converted before this quotation was created —
+        // the common order of events), reuse it automatically so the
+        // quotation shows up in that customer's history without the
+        // caller having to know to pass it explicitly.
+        if (empty($validated['customer_id'])) {
+            $lead = Lead::find($validated['lead_id']);
+            if ($lead && $lead->customer_id) {
+                $validated['customer_id'] = $lead->customer_id;
+            }
+        }
 
         $quotation = Quotation::create([
             'tenant_id' => $request->user->tenant_id,
@@ -238,6 +253,130 @@ class QuotationController extends Controller
         $copy->update(['subtotal' => $subtotal, 'total_amount' => $subtotal + $copy->tax_amount - $copy->discount_amount]);
 
         return response()->json(['data' => $copy->load('items')], 201);
+    }
+
+    // Directive requirement: a quotation must be able to become a booking
+    // without duplicating the customer record. Reuses whichever customer
+    // is already linked (directly, or via the originating lead once it's
+    // won) rather than ever creating a second Customer row.
+    public function convertToBooking(Request $request, $id)
+    {
+        $quotation = Quotation::where('tenant_id', $request->user->tenant_id)
+            ->with(['items', 'lead'])
+            ->findOrFail($id);
+
+        if ($quotation->status !== 'accepted') {
+            return response()->json([
+                'error' => 'Only an accepted quotation can be converted to a booking.',
+            ], 400);
+        }
+
+        $customerId = $quotation->customer_id ?? $quotation->lead?->customer_id;
+        if (!$customerId) {
+            return response()->json([
+                'error' => 'This quotation has no linked customer yet (its lead has not converted). Link a customer before converting to a booking.',
+            ], 422);
+        }
+
+        $packageItem = $quotation->items->first(fn ($item) => $item->package_id !== null);
+        $validated = $request->validate([
+            'package_id' => $packageItem ? 'nullable|exists:packages,id' : 'required|exists:packages,id',
+            'booking_type' => 'required|in:individual,group,corporate',
+            'travel_date' => 'required|date|after:today',
+            'return_date' => 'required|date|after:travel_date',
+            'number_of_travelers' => 'required|integer|min:1',
+            'visa_required' => 'nullable|boolean',
+            'special_requests' => 'nullable|array',
+        ]);
+
+        $booking = Booking::create([
+            'tenant_id' => $quotation->tenant_id,
+            'created_by' => $request->user->id,
+            'lead_id' => $quotation->lead_id,
+            'customer_id' => $customerId,
+            'package_id' => $validated['package_id'] ?? $packageItem->package_id,
+            'booking_type' => $validated['booking_type'],
+            'travel_date' => $validated['travel_date'],
+            'return_date' => $validated['return_date'],
+            'number_of_travelers' => $validated['number_of_travelers'],
+            'total_amount' => $quotation->total_amount,
+            'currency' => $quotation->currency,
+            'visa_required' => $validated['visa_required'] ?? false,
+            'special_requests' => $validated['special_requests'] ?? null,
+            'booking_number' => 'BK-' . time() . '-' . strtoupper(\Illuminate\Support\Str::random(6)),
+            'status' => 'pending',
+            'payment_status' => 'pending',
+        ]);
+
+        return response()->json([
+            'message' => 'Quotation converted to booking successfully',
+            'data' => $booking,
+        ], 201);
+    }
+
+    // Pre-populates an Invoice's items/totals directly from the
+    // quotation's own items/totals — the standalone invoice endpoint
+    // requires callers to re-enter every line item by hand, which is
+    // real but error-prone busywork for the (by far) most common case of
+    // invoicing a quotation the customer already accepted.
+    public function generateInvoice(Request $request, $id)
+    {
+        $quotation = Quotation::where('tenant_id', $request->user->tenant_id)
+            ->with('items')
+            ->findOrFail($id);
+
+        $customerId = $quotation->customer_id ?? $quotation->lead?->customer_id;
+        if (!$customerId) {
+            return response()->json([
+                'error' => 'This quotation has no linked customer yet. Link a customer before generating an invoice.',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'due_date' => 'nullable|date|after_or_equal:today',
+            'booking_id' => 'nullable|exists:bookings,id',
+        ]);
+        // Net-14 is a reasonable default payment term when the caller
+        // doesn't specify one (a one-click "generate invoice" action, not
+        // a full invoice-creation form) — never left unset/fabricated,
+        // just a stated default a real caller can always override.
+        $validated['due_date'] ??= now()->addDays(14)->toDateString();
+
+        $invoice = Invoice::create([
+            'tenant_id' => $quotation->tenant_id,
+            'created_by' => $request->user->id,
+            'customer_id' => $customerId,
+            'quotation_id' => $quotation->id,
+            'booking_id' => $validated['booking_id'] ?? null,
+            'invoice_number' => 'INV-' . now()->format('Ymd') . '-' . str_pad((string) (Invoice::where('tenant_id', $quotation->tenant_id)->count() + 1), 5, '0', STR_PAD_LEFT),
+            'status' => 'draft',
+            'currency' => $quotation->currency,
+            'issue_date' => now()->toDateString(),
+            'due_date' => $validated['due_date'],
+            'subtotal' => $quotation->subtotal,
+            'tax_amount' => $quotation->tax_amount,
+            'discount_amount' => $quotation->discount_amount,
+            'total_amount' => $quotation->total_amount,
+            'paid_amount' => 0,
+            'notes' => "Generated from quotation {$quotation->quotation_number}.",
+        ]);
+
+        foreach ($quotation->items as $item) {
+            InvoiceItem::create([
+                'invoice_id' => $invoice->id,
+                'description' => $item->description,
+                'quantity' => $item->quantity,
+                'unit_price' => $item->unit_price,
+                'tax_rate' => $item->tax_rate,
+                'discount' => $item->discount,
+                'total' => $item->total,
+            ]);
+        }
+
+        return response()->json([
+            'message' => 'Invoice generated from quotation successfully',
+            'data' => $invoice->load('items'),
+        ], 201);
     }
 
     public function getQuotationStats(Request $request)

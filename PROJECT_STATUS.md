@@ -11,7 +11,7 @@ for the fullest recent verification transcript.
 | 0 | Foundation / Audit | ✅ Complete |
 | 1 | Backend Foundation + Auth + RBAC | ✅ Complete (backend). RBAC middleware exists (`RBACMiddleware`) but is not yet attached to any route — see Known Limitations below. |
 | 2 | Complete CRM | ✅ Complete — see `DOCUMENTATION/PHASE_2_REPORT.md` |
-| 3 | Sales + Quotation | ✅ Backend complete (prior sessions); no frontend yet |
+| 3 | Sales + Quotation | ✅ Complete — see `DOCUMENTATION/PHASE_3_REPORT.md` |
 | 4 | Travel Operations (Flights/Hotels/Visa/Bookings) | ✅ Backend complete (prior sessions); no frontend yet |
 | 5 | Hajj & Umrah + Student Visa | ✅ Backend complete (prior sessions); no frontend yet |
 | 6 | Custom Package Builder + Pricing Engine | ✅ Backend complete (prior sessions); no frontend yet |
@@ -46,11 +46,13 @@ live-verified end-to-end rather than syntax-checked only.
 ## Frontend
 
 A React + TypeScript frontend was started with Master Directive Phase 2
-(`/frontend`) — the first UI code anywhere in this repository. It
-currently covers the Phase 2 CRM surface (login, dashboard, customers +
-360 profile, leads + pipeline, deals + pipeline, tasks). Phases 3–16's
-backend APIs have no frontend yet — building it out is expected to
-track the same phase-by-phase cadence going forward, per the directive.
+(`/frontend`) — the first UI code anywhere in this repository. It now
+covers Phase 2's CRM surface (login, dashboard, customers + 360
+profile, leads + pipeline, deals + pipeline, tasks) and Phase 3's Sales
+surface (sales dashboard, quotations incl. approval workflow + PDF,
+proposals, invoices incl. payments + PDF). Phases 4–16's backend APIs
+have no frontend yet — building it out is expected to track the same
+phase-by-phase cadence going forward, per the directive.
 
 ## Known Limitations (cross-cutting, not specific to one phase)
 

@@ -1216,6 +1216,47 @@ verification transcript and honest UNVERIFIED items.
 
 ---
 
+## MASTER DIRECTIVE PHASE 3 ADDENDUM — Sales + Quotation (appended, not a rewrite)
+
+Same auth requirements as the Phase 2 addendum above (JWT bearer, `Accept: application/json`).
+
+### Lead → Customer → Booking/Invoice integration (no duplicate records)
+- Winning a lead (`PUT /api/v1/leads/{id}/status {status: won}` or
+  `PUT /api/v1/pipeline/stage {lead_id, new_stage: won}`) reuses an
+  existing customer in the tenant matched by email, then phone, before
+  creating a new one; also backfills `customer_id` onto any of that
+  lead's existing quotations.
+- `POST /api/v1/quotations` now auto-populates `customer_id` from the
+  lead if the lead already has one and the caller didn't pass one.
+- `POST /api/v1/quotations/{id}/convert-to-booking` — only from an
+  `accepted` quotation. Body: `{package_id? (required if no item on the
+  quotation has one), booking_type, travel_date, return_date,
+  number_of_travelers, visa_required?, special_requests?}`. Reuses the
+  quotation's (or its lead's) linked customer — 422 if none exists yet.
+- `POST /api/v1/quotations/{id}/generate-invoice` — Body:
+  `{due_date? (Net-14 default), booking_id?}`. Pre-populates every
+  invoice item from the quotation's items. 422 if no customer is linked
+  yet.
+
+### Invoices
+- `GET /api/v1/invoices/{id}/pdf` — binary PDF download, same pattern
+  as the existing quotation PDF endpoint.
+- `POST /api/v1/invoices/{id}/record-payment` — alias of the existing
+  `POST /api/v1/invoices/{id}/payments` (`{amount}`).
+
+### Sales Dashboard
+- `GET /api/v1/sales/dashboard` — `{revenue_this_month,
+  quotation_conversion_rate, invoice_collection_rate,
+  outstanding_amount, top_packages: [{package_id, name, count, revenue}]}`
+
+### Customer Quotation History
+- `GET /api/v1/customers/{id}/quotations` — `{data: [...quotations]}`
+
+**Phase 3 addendum version:** 1.0.0
+**Appended:** 2026-08-31
+
+---
+
 **Version:** 1.0.0  
 **Last Updated:** 2026-08-16  
 **Status:** ✅ Production Ready
