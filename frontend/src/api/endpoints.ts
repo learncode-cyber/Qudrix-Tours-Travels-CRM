@@ -14,6 +14,9 @@ import type {
   Flight,
   FlightBooking,
   FollowUp,
+  HajjPackage,
+  HajjUmrahGroup,
+  HajjUmrahGroupReport,
   Hotel,
   HotelRoomType,
   Invoice,
@@ -21,6 +24,7 @@ import type {
   Lead,
   LoginResponse,
   Package,
+  Pilgrim,
   PipelineFullResponse,
   ProfileResponse,
   Proposal,
@@ -29,8 +33,10 @@ import type {
   QuotationStats,
   RoomBlock,
   SalesDashboardResponse,
+  StudentVisaApplication,
   Task,
   TaskStats,
+  UmrahPackage,
   VisaApplication,
   VisaBookingStatus,
   VisaChecklistItem,
@@ -275,3 +281,86 @@ export const createEmbassy = (payload: Partial<Embassy>) =>
 export const updateEmbassy = (id: number | string, payload: Partial<Embassy>) =>
   client.put<ApiItemResponse<Embassy>>(`/embassies/${id}`, payload)
 export const deleteEmbassy = (id: number | string) => client.delete(`/embassies/${id}`)
+
+// --- Hajj / Umrah packages ---
+export const listHajjPackages = () => client.get<ApiListResponse<HajjPackage>>('/hajj')
+export const getHajjPackage = (id: number | string) =>
+  client.get<ApiItemResponse<HajjPackage>>(`/hajj/${id}`)
+export const createHajjPackage = (payload: Partial<HajjPackage>) =>
+  client.post<ApiItemResponse<HajjPackage>>('/hajj', payload)
+export const updateHajjPackage = (id: number | string, payload: Partial<HajjPackage>) =>
+  client.put<ApiItemResponse<HajjPackage>>(`/hajj/${id}`, payload)
+
+export const listUmrahPackages = () => client.get<ApiListResponse<UmrahPackage>>('/umrah')
+export const getUmrahPackage = (id: number | string) =>
+  client.get<ApiItemResponse<UmrahPackage>>(`/umrah/${id}`)
+export const createUmrahPackage = (payload: Partial<UmrahPackage>) =>
+  client.post<ApiItemResponse<UmrahPackage>>('/umrah', payload)
+
+// --- Hajj/Umrah departure groups ---
+export const listHajjUmrahGroups = (params?: { package_type?: string; status?: string }) =>
+  client.get<ApiListResponse<HajjUmrahGroup>>('/hajj-umrah-groups', { params })
+export const getHajjUmrahGroup = (id: number | string) =>
+  client.get<ApiItemResponse<HajjUmrahGroup & { seats_available: number; package: HajjPackage | UmrahPackage | null }>>(
+    `/hajj-umrah-groups/${id}`,
+  )
+export const createHajjUmrahGroup = (payload: Partial<HajjUmrahGroup>) =>
+  client.post<ApiItemResponse<HajjUmrahGroup>>('/hajj-umrah-groups', payload)
+export const updateHajjUmrahGroup = (id: number | string, payload: Partial<HajjUmrahGroup>) =>
+  client.put<ApiItemResponse<HajjUmrahGroup>>(`/hajj-umrah-groups/${id}`, payload)
+export const getHajjUmrahGroupReport = (id: number | string) =>
+  client.get<ApiItemResponse<HajjUmrahGroupReport>>(`/hajj-umrah-groups/${id}/report`)
+
+// --- Pilgrims ---
+export const listPilgrims = (params?: { hajj_umrah_group_id?: number | string; status?: string }) =>
+  client.get<ApiListResponse<Pilgrim>>('/pilgrims', { params })
+export const getPilgrim = (id: number | string) =>
+  client.get<ApiItemResponse<Pilgrim>>(`/pilgrims/${id}`)
+export const createPilgrim = (payload: Partial<Pilgrim>) =>
+  client.post<ApiItemResponse<Pilgrim>>('/pilgrims', payload)
+export const updatePilgrim = (id: number | string, payload: Partial<Pilgrim>) =>
+  client.put<ApiItemResponse<Pilgrim>>(`/pilgrims/${id}`, payload)
+export const assignPilgrimRoom = (id: number | string, payload: { room_number: string; hotel_id?: number }) =>
+  client.put<ApiItemResponse<Pilgrim>>(`/pilgrims/${id}/room`, payload)
+export const assignPilgrimTransport = (id: number | string, transport_assignment: string) =>
+  client.put<ApiItemResponse<Pilgrim>>(`/pilgrims/${id}/transport`, { transport_assignment })
+export const recordPilgrimPayment = (id: number | string, amount: number) =>
+  client.post<ApiItemResponse<Pilgrim>>(`/pilgrims/${id}/payments`, { amount })
+
+// --- Student Visa Applications ---
+export const listStudentVisaApplications = (params?: {
+  application_status?: string
+  assigned_counsellor_id?: number | string
+  destination_country?: string
+}) => client.get<ApiListResponse<StudentVisaApplication>>('/student-visa-applications', { params })
+export const getStudentVisaApplication = (id: number | string) =>
+  client.get<ApiItemResponse<StudentVisaApplication>>(`/student-visa-applications/${id}`)
+export const createStudentVisaApplication = (payload: Partial<StudentVisaApplication>) =>
+  client.post<ApiItemResponse<StudentVisaApplication>>('/student-visa-applications', payload)
+export const updateStudentVisaApplication = (id: number | string, payload: Partial<StudentVisaApplication>) =>
+  client.put<ApiItemResponse<StudentVisaApplication>>(`/student-visa-applications/${id}`, payload)
+export const updateStudentVisaStatus = (id: number | string, application_status: string) =>
+  client.put<ApiItemResponse<StudentVisaApplication>>(`/student-visa-applications/${id}/status`, {
+    application_status,
+  })
+export const recordStudentVisaOfferLetter = (id: number | string, offer_letter_date: string) =>
+  client.post<ApiItemResponse<StudentVisaApplication>>(`/student-visa-applications/${id}/offer-letter`, {
+    offer_letter_date,
+  })
+export const scheduleStudentVisaEmbassyAppointment = (
+  id: number | string,
+  embassy_appointment_date: string,
+) =>
+  client.post<ApiItemResponse<StudentVisaApplication>>(
+    `/student-visa-applications/${id}/embassy-appointment`,
+    { embassy_appointment_date },
+  )
+export const updateStudentVisaVisaStatus = (id: number | string, visa_status: string) =>
+  client.put<ApiItemResponse<StudentVisaApplication>>(`/student-visa-applications/${id}/visa-status`, {
+    visa_status,
+  })
+export const assignStudentVisaCounsellor = (id: number | string, assigned_counsellor_id: number | string) =>
+  client.post<ApiItemResponse<StudentVisaApplication>>(
+    `/student-visa-applications/${id}/assign-counsellor`,
+    { assigned_counsellor_id },
+  )

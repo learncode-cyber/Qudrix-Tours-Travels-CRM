@@ -11,6 +11,8 @@ import CustomersPage from './pages/CustomersPage'
 import DashboardPage from './pages/DashboardPage'
 import DealsPage from './pages/DealsPage'
 import FlightsPage from './pages/FlightsPage'
+import HajjUmrahGroupDetailPage from './pages/HajjUmrahGroupDetailPage'
+import HajjUmrahPage from './pages/HajjUmrahPage'
 import HotelDetailPage from './pages/HotelDetailPage'
 import HotelsPage from './pages/HotelsPage'
 import InvoicesPage from './pages/InvoicesPage'
@@ -20,6 +22,7 @@ import ProposalsPage from './pages/ProposalsPage'
 import QuotationDetailPage from './pages/QuotationDetailPage'
 import QuotationsPage from './pages/QuotationsPage'
 import SalesDashboardPage from './pages/SalesDashboardPage'
+import StudentVisaPage from './pages/StudentVisaPage'
 import TasksPage from './pages/TasksPage'
 import VisasPage from './pages/VisasPage'
 
@@ -49,6 +52,9 @@ export default function App() {
             <Route path="/hotels" element={<HotelsPage />} />
             <Route path="/hotels/:id" element={<HotelDetailPage />} />
             <Route path="/visas" element={<VisasPage />} />
+            <Route path="/hajj-umrah" element={<HajjUmrahPage />} />
+            <Route path="/hajj-umrah/groups/:id" element={<HajjUmrahGroupDetailPage />} />
+            <Route path="/student-visa" element={<StudentVisaPage />} />
           </Route>
         </Route>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

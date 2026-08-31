@@ -315,6 +315,130 @@ export interface Embassy {
   [key: string]: unknown
 }
 
+export type HajjUmrahPackageStatus = 'active' | 'inactive' | 'discontinued' | string
+
+export interface HajjPackage {
+  id: number
+  name: string
+  description?: string | null
+  duration_days: number
+  price: number | string
+  currency?: string
+  max_capacity: number
+  rituals_included?: string[] | null
+  accommodations?: Record<string, unknown> | null
+  status: HajjUmrahPackageStatus
+  [key: string]: unknown
+}
+
+export interface UmrahPackage {
+  id: number
+  name: string
+  description?: string | null
+  duration_days: number
+  price: number | string
+  currency?: string
+  max_capacity: number
+  rituals_included?: string[] | null
+  accommodations?: Record<string, unknown> | null
+  status: HajjUmrahPackageStatus
+  [key: string]: unknown
+}
+
+export type HajjUmrahGroupStatus = 'planned' | 'confirmed' | 'departed' | 'completed' | 'cancelled' | string
+export type HajjUmrahPackageType = 'hajj' | 'umrah'
+
+export interface HajjUmrahGroup {
+  id: number
+  package_type: HajjUmrahPackageType
+  package_id: number
+  name: string
+  departure_date: string
+  return_date: string
+  group_leader_id?: number | null
+  agent_id?: number | null
+  capacity: number
+  status: HajjUmrahGroupStatus
+  pilgrims_count?: number
+  seats_available?: number
+  pilgrims?: Pilgrim[]
+  [key: string]: unknown
+}
+
+export interface HajjUmrahGroupReport {
+  group: string
+  total_pilgrims: number
+  seats_available: number
+  by_status: Record<string, number>
+  total_amount_due: number
+  total_amount_paid: number
+  total_balance: number
+  unassigned_rooms: number
+  [key: string]: unknown
+}
+
+export type PilgrimStatus = 'registered' | 'confirmed' | 'travelled' | 'completed' | 'cancelled' | string
+export type PilgrimPaymentStatus = 'pending' | 'partial' | 'paid' | string
+
+export interface Pilgrim {
+  id: number
+  hajj_umrah_group_id: number
+  booking_id?: number | null
+  customer_id?: number | null
+  name: string
+  passport_number?: string | null
+  passport_expiry?: string | null
+  gender?: string | null
+  date_of_birth?: string | null
+  mahram_name?: string | null
+  room_number?: string | null
+  hotel_id?: number | null
+  transport_assignment?: string | null
+  visa_application_id?: number | null
+  payment_status: PilgrimPaymentStatus
+  amount_due: number | string
+  amount_paid: number | string
+  status: PilgrimStatus
+  [key: string]: unknown
+}
+
+export type StudentVisaApplicationStatus =
+  | 'inquiry'
+  | 'documents_pending'
+  | 'applied'
+  | 'offer_received'
+  | 'visa_appointment_scheduled'
+  | 'visa_submitted'
+  | 'visa_approved'
+  | 'visa_rejected'
+  | 'enrolled'
+  | string
+
+export type StudentVisaStatus = 'not_applied' | 'submitted' | 'approved' | 'rejected' | string
+
+export interface StudentVisaApplication {
+  id: number
+  lead_id?: number | null
+  customer_id?: number | null
+  student_name: string
+  date_of_birth?: string | null
+  destination_country: string
+  university?: string | null
+  course?: string | null
+  intake?: string | null
+  application_status: StudentVisaApplicationStatus
+  offer_letter_received?: boolean
+  offer_letter_date?: string | null
+  embassy_appointment_date?: string | null
+  visa_status: StudentVisaStatus
+  assigned_counsellor_id?: number | null
+  service_fee?: number | string | null
+  service_fee_currency?: string | null
+  payment_status: PilgrimPaymentStatus
+  notes?: string | null
+  [key: string]: unknown
+}
+
 export type QuotationStatus =
   | 'draft'
   | 'pending_approval'

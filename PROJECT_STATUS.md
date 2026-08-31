@@ -13,7 +13,7 @@ for the fullest recent verification transcript.
 | 2 | Complete CRM | ✅ Complete — see `DOCUMENTATION/PHASE_2_REPORT.md` |
 | 3 | Sales + Quotation | ✅ Complete — see `DOCUMENTATION/PHASE_3_REPORT.md` |
 | 4 | Travel Operations (Flights/Hotels/Visa/Bookings) | ✅ Complete — see `DOCUMENTATION/PHASE_4_REPORT.md` |
-| 5 | Hajj & Umrah + Student Visa | ✅ Backend complete (prior sessions); no frontend yet |
+| 5 | Hajj & Umrah + Student Visa | ✅ Complete — see `DOCUMENTATION/PHASE_5_REPORT.md` |
 | 6 | Custom Package Builder + Pricing Engine | ✅ Backend complete (prior sessions); no frontend yet |
 | 7 | Telegram + Notification System | ✅ Backend complete (prior sessions); Telegram delivery UNVERIFIED — no outbound network in this sandbox |
 | 8 | CRM External API Integration | Architecture-only per directive rule (no external contract supplied); generic connector engine built |
@@ -50,12 +50,15 @@ A React + TypeScript frontend was started with Master Directive Phase 2
 covers Phase 2's CRM surface (login, dashboard, customers + 360
 profile, leads + pipeline, deals + pipeline, tasks), Phase 3's Sales
 surface (sales dashboard, quotations incl. approval workflow + PDF,
-proposals, invoices incl. payments + PDF), and Phase 4's Travel
+proposals, invoices incl. payments + PDF), Phase 4's Travel
 Operations surface (packages, bookings + calendar, flights + seat
 booking, hotels + room types + room blocks, visas + embassies +
-expiry-reminder trigger). Phases 5–16's backend APIs have no frontend
-yet — building it out is expected to track the same phase-by-phase
-cadence going forward, per the directive.
+expiry-reminder trigger), and Phase 5's Hajj/Umrah + Student Visa
+surface (Hajj/Umrah packages, departure groups + pilgrim management +
+group report, student visa applications + status workflow). Phases
+6–16's backend APIs have no frontend yet — building it out is expected
+to track the same phase-by-phase cadence going forward, per the
+directive.
 
 ## Known Limitations (cross-cutting, not specific to one phase)
 

@@ -44,8 +44,8 @@ export function statusTone(status: string | null | undefined): string {
 
 export function getErrorMessage(err: unknown, fallback = 'Something went wrong.'): string {
   if (err && typeof err === 'object') {
-    const anyErr = err as { response?: { data?: { message?: string } }; message?: string }
-    return anyErr.response?.data?.message ?? anyErr.message ?? fallback
+    const anyErr = err as { response?: { data?: { message?: string; error?: string } }; message?: string }
+    return anyErr.response?.data?.message ?? anyErr.response?.data?.error ?? anyErr.message ?? fallback
   }
   return fallback
 }

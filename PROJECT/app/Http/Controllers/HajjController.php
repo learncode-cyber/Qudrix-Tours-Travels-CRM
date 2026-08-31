@@ -40,7 +40,7 @@ class HajjController extends Controller
             'max_capacity' => 'sometimes|integer',
             'rituals_included' => 'nullable|array',
             'accommodations' => 'nullable|array',
-            'status' => 'sometimes|in:active,inactive,sold_out',
+            'status' => 'sometimes|in:active,inactive,discontinued',
         ]);
         $package->update($validated);
         return response()->json(['data' => $package]);

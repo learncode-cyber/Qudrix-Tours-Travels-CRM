@@ -4,6 +4,47 @@ All notable changes to the Qudrix Travel CRM/ERP project, following the
 master development directive's phase numbering (Phase 0 = Foundation,
 Phase 1 = Backend Foundation + Auth + RBAC, Phase 2 = Complete CRM, ...).
 
+## [Unreleased] — Master Directive Phase 5: Hajj & Umrah + Student Visa
+
+The backend for this module already existed from a prior session
+(`HajjController`, `UmrahController`, `HajjUmrahGroupController`,
+`PilgrimController`, `StudentVisaController` and their models/migrations)
+but had never been executed against a live database or exercised by a
+frontend. This phase's work was auditing it, live-testing every endpoint,
+fixing the one real bug that surfaced, writing its automated test suite,
+and building its frontend for the first time.
+
+### Added
+- Frontend: Hajj & Umrah page (Hajj Packages / Umrah Packages / Groups
+  tabs — create + edit Hajj packages, create-only Umrah packages since no
+  update route exists for them, create groups against either package
+  type with filters by type/status), a Group detail page (Pilgrims tab —
+  register pilgrims, assign room/transport, record payments; Report tab
+  — totals and by-status breakdown), and a Student Visa page (create
+  applications, update application status, record offer letter, schedule
+  embassy appointment, update visa status). No delete/destroy UI exists
+  for any of these — the backend has no destroy routes for this module.
+- `tests/Feature/Phase5HajjUmrahStudentVisaTest.php` (12 tests) — the
+  first automated coverage this module has ever had: full CRUD/action
+  lifecycles for Hajj/Umrah packages, groups + report, pilgrims + the
+  group-at-capacity rejection, and the full student visa status workflow,
+  plus tenant-scoping checks on every list endpoint.
+
+### Fixed
+- `HajjController::update()` accepted `status: sold_out` in its
+  validation, but the `hajj_packages.status` database column is an enum
+  of `active, inactive, discontinued` — that status was never a real
+  option, and attempting to set it crashed with a SQL check-constraint
+  violation instead of a normal validation error. Caught by this phase's
+  own test, not by static checking. Fixed the validation to match the
+  real schema.
+- `utils/format.ts`'s `getErrorMessage()` only ever read a `message` key
+  off a failed response, but `POST /pilgrims`'s at-capacity rejection
+  returns `{"error": "Group is at full capacity"}` — that real backend
+  error text was being silently swallowed and replaced with a generic
+  fallback everywhere in the app, not just this phase's pages. Now reads
+  `error` as well as `message`.
+
 ## [Unreleased] — Master Directive Phase 4: Travel Operations
 
 ### Added

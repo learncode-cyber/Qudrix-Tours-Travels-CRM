@@ -12,6 +12,8 @@ const navItems = [
   { to: '/flights', label: 'Flights', icon: '➤' },
   { to: '/hotels', label: 'Hotels', icon: '⌂' },
   { to: '/visas', label: 'Visas', icon: '⚕' },
+  { to: '/hajj-umrah', label: 'Hajj & Umrah', icon: '☪' },
+  { to: '/student-visa', label: 'Student Visa', icon: '🎓' },
   { to: '/sales', label: 'Sales', icon: '$' },
   { to: '/quotations', label: 'Quotations', icon: '≡' },
   { to: '/proposals', label: 'Proposals', icon: '▤' },

@@ -1296,6 +1296,61 @@ A systematic scan (every `Route::apiResource(...)` registration checked against 
 
 ---
 
+## MASTER DIRECTIVE PHASE 5 ADDENDUM — Hajj & Umrah + Student Visa (appended, not a rewrite)
+
+Same auth requirements as the Phase 2/3/4 addenda above. The backend for this
+phase was already built in a prior session (see `PROJECT_STATUS.md`'s
+"backend complete" definition) — this phase's own work was live-testing it
+for the first time end-to-end, fixing the one real bug it exposed, writing
+its automated test coverage, and building its frontend.
+
+### Hajj Packages
+- `GET/POST/PUT /api/v1/hajj`, `GET /api/v1/hajj/{id}` — `{name, description?, duration_days, price, currency?, max_capacity, rituals_included?: string[], accommodations?: object, status?: active|inactive|discontinued}`. No `destroy` route exists.
+
+### Umrah Packages
+- `GET/POST /api/v1/umrah`, `GET /api/v1/umrah/{id}` — same shape as Hajj minus `accommodations` on create. **No update or destroy route exists** — list/create/show only.
+
+### Hajj/Umrah Groups (departure management)
+- `GET/POST/PUT /api/v1/hajj-umrah-groups`, `GET /api/v1/hajj-umrah-groups/{id}` — `{package_type: hajj|umrah, package_id, name, departure_date, return_date, group_leader_id?, agent_id?, capacity, status?}`. `show` returns the group merged with `seats_available` (capacity minus registered pilgrims) and the resolved `package` object. No destroy route exists.
+- `GET /api/v1/hajj-umrah-groups/{id}/report` — `{group, total_pilgrims, seats_available, by_status, total_amount_due, total_amount_paid, total_balance, unassigned_rooms}`.
+
+### Pilgrims
+- `GET/POST/PUT /api/v1/pilgrims`, `GET /api/v1/pilgrims/{id}` — `{hajj_umrah_group_id, booking_id?, customer_id?, name, passport_number?, passport_expiry?, gender?, date_of_birth?, mahram_name?, amount_due?}`. `index` accepts `hajj_umrah_group_id`/`status` filters. `store` returns `400 {"error": "Group is at full capacity"}` when the target group has no seats left. No destroy route exists.
+- `PUT /api/v1/pilgrims/{id}/room` — `{room_number, hotel_id?}`
+- `PUT /api/v1/pilgrims/{id}/transport` — `{transport_assignment}`
+- `POST /api/v1/pilgrims/{id}/payments` — `{amount}`, increments `amount_paid` and flips `payment_status` to `paid`/`partial` based on the resulting balance.
+
+### Student Visa Applications
+- `GET/POST/PUT /api/v1/student-visa-applications`, `GET /api/v1/student-visa-applications/{id}` — `{lead_id?, customer_id?, student_name, date_of_birth?, destination_country (2-letter), university?, course?, intake?, assigned_counsellor_id?, service_fee?, service_fee_currency?}`. `index` accepts `application_status`/`assigned_counsellor_id`/`destination_country` filters. No destroy route exists.
+- `PUT /api/v1/student-visa-applications/{id}/status` — `{application_status}` (one of `inquiry, documents_pending, applied, offer_received, visa_appointment_scheduled, visa_submitted, visa_approved, visa_rejected, enrolled`)
+- `POST /api/v1/student-visa-applications/{id}/offer-letter` — `{offer_letter_date}`, sets `offer_letter_received=true` and `application_status=offer_received`.
+- `POST /api/v1/student-visa-applications/{id}/embassy-appointment` — `{embassy_appointment_date}`, sets `application_status=visa_appointment_scheduled`.
+- `PUT /api/v1/student-visa-applications/{id}/visa-status` — `{visa_status: not_applied|submitted|approved|rejected}`, also advances `application_status` to match (`submitted`→`visa_submitted`, etc.)
+- `POST /api/v1/student-visa-applications/{id}/assign-counsellor` — `{assigned_counsellor_id}`
+
+### Fixed: Hajj package status validation didn't match its database schema
+`HajjController::update()`'s validation allowed `status: sold_out`, but the
+`hajj_packages.status` column is a DB-level enum of `active, inactive,
+discontinued` (defined back when the phase 0/1 migrations were written) —
+`sold_out` isn't one of them. Any attempt to set that status crashed with a
+SQL check-constraint violation instead of a clean validation error. Caught
+by this phase's own feature test, not by static checking. Fixed by aligning
+the validation to the real enum (`active, inactive, discontinued`) rather
+than altering the shipped database schema.
+
+### Known inconsistency (not a bug, flagged for awareness)
+Unlike some Phase 4 list endpoints (`packages`, `bookings`), the Phase 5 list
+endpoints (`hajj`, `umrah`, `hajj-umrah-groups`, `pilgrims`,
+`student-visa-applications`) return `{"data": [...]}` with no `pagination`
+key — they use `paginate()` server-side but only ever return `.items()`.
+The frontend for this phase does not build pagination controls against
+these lists as a result.
+
+**Phase 5 addendum version:** 1.0.0
+**Appended:** 2026-08-31
+
+---
+
 **Version:** 1.0.0  
 **Last Updated:** 2026-08-16  
 **Status:** ✅ Production Ready
