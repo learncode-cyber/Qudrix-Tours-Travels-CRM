@@ -24,6 +24,7 @@ const navItems = [
   { to: '/notifications', label: 'Notifications', icon: '🔔' },
   { to: '/profile', label: 'Profile', icon: '👤' },
   { to: '/integrations', label: 'Integrations', icon: '🔌' },
+  { to: '/ai-providers', label: 'AI Providers', icon: '✨' },
 ]
 
 export default function AppLayout() {

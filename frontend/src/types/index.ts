@@ -451,6 +451,46 @@ export interface ApiConnectorCallLog {
   [key: string]: unknown
 }
 
+export type AiProviderKey = 'openai' | 'anthropic' | 'gemini' | string
+
+export interface AiProvider {
+  id: number
+  provider: AiProviderKey
+  model: string
+  base_url?: string | null
+  is_active: boolean
+  is_default: boolean
+  priority?: number | null
+  monthly_cost_limit_usd?: number | string | null
+  input_cost_per_million?: number | string | null
+  output_cost_per_million?: number | string | null
+  max_output_tokens?: number | null
+  last_test_at?: string | null
+  last_test_error?: string | null
+  credentials_configured?: boolean
+  cost_rates_configured?: boolean
+  [key: string]: unknown
+}
+
+export interface AiUsageBreakdownRow {
+  ai_provider_id: number
+  feature: string
+  status: string
+  calls: number
+  prompt_tokens: number
+  completion_tokens: number
+  cost_usd: number
+  avg_latency_ms: number | null
+}
+
+export interface AiUsageResponse {
+  since: string
+  breakdown: AiUsageBreakdownRow[]
+  total_cost_usd: number
+  total_calls: number
+  providers_without_cost_rates: number[]
+}
+
 export type RoomBlockStatus = 'held' | 'partially_released' | 'released' | string
 
 export interface RoomBlock {

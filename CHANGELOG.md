@@ -4,6 +4,40 @@ All notable changes to the Qudrix Travel CRM/ERP project, following the
 master development directive's phase numbering (Phase 0 = Foundation,
 Phase 1 = Backend Foundation + Auth + RBAC, Phase 2 = Complete CRM, ...).
 
+## [Unreleased] — Master Directive Phase 9: AI Provider Management
+
+Backend (`AiProviderController`, `AiGateway`, and the Anthropic/OpenAI/
+Gemini adapters) already existed from a prior session but had never been
+executed live or covered by a test. Live-tested end to end (including a
+real request against Anthropic's live API — reachable from this sandbox
+— that correctly and honestly failed on an intentionally invalid key)
+and wrote its first automated coverage. Zero bugs found, matching
+Phase 6 and Phase 8.
+
+### Added
+- Frontend: an AI Providers page (Providers tab — create, set/rotate an
+  API key through a write-only form, activate/deactivate, set default,
+  run a real connection test and see its honest result inline, delete;
+  Usage tab — real aggregated cost/token/call stats per feature since a
+  given date, with providers missing cost rates explicitly flagged
+  rather than silently costed at $0). No such UI existed anywhere
+  before this phase, despite the backend having existed since a prior
+  session.
+- `tests/Feature/Phase9AiProviderTest.php` (15 tests) — the first
+  automated coverage this module has ever had: credential hiding across
+  every read path, tenant scoping, the single-default-per-tenant
+  invariant, the activation-refused-without-credentials guard, honest
+  test-connection success/failure (via `Http::fake`, no real network
+  required for determinism), the gateway's failover to a second
+  provider on the first one's failure (with both attempts correctly
+  logged), the "no provider configured" and "over spend limit" failure
+  paths, real cost computed from configured per-token rates on live
+  token counts, the zero-cost-when-unrated path and its usage-endpoint
+  flag, and usage aggregation being correctly tenant-scoped.
+
+### Fixed
+Nothing — no bugs were found in this module.
+
 ## [Unreleased] — Master Directive Phase 8: CRM External API Integration
 
 Architecture-only per the master directive's own rule for this phase: no

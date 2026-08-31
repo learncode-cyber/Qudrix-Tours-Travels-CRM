@@ -4,6 +4,7 @@ import AppLayout from './components/AppLayout'
 import ProtectedRoute from './components/ProtectedRoute'
 import BookingDetailPage from './pages/BookingDetailPage'
 import BookingsCalendarPage from './pages/BookingsCalendarPage'
+import AiProvidersPage from './pages/AiProvidersPage'
 import BookingsPage from './pages/BookingsPage'
 import PackagesPage from './pages/PackagesPage'
 import ConversationsPage from './pages/ConversationsPage'
@@ -69,6 +70,7 @@ export default function App() {
             <Route path="/profile" element={<ProfilePage />} />
             <Route path="/integrations" element={<IntegrationsPage />} />
             <Route path="/integrations/:id" element={<IntegrationDetailPage />} />
+            <Route path="/ai-providers" element={<AiProvidersPage />} />
           </Route>
         </Route>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />

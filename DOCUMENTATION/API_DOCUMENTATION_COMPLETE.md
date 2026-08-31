@@ -1462,6 +1462,50 @@ real external system is claimed to have been exchanged.
 
 ---
 
+## MASTER DIRECTIVE PHASE 9 ADDENDUM — AI Provider Management (appended, not a rewrite)
+
+Same auth requirements as the Phase 2–8 addenda above. Backend
+(`AiProviderController`, `AiGateway`, provider adapters for Anthropic/
+OpenAI/Gemini) already existed from a prior session; this phase live-
+tested it end to end for the first time, wrote its first automated
+coverage, and built its frontend. Zero bugs found — a third phase this
+happened, after Phase 6 and Phase 8.
+
+### AI Providers
+- `GET/POST/PUT/DELETE /api/v1/ai-providers` — `{provider: openai|anthropic|gemini, model, base_url?, credentials?, is_default?, priority?, monthly_cost_limit_usd?, input_cost_per_million?, output_cost_per_million?, max_output_tokens?}`. `index`/`show` add `credentials_configured`/`cost_rates_configured` boolean flags — the actual `credentials` value is never present in any response (`encrypted:array` cast + `$hidden` on the model).
+- `PUT /ai-providers/{id}` refuses `is_active: true` with a `422` unless credentials are already configured — never lets a provider be switched on and fail on first real use.
+- Setting `is_default: true` on create or update automatically clears the flag on every other provider for that tenant (at most one default at a time).
+- `PUT /ai-providers/{id}/credentials` — the only way to write an API key; requires `credentials.api_key`.
+- `POST /ai-providers/{id}/test` — issues a real minimal completion ("Reply with the single word: OK") against the provider and records the actual outcome (`last_test_at`, `last_test_error`) on the provider — never a fabricated "connected". Returns `502` on failure with the real provider error message.
+- `GET /ai-usage?since=` — aggregates real `AiUsageLog` rows by provider/feature/status (calls, tokens, cost, avg latency) since the given date (default: start of current month). `providers_without_cost_rates` lists provider ids whose cost figures are unknown (no configured per-token rates) rather than silently reported as zero.
+
+### The Gateway (`AiGateway`, used internally by every AI feature)
+- Application code never names a vendor — it calls `AiGateway::complete($tenantId, $feature, $messages, ...)` and the gateway resolves an eligible provider (active, not over its spend limit), tries it, and **fails over to the next eligible provider on any error**, logging both the failure and the eventual success (or, if every provider fails, throwing with every failure reason concatenated).
+- Cost is computed from real logged token counts against the operator's configured per-million rates — a provider with no rates configured logs `cost_usd: 0` and is flagged in `/ai-usage`, never estimated.
+- A tenant-level `monthly_cost_limit_usd` on a provider, and a global `AI_GLOBAL_MONTHLY_COST_CEILING_USD` ceiling (env, default $500), both computed from real summed usage this calendar month — a provider over its limit is skipped in failover order, not silently allowed through.
+
+### Fixed
+Nothing — no bugs were found in this module.
+
+### Verification note
+`api.anthropic.com` is reachable from this sandbox (allowlisted), so this
+phase's live curl testing against a real Anthropic provider with a
+deliberately invalid key produced a genuine `401` from Anthropic's own
+API, exercised end-to-end through the real adapter and honestly recorded
+on the provider — this is real verified connectivity, not a mock. `api.openai.com`
+is **not** reachable from this sandbox (connection blocked at the network
+boundary) — that failure was also honestly reported by the adapter with
+no crash. Neither a successful real completion (no valid API key was
+used) nor Gemini connectivity were exercised live; the gateway's
+failover/cost-limit/logging logic itself was verified via `Http::fake`
+in the automated test suite instead, which requires no real network and
+is deterministic.
+
+**Phase 9 addendum version:** 1.0.0
+**Appended:** 2026-08-31
+
+---
+
 **Version:** 1.0.0  
 **Last Updated:** 2026-08-16  
 **Status:** ✅ Production Ready

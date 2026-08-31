@@ -2,6 +2,9 @@ import client, { downloadFile } from './client'
 import type {
   ApiItemResponse,
   ApiListResponse,
+  AiProvider,
+  AiProviderKey,
+  AiUsageResponse,
   ApiConnector,
   ApiConnectorAuthType,
   ApiConnectorCallLog,
@@ -483,6 +486,35 @@ export const executeApiConnector = (id: number | string, operation: string, para
   )
 export const listApiConnectorCallLogs = (id: number | string) =>
   client.get<ApiListResponse<ApiConnectorCallLog>>(`/api-connectors/${id}/call-logs`)
+
+// --- AI Providers ---
+export const listAiProviders = () => client.get<ApiListResponse<AiProvider>>('/ai-providers')
+export const createAiProvider = (payload: {
+  provider: AiProviderKey
+  model: string
+  base_url?: string
+  credentials?: { api_key: string }
+  is_default?: boolean
+  priority?: number
+  monthly_cost_limit_usd?: number
+  input_cost_per_million?: number
+  output_cost_per_million?: number
+  max_output_tokens?: number
+}) => client.post<{ data: AiProvider; message: string }>('/ai-providers', payload)
+export const updateAiProvider = (id: number | string, payload: Partial<AiProvider>) =>
+  client.put<ApiItemResponse<AiProvider>>(`/ai-providers/${id}`, payload)
+export const updateAiProviderCredentials = (id: number | string, api_key: string) =>
+  client.put<{ message: string }>(`/ai-providers/${id}/credentials`, { credentials: { api_key } })
+export const deleteAiProvider = (id: number | string) => client.delete(`/ai-providers/${id}`)
+export const testAiProvider = (id: number | string) =>
+  client.post<
+    ApiItemResponse<
+      | { ok: true; reply: string; latency_ms: number; prompt_tokens: number; completion_tokens: number }
+      | { ok: false; error: string }
+    >
+  >(`/ai-providers/${id}/test`)
+export const getAiUsage = (since?: string) =>
+  client.get<ApiItemResponse<AiUsageResponse>>('/ai-usage', { params: since ? { since } : undefined })
 
 // --- Package Builder ---
 export const buildPackage = (payload: {
