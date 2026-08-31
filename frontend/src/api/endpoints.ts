@@ -12,6 +12,10 @@ import type {
   AiProviderKey,
   AiSuggestedReply,
   AiUsageResponse,
+  AbAssignment,
+  AbExperiment,
+  AbExperimentResults,
+  AbVariant,
   ApiConnector,
   BehavioralAnalyticsData,
   ApiConnectorAuthType,
@@ -68,6 +72,11 @@ import type {
   TaskStats,
   Transport,
   UmrahPackage,
+  UpsellEffectivenessRow,
+  UpsellRecommendationsForBooking,
+  UpsellRecommendType,
+  UpsellRule,
+  UpsellTriggerType,
   User,
   VisaApplication,
   VisaBookingStatus,
@@ -600,6 +609,58 @@ export const getQuotationFunnel = (from?: string, to?: string) =>
   client.get<ApiListResponse<{ status: string; count: number; value: number }>>('/analytics/quotation-funnel', {
     params: { from, to },
   })
+
+// --- Upsell / Cross-sell ---
+export const listUpsellRules = () =>
+  client.get<{ data: UpsellRule[]; trigger_types: UpsellTriggerType[]; recommend_types: UpsellRecommendType[] }>(
+    '/upsell-rules',
+  )
+export const createUpsellRule = (payload: {
+  name: string
+  trigger_type: UpsellTriggerType
+  recommend_type: UpsellRecommendType
+  description?: string
+  suggested_price?: number
+  currency?: string
+  priority?: number
+  requires_availability_check?: boolean
+}) => client.post<ApiItemResponse<UpsellRule>>('/upsell-rules', payload)
+export const updateUpsellRule = (id: number | string, payload: Partial<UpsellRule>) =>
+  client.put<ApiItemResponse<UpsellRule>>(`/upsell-rules/${id}`, payload)
+export const deleteUpsellRule = (id: number | string) => client.delete(`/upsell-rules/${id}`)
+export const getUpsellRecommendationsForBooking = (bookingId: number | string) =>
+  client.get<ApiItemResponse<UpsellRecommendationsForBooking>>(`/bookings/${bookingId}/upsell-recommendations`)
+export const recordUpsellShown = (payload: {
+  rule_id: number
+  recommend_type: string
+  booking_id?: number
+  lead_id?: number
+}) => client.post<ApiItemResponse<{ id: number }>>('/upsell-recommendations', payload)
+export const recordUpsellOutcome = (id: number | string, outcome: 'accepted' | 'declined', accepted_value?: number) =>
+  client.put<ApiItemResponse<{ id: number }>>(`/upsell-recommendations/${id}/outcome`, { outcome, accepted_value })
+export const getUpsellEffectiveness = () =>
+  client.get<ApiListResponse<UpsellEffectivenessRow>>('/upsell-effectiveness')
+
+// --- A/B Testing ---
+export const listAbExperiments = () => client.get<ApiListResponse<AbExperiment>>('/ab-experiments')
+export const createAbExperiment = (payload: { name: string; hypothesis?: string; subject_type?: string }) =>
+  client.post<ApiItemResponse<AbExperiment>>('/ab-experiments', payload)
+export const getAbExperiment = (id: number | string) =>
+  client.get<ApiItemResponse<AbExperiment>>(`/ab-experiments/${id}`)
+export const addAbVariant = (id: number | string, payload: { label: string; content: string; weight?: number }) =>
+  client.post<ApiItemResponse<AbVariant>>(`/ab-experiments/${id}/variants`, payload)
+export const startAbExperiment = (id: number | string) =>
+  client.post<ApiItemResponse<AbExperiment>>(`/ab-experiments/${id}/start`)
+export const stopAbExperiment = (id: number | string) =>
+  client.post<ApiItemResponse<AbExperiment>>(`/ab-experiments/${id}/stop`)
+export const assignAbExperiment = (id: number | string, lead_id: number | string) =>
+  client.post<ApiItemResponse<AbAssignment>>(`/ab-experiments/${id}/assign`, { lead_id })
+export const recordAbResponse = (assignmentId: number | string) =>
+  client.put<ApiItemResponse<AbAssignment>>(`/ab-assignments/${assignmentId}/response`)
+export const recordAbConversion = (assignmentId: number | string, booking_value?: number) =>
+  client.put<ApiItemResponse<AbAssignment>>(`/ab-assignments/${assignmentId}/conversion`, { booking_value })
+export const getAbExperimentResults = (id: number | string) =>
+  client.get<ApiItemResponse<AbExperimentResults>>(`/ab-experiments/${id}/results`)
 
 // --- Package Builder ---
 export const buildPackage = (payload: {

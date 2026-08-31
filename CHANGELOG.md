@@ -4,6 +4,41 @@ All notable changes to the Qudrix Travel CRM/ERP project, following the
 master development directive's phase numbering (Phase 0 = Foundation,
 Phase 1 = Backend Foundation + Auth + RBAC, Phase 2 = Complete CRM, ...).
 
+## [Unreleased] — Master Directive Phase 13: Upsell/Cross-sell Engine + Sales Script A/B Testing
+
+Backend (`UpsellController`/`UpsellEngine`, `AbTestingController`/
+`AbTestingService`) already existed from a prior session. Live-tested
+end to end for the first time and wrote its first automated coverage.
+Zero bugs found, matching Phase 6, 8, 9, 10, and 12.
+
+### Added
+- Frontend: an Upsell page (Rules tab — CRUD with the real trigger/
+  recommend-type enums from the API, activate/deactivate; Effectiveness
+  tab — real shown/accepted/acceptance-rate/revenue per type) and an
+  A/B Testing page (experiment list + create, a detail page for
+  managing variants, starting/stopping, assigning a lead, and viewing
+  results — including the honest "sample too small to call a winner"
+  message rendered exactly as the backend reports it). No such UI
+  existed anywhere before this phase.
+- `tests/Feature/Phase13UpsellAbTestingTest.php` (16 tests) — the first
+  automated coverage this module has ever had: a recommendation is
+  never shown for a component the booking already has; an availability-
+  gated recommendation is silently skipped when nothing is actually
+  available and shown with a real inventory count when it is; a non-
+  inventory recommend type carries its honest "not tracked as
+  inventory" note; real component detection from the `flight_bookings`
+  join table; recording a shown recommendation through to its outcome
+  and effectiveness stats; the "fewer than 2 variants" start guard; the
+  variant-upsert-by-label idempotency; assignment being refused on a
+  non-running experiment and being deterministic/idempotent for the
+  same lead; response/conversion recording; and the results endpoint's
+  statistical honesty in both directions — declining to name a winner
+  under the 30-assignment-per-variant threshold, and correctly naming
+  one once a real, well-powered sample shows a clear margin.
+
+### Fixed
+Nothing — no bugs were found in this module.
+
 ## [Unreleased] — Master Directive Phase 12: Analytics + Behavioral Intelligence
 
 Backend (`AnalyticsDashboardController`/`BehavioralAnalyticsService`)

@@ -682,6 +682,106 @@ export interface BehavioralAnalyticsData {
   customer_base: { total_customers: number; repeat_customers: number }
 }
 
+export type UpsellTriggerType = 'flight' | 'hotel' | 'tour' | 'visa' | 'hajj' | 'umrah' | 'transport' | 'any' | string
+export type UpsellRecommendType = 'hotel' | 'flight' | 'visa' | 'insurance' | 'transport' | 'tour_guide' | 'addon' | string
+
+export interface UpsellRule {
+  id: number
+  name: string
+  trigger_type: UpsellTriggerType
+  recommend_type: UpsellRecommendType
+  description?: string | null
+  suggested_price?: number | string | null
+  currency?: string | null
+  priority?: number | null
+  requires_availability_check: boolean
+  is_active: boolean
+  [key: string]: unknown
+}
+
+export interface UpsellRecommendationResult {
+  rule_id: number
+  name: string
+  recommend_type: UpsellRecommendType
+  description?: string | null
+  suggested_price?: number | null
+  currency?: string | null
+  availability: { available: boolean; count: number | null; note: string | null }
+}
+
+export interface UpsellRecommendationsForBooking {
+  booking_id: number
+  detected_components: string[]
+  recommendations: UpsellRecommendationResult[]
+}
+
+export interface UpsellEffectivenessRow {
+  recommend_type: string
+  shown: number
+  accepted: number
+  acceptance_rate_percent: number | null
+  revenue_from_upsells: number
+}
+
+export type AbExperimentStatus = 'draft' | 'running' | 'stopped' | string
+
+export interface AbExperiment {
+  id: number
+  name: string
+  hypothesis?: string | null
+  subject_type?: string | null
+  status: AbExperimentStatus
+  started_at?: string | null
+  stopped_at?: string | null
+  variants_count?: number
+  assignments_count?: number
+  variants?: AbVariant[]
+  [key: string]: unknown
+}
+
+export interface AbVariant {
+  id: number
+  ab_experiment_id: number
+  label: string
+  content: string
+  weight: number
+  is_active: boolean
+  [key: string]: unknown
+}
+
+export interface AbAssignment {
+  id: number
+  ab_experiment_id: number
+  ab_variant_id: number
+  lead_id: number
+  responded: boolean
+  converted: boolean
+  booking_value?: number | string | null
+  variant?: AbVariant
+  [key: string]: unknown
+}
+
+export interface AbVariantResult {
+  variant_id: number
+  label: string
+  assignments: number
+  responded: number
+  response_rate_percent: number | null
+  converted: number
+  conversion_rate_percent: number | null
+  total_booking_value: number
+  average_booking_value: number | null
+  average_time_to_close_hours: number | null
+}
+
+export interface AbExperimentResults {
+  experiment: { id: number; name: string; status: string; hypothesis: string | null }
+  variants: AbVariantResult[]
+  winner:
+    | { decided: true; variant_label: string; conversion_rate_percent: number; margin_over_next_percent: number; note: string }
+    | { decided: false; reason: string }
+}
+
 export type RoomBlockStatus = 'held' | 'partially_released' | 'released' | string
 
 export interface RoomBlock {

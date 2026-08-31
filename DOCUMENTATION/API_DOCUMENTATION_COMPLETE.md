@@ -1642,6 +1642,36 @@ provider connectivity.
 
 ---
 
+## MASTER DIRECTIVE PHASE 13 ADDENDUM — Upsell/Cross-sell Engine + Sales Script A/B Testing (appended, not a rewrite)
+
+Same auth requirements as the Phase 2–12 addenda above. Backend
+(`UpsellController`/`UpsellEngine`, `AbTestingController`/
+`AbTestingService`) already existed from a prior session. Live-tested
+end to end for the first time, wrote its first automated coverage, and
+built its frontend. Zero bugs found, matching Phase 6, 8, 9, 10, and 12.
+
+### Upsell / Cross-sell Engine
+- `GET/POST/PUT/DELETE /api/v1/upsell-rules` — `{name, trigger_type: flight|hotel|tour|visa|hajj|umrah|transport|any, recommend_type: hotel|flight|visa|insurance|transport|tour_guide|addon, description?, suggested_price?, currency?, priority?, requires_availability_check?}`. `index` also returns `trigger_types`/`recommend_types` (the full enums).
+- `GET /bookings/{bookingId}/upsell-recommendations` — detects what a booking already has from **real** join-table rows (`flight_bookings`, `hotel_bookings`, `visa_applications`, plus `booking_type`/package `type`/`visa_required`), matches active rules by trigger, **never recommends a component type the booking already has**, and — for a rule with `requires_availability_check: true` — runs a real inventory count (`Hotel`/`Flight`/`Transport`) and silently omits the recommendation if nothing is actually available rather than showing an option the rep can't fulfil. A `recommend_type` with no inventory model in this system (insurance, tour_guide, addon) is honestly reported `available: true` with a note that it "is not tracked as inventory in this system; confirm with the supplier before promising it" — never silently treated as confirmed stock.
+- `POST /upsell-recommendations` — records a recommendation as shown (for later effectiveness measurement); `PUT /upsell-recommendations/{id}/outcome` — `{outcome: accepted|declined, accepted_value?}`.
+- `GET /upsell-effectiveness` — real shown/accepted counts and revenue per `recommend_type`, `acceptance_rate_percent` reported as `null` (not `0`) when nothing has been shown yet for that type.
+
+### Sales Script A/B Testing
+- `GET/POST /api/v1/ab-experiments`, `GET /ab-experiments/{id}` — `{name, hypothesis?, subject_type?: sales_script|email_template|follow_up_sequence}`. Starts in `status: draft`.
+- `POST /ab-experiments/{id}/variants` — upsert by `label` (re-posting the same label updates its content rather than duplicating it) — `{label, content, weight?}`.
+- `POST /ab-experiments/{id}/start` — refuses with `422` unless at least 2 active variants exist ("An experiment with one variant is not a test"). `POST /ab-experiments/{id}/stop`.
+- `POST /ab-experiments/{id}/assign` — `{lead_id}`. Assignment is **deterministic**, derived from a hash of `experiment_id:lead_id` rather than `rand()` — the same lead always lands in the same variant, and re-assigning an already-assigned lead returns its existing assignment rather than creating a duplicate or re-rolling. Refuses with `422` when the experiment isn't `running` or has no active variants.
+- `PUT /ab-assignments/{id}/response`, `PUT /ab-assignments/{id}/conversion` — `{booking_value?}`. A conversion implies a response even if none was explicitly logged, and records real `time_to_close_hours` from the assignment's own timestamp.
+- `GET /ab-experiments/{id}/results` — real per-variant response/conversion rates, total/average booking value, average time-to-close, and a `winner` object that is honest about statistical power: **`decided: false` whenever any variant has fewer than 30 assignments**, or when the top two variants' conversion rates differ by less than 1 percentage point — an A/B tool that calls a winner on a handful of leads is worse than one that says it doesn't know yet.
+
+### Fixed
+Nothing — no bugs were found in this module.
+
+**Phase 13 addendum version:** 1.0.0
+**Appended:** 2026-08-31
+
+---
+
 **Version:** 1.0.0  
 **Last Updated:** 2026-08-16  
 **Status:** ✅ Production Ready

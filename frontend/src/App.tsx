@@ -7,6 +7,8 @@ import BookingsCalendarPage from './pages/BookingsCalendarPage'
 import AiPackageAssistantPage from './pages/AiPackageAssistantPage'
 import AiProvidersPage from './pages/AiProvidersPage'
 import AnalyticsDashboardPage from './pages/AnalyticsDashboardPage'
+import AbTestingPage from './pages/AbTestingPage'
+import AbTestingDetailPage from './pages/AbTestingDetailPage'
 import BookingsPage from './pages/BookingsPage'
 import PackagesPage from './pages/PackagesPage'
 import ConversationsPage from './pages/ConversationsPage'
@@ -30,6 +32,7 @@ import PricingRulesPage from './pages/PricingRulesPage'
 import ProfilePage from './pages/ProfilePage'
 import ProposalsPage from './pages/ProposalsPage'
 import SalesStrategiesPage from './pages/SalesStrategiesPage'
+import UpsellPage from './pages/UpsellPage'
 import QuotationDetailPage from './pages/QuotationDetailPage'
 import QuotationsPage from './pages/QuotationsPage'
 import SalesDashboardPage from './pages/SalesDashboardPage'
@@ -77,6 +80,9 @@ export default function App() {
             <Route path="/ai-package-assistant" element={<AiPackageAssistantPage />} />
             <Route path="/sales-strategies" element={<SalesStrategiesPage />} />
             <Route path="/analytics" element={<AnalyticsDashboardPage />} />
+            <Route path="/upsell" element={<UpsellPage />} />
+            <Route path="/ab-testing" element={<AbTestingPage />} />
+            <Route path="/ab-testing/:id" element={<AbTestingDetailPage />} />
           </Route>
         </Route>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
